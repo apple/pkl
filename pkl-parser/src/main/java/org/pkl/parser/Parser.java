@@ -26,7 +26,9 @@ public final class Parser {
     var parser = new ParserImpl(source);
     try {
       return parser.parseModule();
-    } catch (StackOverflowError e) {
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
       throw parser.tooDeeplyNested();
     }
   }
@@ -35,7 +37,9 @@ public final class Parser {
     var parser = new ParserImpl(source);
     try {
       return parser.parseExpressionInput();
-    } catch (StackOverflowError e) {
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
       throw parser.tooDeeplyNested();
     }
   }
@@ -44,7 +48,9 @@ public final class Parser {
     var parser = new ParserImpl(source);
     try {
       return parser.parseReplInput();
-    } catch (StackOverflowError e) {
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
       throw parser.tooDeeplyNested();
     }
   }

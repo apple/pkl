@@ -31,13 +31,17 @@ dependencies {
 }
 
 jmh {
-  // include = ["fib_class_java"]
-  // include = ["fib_class_constrained1", "fib_class_constrained2"]
+  //  includes = listOf("ParserBenchmark")
   jmhVersion.set(libs.versions.jmh)
   // jvmArgsAppend = "-Dgraal.TruffleCompilationExceptionsAreFatal=true " +
   //  "-Dgraal.Dump=Truffle,TruffleTree -Dgraal.TraceTruffleCompilation=true " +
   //  "-Dgraal.TruffleFunctionInlining=false"
-  jvm.set("${buildInfo.graalVmAmd64.baseDir}/bin/java")
+  val graalVm =
+    when (buildInfo.arch) {
+      Target.Arch.AARCH64 -> buildInfo.graalVmAarch64
+      Target.Arch.AMD64 -> buildInfo.graalVmAmd64
+    }
+  jvm.set("${graalVm.baseDir}/bin/java")
   // see:
   // https://docs.oracle.com/en/graalvm/enterprise/20/docs/graalvm-as-a-platform/implement-language/#disable-class-path-separation
   jvmArgs.set(
@@ -51,7 +55,13 @@ jmh {
   // synchronizeIterations = false
 }
 
-tasks.named("jmh") { dependsOn(":installGraalVmAmd64") }
+tasks.named("jmh") {
+  if (buildInfo.arch == Target.Arch.AARCH64) {
+    dependsOn(":installGraalVmAarch64")
+  } else if (buildInfo.arch == Target.Arch.AMD64) {
+    dependsOn(":installGraalVmAmd64")
+  }
+}
 
 // Prevent this error which occurs when building in IntelliJ:
 // "Entry org/pkl/core/fib_class_typed.pkl is a duplicate but no duplicate handling strategy has

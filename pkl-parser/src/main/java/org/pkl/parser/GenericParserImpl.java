@@ -15,9 +15,13 @@
  */
 package org.pkl.parser;
 
+import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
@@ -25,6 +29,7 @@ import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 import org.pkl.parser.util.ErrorMessages;
+import org.pkl.parser.util.SortedIntArray;
 
 @SuppressWarnings("DuplicatedCode")
 class GenericParserImpl {
@@ -35,6 +40,11 @@ class GenericParserImpl {
   private FullToken _lookahead;
   private int cursor = 0;
   private final List<FullToken> tokens = new ArrayList<>();
+  private int speculativeTokenCount = 0;
+  private boolean isSpeculativeParse = false;
+  private final Set<Integer> failedTypeArgAttempts = new HashSet<>();
+  // char indices of `<` that might start a type argument list
+  private @Nullable SortedIntArray typeArgCandidates;
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
@@ -745,24 +755,60 @@ class GenericParserImpl {
 
   private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    if (lookahead() == Token.DCOLON && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
-      children.add(makeTerminal(next()));
+    var typeArgs = tryParseTypeArgumentList();
+    if (typeArgs != null) {
+      // `tryParseTypeArgumentList` guarantees that an argument list follows
+      children.add(typeArgs);
       ff(children);
-      children.add(parseTypeArgumentList());
-      if (lookahead() == Token.LPAREN
-          && noSemicolonInbetween()
-          && _lookahead.newLinesBetween == 0) {
-        ff(children);
-        children.add(parseArgumentList());
-      } else {
-        throw parserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-      }
+      children.add(parseArgumentList());
     } else if (lookahead() == Token.LPAREN
         && noSemicolonInbetween()
         && _lookahead.newLinesBetween == 0) {
       ff(children);
       children.add(parseArgumentList());
     }
+  }
+
+  private @Nullable Node tryParseTypeArgumentList() {
+    if (lookahead() != Token.LT
+        || !noSemicolonInbetween()
+        || _lookahead.newLinesBetween != 0
+        || failedTypeArgAttempts.contains(spanLookahead.charIndex())
+        || !isTypeArgCandidate(spanLookahead.charIndex())) {
+      return null;
+    }
+    var savedCursor = cursor;
+    var savedCharIndex = spanLookahead.charIndex();
+    var savedIsSpeculativeParse = isSpeculativeParse;
+    isSpeculativeParse = true;
+    try {
+      var typeArgs = parseTypeArgumentList();
+      if (lookahead() == Token.LPAREN
+          && noSemicolonInbetween()
+          && _lookahead.newLinesBetween == 0) {
+        return typeArgs;
+      }
+    } catch (GenericParserError ignored) {
+      // not a type argument list
+    } finally {
+      isSpeculativeParse = savedIsSpeculativeParse;
+    }
+    failedTypeArgAttempts.add(savedCharIndex);
+    backtrackTo(savedCursor);
+    return null;
+  }
+
+  private boolean isTypeArgCandidate(int charIndex) {
+    if (typeArgCandidates == null) {
+      var scanner = new TypeArgumentCandidatesScanner();
+      scanner.addPending(charIndex);
+      for (var i = cursor + 1; i < tokens.size(); i++) {
+        var tk = tokens.get(i);
+        scanner.accept(tk.token, tk.span.charIndex());
+      }
+      typeArgCandidates = scanner.candidates();
+    }
+    return typeArgCandidates.contains(charIndex);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -1506,6 +1552,12 @@ class GenericParserImpl {
   }
 
   private FullToken next() {
+    if (isSpeculativeParse) {
+      if (speculativeTokenCount > MAX_SPECULATIVE_TOKEN_COUNT) {
+        throw new MaxBacktrackCountError(spanLookahead);
+      }
+      speculativeTokenCount++;
+    }
     var tmp = tokens.get(cursor++);
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -1517,15 +1569,10 @@ class GenericParserImpl {
     return tokens.get(cursor - 1).token != Token.SEMICOLON;
   }
 
-  private void backtrack() {
-    var tmp = tokens.get(--cursor);
-    lookahead = tmp.token;
-    spanLookahead = tmp.span;
-  }
-
   private void backtrackTo(int point) {
     cursor = point;
     var tmp = tokens.get(cursor);
+    _lookahead = tmp;
     lookahead = tmp.token;
     spanLookahead = tmp.span;
   }
@@ -1611,7 +1658,6 @@ class GenericParserImpl {
           case ASSIGN -> NodeType.ASSIGN;
           case AT -> NodeType.AT;
           case COLON -> NodeType.COLON;
-          case DCOLON -> NodeType.DCOLON;
           case COMMA -> NodeType.COMMA;
           case DOT -> NodeType.DOT;
           case GT -> NodeType.GT;

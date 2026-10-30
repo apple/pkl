@@ -9,4 +9,4 @@ class D extends ref.AbstractDomain {
 }
 local d: D = new {}
 
-test = ref.Reference::<D, ModuleSubclass>(d, "").output
+test = ref.Reference<D, ModuleSubclass>(d, "").output

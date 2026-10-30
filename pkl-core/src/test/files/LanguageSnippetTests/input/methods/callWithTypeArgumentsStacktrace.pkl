@@ -1,5 +1,5 @@
 function foo<T>(bar) = bar as T
 
-function baz<T>(qux) = foo::<List<T>>(qux)
+function baz<T>(qux) = foo<List<T>>(qux)
 
-res = baz::<String(throw("oops"))>(List("a"))
+res = baz<String(throw("oops"))>(List("a"))

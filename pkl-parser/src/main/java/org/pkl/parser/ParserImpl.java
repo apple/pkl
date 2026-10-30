@@ -15,10 +15,14 @@
  */
 package org.pkl.parser;
 
+import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Annotation;
@@ -86,10 +90,10 @@ import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
 import org.pkl.parser.util.ErrorMessages;
+import org.pkl.parser.util.SortedIntArray;
 
 @SuppressWarnings("DuplicatedCode")
 final class ParserImpl {
-
   private final Lexer lexer;
   private Token lookahead;
   private Span spanLookahead;
@@ -97,8 +101,15 @@ final class ParserImpl {
   private FullToken prev = new FullToken(Token.SOF, new Span(0, 0), 0);
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
+  private int speculativeTokenCount = 0;
+  private final Set<Integer> failedTypeArgAttempts = new HashSet<>();
+  private boolean isSpeculativeParse = false;
+  private final String source;
+  // char indices of `<` that might start a type argument list
+  private @Nullable SortedIntArray typeArgCandidates;
 
   ParserImpl(String source) {
+    this.source = source;
     this.lexer = new Lexer(source);
     _lookahead = forceNext();
     lookahead = _lookahead.token;
@@ -831,21 +842,12 @@ final class ParserImpl {
         case DOT, QDOT -> {
           var rhs = parseIdentifier();
           var isNullable = op == Operator.QDOT;
-          TypeArgumentList typeArgumentList = null;
-          if (lookahead == Token.DCOLON
-              && !precededBySemicolon
-              && _lookahead.newLinesBetween == 0) {
-            next();
-            typeArgumentList = parseTypeArgumentList();
-          }
+          var typeArgumentList = tryParseTypeArgumentList();
           ArgumentList argumentList = null;
           if (lookahead == Token.LPAREN
               && !precededBySemicolon
               && _lookahead.newLinesBetween == 0) {
             argumentList = parseArgumentList();
-          } else if (typeArgumentList != null) {
-            // type args but no args
-            throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
           }
           var lastSpan = argumentList != null ? argumentList.span() : rhs.span();
           expr =
@@ -992,25 +994,14 @@ final class ParserImpl {
             if (lookahead == Token.DOT) {
               next();
               var identifier = parseIdentifier();
-              TypeArgumentList typeArgs = null;
-              if (lookahead == Token.DCOLON
-                  && !precededBySemicolon
-                  && _lookahead.newLinesBetween == 0) {
-                next();
-                typeArgs = parseTypeArgumentList();
-              }
+              var typeArgs = tryParseTypeArgumentList();
               if (lookahead == Token.LPAREN
                   && !precededBySemicolon
                   && _lookahead.newLinesBetween == 0) {
                 var args = parseArgumentList();
                 yield new SuperAccessExpr(identifier, typeArgs, args, start.endWith(args.span()));
               }
-              if (typeArgs != null) {
-                // type args but no args
-                throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-              } else {
-                yield new SuperAccessExpr(identifier, null, null, start.endWith(identifier.span()));
-              }
+              yield new SuperAccessExpr(identifier, null, null, start.endWith(identifier.span()));
             } else {
               expect(Token.LBRACK, "unexpectedToken", "[");
               var exp = parseExpr("]");
@@ -1052,13 +1043,7 @@ final class ParserImpl {
           case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
           case IDENTIFIER -> {
             var identifier = parseIdentifier();
-            TypeArgumentList typeArgs = null;
-            if (lookahead == Token.DCOLON
-                && !precededBySemicolon
-                && _lookahead.newLinesBetween == 0) {
-              next();
-              typeArgs = parseTypeArgumentList();
-            }
+            var typeArgs = tryParseTypeArgumentList();
             if (lookahead == Token.LPAREN
                 && !precededBySemicolon
                 && _lookahead.newLinesBetween == 0) {
@@ -1066,12 +1051,7 @@ final class ParserImpl {
               yield new UnqualifiedAccessExpr(
                   identifier, typeArgs, args, identifier.span().endWith(args.span()));
             }
-            if (typeArgs != null) {
-              // type args but no args
-              throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-            } else {
-              yield new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
-            }
+            yield new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
           }
           case EOF ->
               throw new ParserError(
@@ -1111,17 +1091,10 @@ final class ParserImpl {
       else if (lookahead == Token.DOT || lookahead == Token.QDOT) {
         var isNullable = next().token == Token.QDOT;
         var identifier = parseIdentifier();
-        TypeArgumentList typeArgumentList = null;
-        if (lookahead == Token.DCOLON && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-          next();
-          typeArgumentList = parseTypeArgumentList();
-        }
+        var typeArgumentList = tryParseTypeArgumentList();
         ArgumentList argumentList = null;
         if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
           argumentList = parseArgumentList();
-        } else if (typeArgumentList != null) {
-          // type args but no args
-          throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
         }
         var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
         expr =
@@ -1603,6 +1576,53 @@ final class ParserImpl {
     return new TypeArgumentList(pars, start.endWith(end));
   }
 
+  private @Nullable TypeArgumentList tryParseTypeArgumentList() {
+    if (lookahead != Token.LT
+        || precededBySemicolon
+        || _lookahead.newLinesBetween != 0
+        || failedTypeArgAttempts.contains(spanLookahead.charIndex())
+        || !isTypeArgCandidate(spanLookahead.charIndex())) {
+      return null;
+    }
+    var lexerSnapshot = lexer.snapshot();
+    var savedLookahead = lookahead;
+    var savedSpanLookahead = spanLookahead;
+    var savedBacktracking = backtracking;
+    var savedPrev = prev;
+    var savedFullLookahead = _lookahead;
+    var savedPrecededBySemicolon = precededBySemicolon;
+    var savedIsSpeculativeParse = isSpeculativeParse;
+    isSpeculativeParse = true;
+    try {
+      var typeArgs = parseTypeArgumentList();
+      if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+        return typeArgs;
+      }
+    } catch (ParserError ignored) {
+      // not a type argument list
+    } finally {
+      isSpeculativeParse = savedIsSpeculativeParse;
+    }
+    failedTypeArgAttempts.add(savedSpanLookahead.charIndex());
+    lexer.restore(lexerSnapshot);
+    lookahead = savedLookahead;
+    spanLookahead = savedSpanLookahead;
+    backtracking = savedBacktracking;
+    prev = savedPrev;
+    _lookahead = savedFullLookahead;
+    precededBySemicolon = savedPrecededBySemicolon;
+    return null;
+  }
+
+  private boolean isTypeArgCandidate(int charIndex) {
+    if (typeArgCandidates == null) {
+      var snapshot = lexer.snapshot();
+      typeArgCandidates = TypeArgumentCandidatesScanner.scanFromPending(lexer);
+      lexer.restore(snapshot);
+    }
+    return typeArgCandidates.contains(charIndex);
+  }
+
   private ArgumentList parseArgumentList() {
     var start = expect(Token.LPAREN, "unexpectedToken", "(").span;
     if (lookahead == Token.RPAREN) {
@@ -1877,6 +1897,12 @@ final class ParserImpl {
   }
 
   private FullToken next() {
+    if (isSpeculativeParse) {
+      if (speculativeTokenCount > MAX_SPECULATIVE_TOKEN_COUNT) {
+        throw new MaxBacktrackCountError(spanLookahead);
+      }
+      speculativeTokenCount++;
+    }
     if (backtracking) {
       backtracking = false;
       lookahead = _lookahead.token;

@@ -22,12 +22,21 @@ public final class GenericParser {
     var parser = new GenericParserImpl(source);
     try {
       return parser.parseModule();
-    } catch (StackOverflowError e) {
+    } catch (MaxBacktrackCountError err) {
+      throw err.toGenericParserError();
+    } catch (StackOverflowError err) {
       throw parser.tooDeeplyNested();
     }
   }
 
   public Node parseExpressionInput(String source) {
-    return new GenericParserImpl(source).parseExpressionInput();
+    var parser = new GenericParserImpl(source);
+    try {
+      return parser.parseExpressionInput();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toGenericParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
   }
 }

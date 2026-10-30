@@ -2300,7 +2300,7 @@ public abstract class TypeNode extends PklNode {
       // e.g.
       // ```
       // function foo<T>(arg: T)
-      // res = foo::<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
+      // res = foo<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
       // ```
       if (levelsUp == 0 && isPreCall) {
         return typeArgumentOverrides == null ? null : typeArgumentOverrides[typeParameter.index()];

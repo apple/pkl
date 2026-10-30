@@ -21,58 +21,42 @@ import kotlin.io.path.extension
 import kotlin.io.path.pathString
 import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.SoftAssertions
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.pkl.commons.walk
 
 @Execution(ExecutionMode.CONCURRENT)
 class ParserComparisonTest {
-
-  @Test
-  fun compareSnippetTests() {
-    SoftAssertions.assertSoftly { softly ->
-      getSnippets()
-        .parallelStream()
-        .map { Pair(it.pathString, it.readText()) }
-        .forEach { (path, snippet) ->
-          try {
-            compare(snippet, path, softly)
-          } catch (e: GenericParserError) {
-            softly.fail("path: $path. Message: ${e.message}", e)
-          } catch (e: ParserError) {
-            softly.fail("path: $path. Message: ${e.message}", e)
-          }
-        }
-    }
-  }
-
-  fun getSnippets(): List<Path> {
-    return Path("../pkl-core/src/test/files/LanguageSnippetTests/input")
-      .walk()
-      .filter { path ->
-        val pathStr = path.toString().replace("\\", "/")
-        path.extension == "pkl" &&
-          !exceptions.any { pathStr.endsWith(it) } &&
-          !regexExceptions.any { it.matches(pathStr) }
+  @TestFactory
+  fun compareSnippetTests(): List<DynamicTest> {
+    val root = Path("../pkl-core/src/test/files/LanguageSnippetTests/input")
+    return getSnippets().map { path ->
+      DynamicTest.dynamicTest(root.relativize(path).pathString, path.toUri()) {
+        val (sexp, genSexp) = renderBoth(path.readText())
+        assertThat(genSexp).isEqualTo(sexp)
       }
-      .toList()
-  }
-
-  fun compare(code: String, path: String? = null, softly: SoftAssertions? = null) {
-    val (sexp, genSexp) = renderBoth(code)
-    when {
-      (path != null && softly != null) ->
-        softly.assertThat(genSexp).`as`("path: $path").isEqualTo(sexp)
-      else -> assertThat(genSexp).`as`("path: $path").isEqualTo(sexp)
     }
   }
 
-  fun renderBoth(code: String): Pair<String, String> =
+  private fun renderBoth(code: String): Pair<String, String> =
     Pair(renderCode(code), renderGenericCode(code))
 
   companion object {
+    @JvmStatic
+    fun getSnippets(): List<Path> {
+      return Path("../pkl-core/src/test/files/LanguageSnippetTests/input")
+        .walk()
+        .filter { path ->
+          val pathStr = path.toString().replace("\\", "/")
+          path.extension == "pkl" &&
+            !exceptions.any { pathStr.endsWith(it) } &&
+            !regexExceptions.any { it.matches(pathStr) }
+        }
+        .toList()
+    }
+
     private fun renderCode(code: String): String {
       val parser = Parser()
       val mod = parser.parseModule(code)

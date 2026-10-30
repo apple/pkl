@@ -1,6 +1,6 @@
-res1 = foo::<Bar>(baz)
+res1 = foo<Bar>(baz)
 res1a =
-  foo::<
+  foo<
     Bar,
     Baz,
     ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,
@@ -10,9 +10,9 @@ res1a =
     reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg,
   )
 
-res2 = qux.foo::<Bar, Bar2>(baz, baz2)
+res2 = qux.foo<Bar, Bar2>(baz, baz2)
 res2a =
-  qux.foo::<
+  qux.foo<
     Bar,
     Baz,
     ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,
@@ -21,11 +21,11 @@ res2a =
     baz,
     reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg,
   )
-res2b = qux.quux::<Corge>().foo::<Bar, Bar2>(baz, baz2)
+res2b = qux.quux<Corge>().foo<Bar, Bar2>(baz, baz2)
 res2c =
   qux
-    .quux::<Corge>()
-    .foo::<
+    .quux<Corge>()
+    .foo<
       Bar,
       Baz,
       ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,
@@ -34,10 +34,10 @@ res2c =
       baz,
       reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg,
     )
-res2d = qux::<Corge>().foo::<Bar, Bar2>(baz, baz2)
+res2d = qux<Corge>().foo<Bar, Bar2>(baz, baz2)
 res2e =
-  qux::<Corge>()
-    .foo::<
+  qux<Corge>()
+    .foo<
       Bar,
       Baz,
       ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,
@@ -46,11 +46,11 @@ res2e =
       baz,
       reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg,
     )
-res2f = grault.qux.quux::<Corge>().foo::<Bar, Bar2>(baz, baz2)
+res2f = grault.qux.quux<Corge>().foo<Bar, Bar2>(baz, baz2)
 res2g =
   grault.qux
-    .quux::<Corge>()
-    .foo::<
+    .quux<Corge>()
+    .foo<
       Bar,
       Baz,
       ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,
@@ -60,9 +60,9 @@ res2g =
       reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg,
     )
 
-res3 = super.foo::<Bar, Bar2>(baz, baz2)
+res3 = super.foo<Bar, Bar2>(baz, baz2)
 res3a =
-  super.foo::<
+  super.foo<
     Bar,
     Baz,
     ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType,

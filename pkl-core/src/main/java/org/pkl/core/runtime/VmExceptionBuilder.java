@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.AnsiStringBuilder;
@@ -137,7 +139,8 @@ public final class VmExceptionBuilder {
 
   public VmExceptionBuilder cannotFindMember(VmObjectLike receiver, Object memberKey) {
     if (memberKey instanceof Identifier identifier) {
-      return cannotFindProperty(receiver, identifier, true, false);
+      return cannotFindProperty(
+          receiver, receiver, identifier, true, MemberLookupMode.EXPLICIT_RECEIVER, null);
     }
     if (memberKey instanceof String string) {
       var candidates = KeyLookupSuggestions.forObject(receiver, string);
@@ -153,19 +156,21 @@ public final class VmExceptionBuilder {
 
   public VmExceptionBuilder cannotFindProperty(
       VmObjectLike receiver,
+      VmObjectLike owner,
       Identifier propertyName,
       // true -> property read, false -> property definition
       boolean isRead,
-      boolean isImplicitReceiver) {
+      MemberLookupMode memberLookupMode,
+      @Nullable PklNode receiverNode) {
 
     var memberKinds = isRead ? EnumSet.allOf(Kind.class) : EnumSet.of(Kind.PROPERTY);
 
     var candidates =
-        new MemberLookupSuggestions(receiver, propertyName, -1, memberKinds)
-            .find(isImplicitReceiver);
+        new MemberLookupSuggestions(receiver, owner, propertyName, -1, memberKinds)
+            .find(memberLookupMode, receiverNode);
 
     if (candidates.isEmpty()) {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         // probably wouldn't be useful to list all members in scope (includes all pkl.base members)
         evalError("cannotFindPropertyInScope", propertyName);
       } else if (receiver.isModuleObject()) {
@@ -183,7 +188,7 @@ public final class VmExceptionBuilder {
             propertyNames.isEmpty() ? "(none)" : new MultilineValue(propertyNames));
       }
     } else {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         evalError(
             "cannotFindPropertyInScopeListCandidates",
             propertyName,
@@ -208,14 +213,20 @@ public final class VmExceptionBuilder {
 
   // `foo.bar()`
   public VmExceptionBuilder cannotFindMethod(
-      VmObjectLike receiver, Identifier methodName, int arity, boolean isImplicitReceiver) {
+      VmObjectLike receiver,
+      VmObjectLike owner,
+      Identifier methodName,
+      int arity,
+      MemberLookupMode memberLookupMode,
+      boolean hasTypeArgs,
+      @Nullable PklNode receiverNode) {
 
     var candidates =
-        new MemberLookupSuggestions(receiver, methodName, arity, EnumSet.allOf(Kind.class))
-            .find(isImplicitReceiver);
+        new MemberLookupSuggestions(receiver, owner, methodName, arity, EnumSet.allOf(Kind.class))
+            .find(memberLookupMode, receiverNode);
 
     if (candidates.isEmpty()) {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         // probably not useful to list all members in scope (includes all pkl.base members)
         evalError("cannotFindMethodInScope", methodName);
       } else if (receiver.isModuleObject()) {
@@ -232,7 +243,15 @@ public final class VmExceptionBuilder {
             new MultilineValue(collectMethodNames(receiver.getVmClass())));
       }
     } else {
-      if (isImplicitReceiver) {
+      var exactPropertyMatch =
+          candidates.stream()
+              .filter((it) -> it.nameSimilarity() == 1 && it.kind() == Kind.PROPERTY)
+              .findFirst();
+      if (hasTypeArgs && exactPropertyMatch.isPresent()) {
+        var candidate = exactPropertyMatch.get();
+        evalError(
+            "cannotFindMethodMaybeComparisonExpr", methodName, candidate.memberNameWithReceiver());
+      } else if (memberLookupMode.isImplicitReceiver()) {
         evalError(
             "cannotFindMethodInScopeListCandidates", methodName, new MultilineValue(candidates));
       } else if (receiver.isModuleObject()) {

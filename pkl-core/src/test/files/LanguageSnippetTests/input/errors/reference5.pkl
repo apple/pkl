@@ -11,4 +11,4 @@ class D2 extends ref.AbstractDomain {
 }
 local d2: D2 = new {}
 
-test = ref.Reference::<D2, String>(d2, "") as Ref<String>
+test = ref.Reference<D2, String>(d2, "") as Ref<String>
