@@ -101,9 +101,17 @@ final class TypeArgumentCandidatesScanner {
       case LPAREN, LBRACK, LBRACE, INTERPOLATION_START -> pending.push(BRACKET);
       case RPAREN, RBRACK, RBRACE -> {
         // discard unmatched `<` (comparison operators) down to the enclosing bracket
-        while (pending.isNotEmpty() && pending.pop() != BRACKET) {}
+        while (true) {
+          if (pending.isEmpty() || pending.pop() == BRACKET) {
+            break;
+          }
+        }
       }
       default -> {}
     }
+  }
+
+  public void addPending(int charIndex) {
+    pending.push(charIndex);
   }
 }

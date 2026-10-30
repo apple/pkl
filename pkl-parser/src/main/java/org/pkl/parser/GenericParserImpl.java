@@ -19,8 +19,10 @@ import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
@@ -41,7 +43,7 @@ class GenericParserImpl {
   private final List<FullToken> tokens = new ArrayList<>();
   private int speculativeTokenCount = 0;
   private boolean isSpeculativeParse = false;
-  private final BitSet failedTypeArgAttempts = new BitSet();
+  private final Set<Integer> failedTypeArgAttempts = new HashSet<>();
   // char indices of `<` that might start a type argument list
   private @Nullable SortedIntArray typeArgCandidates;
 
@@ -753,9 +755,8 @@ class GenericParserImpl {
   }
 
   private void parseAccess(List<Node> children) {
-    var startCursor = cursor;
     children.add(parseIdentifier());
-    var typeArgs = tryParseTypeArgumentList(startCursor);
+    var typeArgs = tryParseTypeArgumentList();
     if (typeArgs != null) {
       // `tryParseTypeArgumentList` guarantees that an argument list follows
       children.add(typeArgs);
@@ -769,12 +770,12 @@ class GenericParserImpl {
     }
   }
 
-  private @Nullable Node tryParseTypeArgumentList(int startCursor) {
+  private @Nullable Node tryParseTypeArgumentList() {
     if (lookahead() != Token.LT
         || !noSemicolonInbetween()
         || _lookahead.newLinesBetween != 0
-        || failedTypeArgAttempts.get(spanLookahead.charIndex())
-        || !isTypeArgCandidate(spanLookahead.charIndex(), startCursor)) {
+        || failedTypeArgAttempts.contains(spanLookahead.charIndex())
+        || !isTypeArgCandidate(spanLookahead.charIndex())) {
       return null;
     }
     var savedCursor = cursor;
@@ -793,15 +794,16 @@ class GenericParserImpl {
     } finally {
       isSpeculativeParse = savedIsSpeculativeParse;
     }
-    failedTypeArgAttempts.set(savedCharIndex);
+    failedTypeArgAttempts.add(savedCharIndex);
     backtrackTo(savedCursor);
     return null;
   }
 
-  private boolean isTypeArgCandidate(int charIndex, int startCursor) {
+  private boolean isTypeArgCandidate(int charIndex) {
     if (typeArgCandidates == null) {
       var scanner = new TypeArgumentCandidatesScanner();
-      for (var i = startCursor; i < tokens.size(); i++) {
+      scanner.addPending(charIndex);
+      for (var i = cursor + 1; i < tokens.size(); i++) {
         var tk = tokens.get(i);
         scanner.accept(tk.token, tk.span.charIndex());
       }
