@@ -47,6 +47,7 @@ class ReplServerTest {
       StackFrameTransformers.defaultTransformer,
       false,
       TraceMode.COMPACT,
+      emptyMap(),
     )
 
   @Test
@@ -214,6 +215,7 @@ class ReplServerTest {
         StackFrameTransformers.defaultTransformer,
         true,
         TraceMode.COMPACT,
+        emptyMap(),
       )
     val responses = server.handleRequest(ReplRequest.Eval("id", "5.ms", false, false))
     assertThat(responses).hasSize(1)
