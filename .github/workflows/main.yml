@@ -233,11 +233,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -295,11 +295,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -356,11 +356,11 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -474,11 +474,11 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
@@ -531,11 +531,11 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -591,11 +591,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -653,11 +653,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -714,11 +714,11 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -832,11 +832,11 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
@@ -889,11 +889,11 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -949,11 +949,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -1011,11 +1011,11 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -1072,11 +1072,11 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -1190,11 +1190,11 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true libpkl:buildNative
@@ -1249,11 +1249,11 @@ jobs:
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
     - name: Print debug info
       shell: bash
-      run: |
-        xcrun --show-sdk-version
-        xcrun --show-sdk-path
-        clang --version
+      run: |-
+        ls -l /Library/Developer/CommandLineTools/SDKs/
+        xcode-select -p
         cc --version
+        pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative

@@ -54,11 +54,10 @@ steps {
     name = "Print debug info"
     shell = "bash"
     run = """
-      xcrun --show-sdk-version
-      xcrun --show-sdk-path
-      clang --version
+      ls -l /Library/Developer/CommandLineTools/SDKs/
+      xcode-select -p
       cc --version
-
+      pkgutil --pkg-info=com.apple.pkg.CLTools_Executables
       """
   }
   new {
