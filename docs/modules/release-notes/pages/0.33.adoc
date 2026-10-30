@@ -231,7 +231,7 @@ greeting2 =
 <2> The `let` binding is inferred to be a `Person`.
 
 Inference is not available where the parameter type is not known ahead of time: for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
-It is an error for the parameter type to be `this`.
+It is an error for the parameter type to be `this` or `module`.
 
 === Support for `.netrc` HTTP authentication
 
@@ -338,7 +338,7 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 ==== `pkl:protobuf`
 
-* Module deprecated for removal in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
+* Module deprecated for removal in Pkl 0.34 (<<upcoming-breaking-changes,upcoming breaking change>>, https://github.com/apple/pkl/pull/1778[#1778]).
 
 == Breaking Changes [small]#💔#
 
@@ -468,6 +468,11 @@ The `catch()` and `catchOrNull()` methods in `pkl:test` now fully evaluate the v
 Previously, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
 Now, it is caught, and `catch()` returns its message.
+
+[[upcoming-breaking-changes]]
+=== Upcoming breaking changes
+
+The `pkl:protobuf` module is deprecated and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
 
 == Miscellaneous [small]#🐸#
 
