@@ -28,6 +28,9 @@ public class SortedIntArray {
   }
 
   public boolean contains(int value) {
+    if (size == 0) return false;
+    if (value < store[0]) return false;
+    if (value > store[size - 1]) return false;
     return Arrays.binarySearch(store, 0, size, value) >= 0;
   }
 
