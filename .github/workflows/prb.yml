@@ -122,7 +122,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -186,7 +186,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -248,7 +248,7 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -368,7 +368,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -427,7 +427,7 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -489,7 +489,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -553,7 +553,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -615,7 +615,7 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -735,7 +735,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -794,7 +794,7 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -856,7 +856,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -920,7 +920,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -982,7 +982,7 @@ jobs:
         fi
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -1102,7 +1102,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
@@ -1163,7 +1163,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
     - name: Print debug info
       shell: bash
-      run: |-
+      run: |
         xcrun --show-sdk-version
         xcrun --show-sdk-path
         clang --version
