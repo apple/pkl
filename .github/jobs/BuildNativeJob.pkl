@@ -63,17 +63,17 @@ steps {
         }
         """
     }
-    run = """
+    run = #"""
       cat << EOF > main.c 
       #include <stdio.h>
-      
+
       int main() {
           printf("Hello, World!\n");
           return 0;
       }
       EOF
       cc main.c -o main.o
-      """
+      """#
   }
 //   new {
 //     name = "gradle buildNative"
