@@ -53,6 +53,13 @@ steps {
   new {
     name = "gradle buildNative"
     shell = "bash"
+    // Right now, some macOS runners have `cc` from XCode 26 toolchain, but default SDK is 27. 
+    // TODO remove me once this issue is fixed
+    when (module.os == "macOS") {
+      env {
+        ["SDKROOT"] = "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk"
+      }
+    }
     run = "./gradlew \(module.gradleArgs) \(project):buildNative"
   }
   (catalog.`actions/upload-artifact@v5`) {

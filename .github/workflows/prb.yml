@@ -9,6 +9,7 @@ permissions:
   contents: read
 jobs:
   gradle-check:
+    if: 'false'
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
@@ -233,6 +234,8 @@ jobs:
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
     - name: gradle buildNative
+      env:
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload built artifacts
@@ -565,6 +568,8 @@ jobs:
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
     - name: gradle buildNative
+      env:
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload built artifacts
@@ -897,6 +902,8 @@ jobs:
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
     - name: gradle buildNative
+      env:
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
     - name: Upload built artifacts

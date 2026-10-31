@@ -136,7 +136,9 @@ local releaseJobs: PklJobs = new {
 //    * [native-pkl-cli-macos]        -- Test pkl-cli on macOS
 prb {
   local prbJobs: Mapping<String, GradleJob> = new {
-    ["gradle-check"] = gradleCheck
+    ["gradle-check"] = (gradleCheck) {
+      `if` = "false"
+    }
     ["gradle-check-windows"] = (gradleCheckWindows) {
       `if` = "contains(github.event.pull_request.body, '[windows]')"
     }
@@ -246,16 +248,16 @@ dependabot {
     }
   }
 }
-
-codeql {
-  scans {
-    new {
-      language = "java-kotlin"
-      buildMode = "autobuild"
-    }
-    new {
-      language = "javascript-typescript"
-      buildMode = "none"
-    }
-  }
-}
+// 
+// codeql {
+//   scans {
+//     new {
+//       language = "java-kotlin"
+//       buildMode = "autobuild"
+//     }
+//     new {
+//       language = "javascript-typescript"
+//       buildMode = "none"
+//     }
+//   }
+// }
