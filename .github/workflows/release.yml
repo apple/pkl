@@ -233,20 +233,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-cli-linux-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-linux-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -290,20 +289,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-cli-linux-aarch64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-linux-aarch64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -346,20 +344,21 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
-    - name: Try compile hello world
+    - name: gradle buildNative
       env:
         SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-cli-macOS-aarch64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-macOS-aarch64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -459,20 +458,19 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-cli:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-cli-alpine-linux-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-alpine-linux-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -511,20 +509,19 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-cli-windows-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-windows-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -566,20 +563,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-doc-linux-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-linux-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -623,20 +619,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-doc-linux-aarch64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-linux-aarch64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -679,20 +674,21 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
-    - name: Try compile hello world
+    - name: gradle buildNative
       env:
         SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-doc-macOS-aarch64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-macOS-aarch64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -792,20 +788,19 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-doc:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-doc-alpine-linux-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-alpine-linux-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -844,20 +839,19 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-pkl-doc-windows-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-windows-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -899,20 +893,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true libpkl:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-libpkl-linux-amd64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-linux-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -956,20 +949,19 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true libpkl:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-libpkl-linux-aarch64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-linux-aarch64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -1012,20 +1004,21 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
-    - name: Try compile hello world
+    - name: gradle buildNative
       env:
         SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true libpkl:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-libpkl-macOS-aarch64
+        path: libpkl*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-macOS-aarch64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -1125,20 +1118,19 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true libpkl:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-libpkl-alpine-linux-amd64
+        path: libpkl*/build/distributions/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-alpine-linux-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -1179,20 +1171,19 @@ jobs:
         fi
     - name: Set up MSVC
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
-    - name: Try compile hello world
-      env:
-        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+    - name: gradle buildNative
       shell: bash
-      run: |-
-        cat << EOF > main.c 
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        EOF
-        cc main.c -o main.o
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true libpkl:buildNative
+    - name: Upload built artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: deploy-artifacts-libpkl-windows-amd64
+        path: libpkl*/build/distributions/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-windows-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5

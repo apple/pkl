@@ -51,54 +51,43 @@ steps {
     }
   }
   new {
-    name = "Try compile hello world"
+    name = "gradle buildNative"
     shell = "bash"
-    env {
-      ["SDKROOT"] = "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk"
-    }
-    run = #"""
-      cat << EOF > main.c 
-      #include <stdio.h>
-
-      int main() {
-          printf("Hello, World!\n");
-          return 0;
+    // Right now, some macOS runners have `cc` from XCode 26 toolchain, but default SDK is 27. 
+    // TODO remove me once this issue is fixed
+    when (module.os == "macOS") {
+      env {
+        ["SDKROOT"] = "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk"
       }
-      EOF
-      cc main.c -o main.o
-      """#
+    }
+    run = "./gradlew \(module.gradleArgs) \(project):buildNative"
   }
-//   new {
-//     name = "gradle buildNative"
-//     shell = "bash"
-//     run = "./gradlew \(module.gradleArgs) \(project):buildNative"
-//   }
-//   (catalog.`actions/upload-artifact@v5`) {
-//     name = "Upload built artifacts"
-//     with {
-//       name =
-//         if (musl)
-//           "deploy-artifacts-\(project)-alpine-\(module.os)-\(module.arch)"
-//         else
-//           "deploy-artifacts-\(project)-\(module.os)-\(module.arch)"
-//       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
-//       // See https://github.com/actions/upload-artifact/issues/206
-//       path = module.buildDir
-//     }
-//   }
-//   (catalog.`actions/upload-artifact@v5`) {
-//     name = "Upload compiled classes list"
-//     with {
-//       name =
-//         if (musl)
-//           "compiled-classes-\(project)-alpine-\(module.os)-\(module.arch)"
-//         else
-//           "compiled-classes-\(project)-\(module.os)-\(module.arch)"
-//       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
-//       // See https://github.com/actions/upload-artifact/issues/206
-//       path = "\(project)*/build/compiled-classes/**/*"
-//     }
-//   }
+  (catalog.`actions/upload-artifact@v5`) {
+    name = "Upload built artifacts"
+    with {
+      name =
+        if (musl)
+          "deploy-artifacts-\(project)-alpine-\(module.os)-\(module.arch)"
+        else
+          "deploy-artifacts-\(project)-\(module.os)-\(module.arch)"
+      // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
+      // See https://github.com/actions/upload-artifact/issues/206
+      path = module.buildDir
+    }
+  }
+  (catalog.`actions/upload-artifact@v5`) {
+    name = "Upload compiled classes list"
+    with {
+      name =
+        if (musl)
+          "compiled-classes-\(project)-alpine-\(module.os)-\(module.arch)"
+        else
+          "compiled-classes-\(project)-\(module.os)-\(module.arch)"
+      // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
+      // See https://github.com/actions/upload-artifact/issues/206
+      path = "\(project)*/build/compiled-classes/**/*"
+    }
+  }
 }
 
 fixed job {
