@@ -321,6 +321,7 @@ jobs:
     runs-on:
     - self-hosted
     - macos
+    - tahoe
     env:
       LANG: en_US.UTF-8
     steps:
@@ -644,6 +645,7 @@ jobs:
     runs-on:
     - self-hosted
     - macos
+    - tahoe
     env:
       LANG: en_US.UTF-8
     steps:
@@ -967,6 +969,7 @@ jobs:
     runs-on:
     - self-hosted
     - macos
+    - tahoe
     env:
       LANG: en_US.UTF-8
     steps:
