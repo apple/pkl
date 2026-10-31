@@ -235,14 +235,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -299,14 +292,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -362,14 +348,7 @@ jobs:
         fi
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -482,14 +461,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -541,14 +513,7 @@ jobs:
         fi
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -603,14 +568,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -667,14 +625,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -730,14 +681,7 @@ jobs:
         fi
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -850,14 +794,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -909,14 +846,7 @@ jobs:
         fi
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -971,14 +901,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -1035,14 +958,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -1098,14 +1014,7 @@ jobs:
         fi
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -1218,14 +1127,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 
@@ -1279,14 +1181,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
     - name: Try compile hello world
       env:
-        program: |-
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello, World!
-          ");
-              return 0;
-          }
+        SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
       shell: bash
       run: |-
         cat << EOF > main.c 

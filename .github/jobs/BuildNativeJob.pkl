@@ -54,14 +54,7 @@ steps {
     name = "Try compile hello world"
     shell = "bash"
     env {
-      ["program"] = """
-        #include <stdio.h>
-
-        int main() {
-            printf("Hello, World!\n");
-            return 0;
-        }
-        """
+      ["SDKROOT"] = "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk"
     }
     run = #"""
       cat << EOF > main.c 
