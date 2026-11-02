@@ -23,6 +23,7 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
 
@@ -30,6 +31,19 @@ import org.pkl.core.runtime.*;
 @TypeSystemReference(VmTypes.class)
 public abstract class PklRootNode extends RootNode {
   private final boolean propagateTypeMismatchExceptions;
+
+  static {
+    // Eagerly init the VmStackOverflowException class.
+    // Otherwise, it's possible that `new VmStackOverflowException(e)` inside the catch block within
+    // `execute` can trigger another StackOverflowException during class loading for
+    // `VmStackOverflowException`.
+    var loader = PklRootNode.class.getClassLoader();
+    try {
+      Class.forName("org.pkl.core.runtime.VmStackOverflowException", true, loader);
+    } catch (ClassNotFoundException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
 
   protected PklRootNode(@Nullable VmLanguage language, FrameDescriptor descriptor) {
     this(language, descriptor, false);
