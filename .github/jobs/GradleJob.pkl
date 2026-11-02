@@ -65,6 +65,10 @@ fixed job {
       new Listing {
         "self-hosted"
         "macos"
+        // Currently have a bug where macOS runners have `cc` from XCode 26 toolchain but have
+        // default SDK set to 27.
+        // TODO remove me once this issue is fixed.
+        "tahoe"
         when (nightlyMacOS) {
           "nightly"
         }
