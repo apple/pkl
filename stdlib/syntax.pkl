@@ -38,8 +38,13 @@ class Parser {
   external function parseExpressionOrNull(source: String | Resource): Node?
 }
 
+/// A renderer for syntax tree [Node]s.
+abstract class SyntaxRenderer {
+  abstract function render(node: Node): String
+}
+
 /// Renders a [Node] back to Pkl source code, using the canonical Pkl formatter.
-class FormattingRenderer {
+class FormattingRenderer extends SyntaxRenderer {
   /// The grammar version to target.
   ///
   /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
@@ -55,9 +60,6 @@ class FormattingRenderer {
 /// on its own line and indented by two spaces.
 /// Nodes without children are rendered on a single line.
 ///
-/// Only [Node]s can be rendered. Rendering any other value throws an error.
-/// [converters] and [convertPropertyTransformers] have no effect.
-///
 /// Example:
 /// ```
 /// new SExpressionRenderer {}.renderValue(new Parser {}.parseExpression("1 + 2"))
@@ -66,9 +68,7 @@ class FormattingRenderer {
 /// //   (operator)
 /// //   (int_literal_expr))
 /// ```
-class SExpressionRenderer extends ValueRenderer {
-  extension = "sexp"
-
+class SExpressionRenderer extends SyntaxRenderer {
   /// Whether to render the [Node.text] of terminal nodes whose text is not implied by their
   /// [Node.type].
   ///
@@ -99,17 +99,8 @@ class SExpressionRenderer extends ValueRenderer {
       "doc_comment_line",
     )
 
-  /// Renders [value], which must be a [Node], followed by a newline.
-  function renderDocument(value: Any): String = renderValue(value) + "\n"
-
-  /// Renders [value], which must be a [Node].
-  function renderValue(value: Any): String =
-    if (value is Node)
-      renderIndented(value, "")
-    else
-      throw(
-        "Cannot render a value of type `\(value.getClass())` as an S-expression. Expected a `pkl.syntax#Node`."
-      )
+  /// Renders [value] as a S-expression.
+  function render(value: Node): String = renderIndented(value, "")
 
   local function renderIndented(node: Node, indent: String): String =
     if (node.children.isEmpty)

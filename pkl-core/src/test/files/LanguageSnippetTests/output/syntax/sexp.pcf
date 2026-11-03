@@ -17,12 +17,6 @@ facts {
   ["terminal text is escaped"] {
     true
   }
-  ["renderDocument adds a trailing newline"] {
-    true
-  }
-  ["rendering a non-node throws"] {
-    true
-  }
 }
 examples {
   ["module"] {

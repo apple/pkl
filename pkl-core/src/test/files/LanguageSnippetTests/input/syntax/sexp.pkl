@@ -1,7 +1,6 @@
 amends "../snippetTest.pkl"
 
 import "pkl:syntax"
-import "pkl:test"
 
 local renderer = new syntax.SExpressionRenderer {}
 local textRenderer = new syntax.SExpressionRenderer { renderTerminalText = true }
@@ -14,15 +13,15 @@ local function parseModule(source: String): syntax.Node =
 
 facts {
   ["terminal"] {
-    renderer.renderValue(parseExpr("5")) == "(int_literal_expr)"
+    renderer.render(parseExpr("5")) == "(int_literal_expr)"
   }
 
   ["terminal with text"] {
-    textRenderer.renderValue(parseExpr("5")) == #"(int_literal_expr "5")"#
+    textRenderer.render(parseExpr("5")) == #"(int_literal_expr "5")"#
   }
 
   ["nested nodes are indented"] {
-    renderer.renderValue(parseExpr("1 + 2"))
+    renderer.render(parseExpr("1 + 2"))
       == """
       (binary_op_expr
         (int_literal_expr)
@@ -32,7 +31,7 @@ facts {
   }
 
   ["nested nodes with terminal text"] {
-    textRenderer.renderValue(parseExpr("1 + 2"))
+    textRenderer.render(parseExpr("1 + 2"))
       == #"""
       (binary_op_expr
         (int_literal_expr "1")
@@ -42,7 +41,7 @@ facts {
   }
 
   ["keywords and punctuation are rendered without text"] {
-    textRenderer.renderValue(parseExpr("if (true) x else 0"))
+    textRenderer.render(parseExpr("if (true) x else 0"))
       == #"""
       (if_expr
         (if_header
@@ -62,7 +61,7 @@ facts {
   }
 
   ["terminal text is escaped"] {
-    textRenderer.renderValue(parseExpr(#""a \"b\"\n""#))
+    textRenderer.render(parseExpr(#""a \"b\"\n""#))
       == #"""
       (single_line_string_literal_expr
         (string_start "\"")
@@ -74,24 +73,16 @@ facts {
         (string_end "\""))
       """#
   }
-
-  ["renderDocument adds a trailing newline"] {
-    renderer.renderDocument(parseExpr("5")) == "(int_literal_expr)\n"
-  }
-
-  ["rendering a non-node throws"] {
-    test.catch(() -> renderer.renderValue(5)).contains("Expected a `pkl.syntax#Node`")
-  }
 }
 
 examples {
   ["module"] {
-    renderer.renderValue(parseModule("x = 1"))
-    textRenderer.renderValue(parseModule("x = 1"))
+    renderer.render(parseModule("x = 1"))
+    textRenderer.render(parseModule("x = 1"))
   }
 
   ["class"] {
-    renderer.renderValue(
+    renderer.render(
       parseModule(
         """
         class Bird {
