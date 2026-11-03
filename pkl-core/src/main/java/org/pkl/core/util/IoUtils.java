@@ -88,7 +88,6 @@ public final class IoUtils {
   private static final Pattern DOT_SEGMENT = Pattern.compile("\\.|%2[eE]");
   private static final Pattern DOT_DOT_SEGMENT = Pattern.compile("(?:\\.|%2[eE]){2}");
   private static final Pattern PATH_SEPARATOR = Pattern.compile("/|%2[fF]");
-  private static final Pattern WINDOWS_PATH_SEPARATOR = Pattern.compile("/|%2[fF]|%5[cC]");
 
   private IoUtils() {}
 
@@ -483,7 +482,7 @@ public final class IoUtils {
     if (assetPath == null || !assetPath.startsWith("/")) {
       return uri;
     }
-    var normalizedPath = normalizeRawPath(assetPath, true, isWindows());
+    var normalizedPath = normalizeRawPath(assetPath, true);
     if (normalizedPath.equals(uri.getRawFragment())) {
       return uri;
     }
@@ -512,7 +511,7 @@ public final class IoUtils {
       pathStart += 2 + (rawAuthority == null ? 0 : rawAuthority.length());
     }
     assert uriString.startsWith(rawPath, pathStart);
-    var normalizedPath = normalizeRawPath(rawPath, decodeSlash, isWindows());
+    var normalizedPath = normalizeRawPath(rawPath, decodeSlash);
     if (normalizedPath.equals(rawPath)) {
       return uri;
     }
@@ -552,13 +551,13 @@ public final class IoUtils {
    * <p>If {@code decodeSlash} is true, treats either {@code /} or {@code %2F} as the path
    * separator, and replaces {@code %2F} with {@code /}. Otherwise, {@code %2F} is kept as is.
    *
-   * <p>If {@code isWindows}, then {@code %5c} is also treated as a slash.
+   * <p>Don't need to treat {@code %5F} ({@code \}) as a slash on Windows; we reject any {@code \}
+   * as a path separator (see {@code org.pkl.core.module.ModuleKeys.File#resolve}).
    */
-  static String normalizeRawPath(String rawPath, boolean decodeSlash, boolean isWindows) {
+  static String normalizeRawPath(String rawPath, boolean decodeSlash) {
     var isAbsolute = rawPath.startsWith("/");
     var rawSegments = (isAbsolute ? rawPath.substring(1) : rawPath);
-    var separator = isWindows ? WINDOWS_PATH_SEPARATOR : PATH_SEPARATOR;
-    var segments = decodeSlash ? separator.split(rawSegments, -1) : rawSegments.split("/", -1);
+    var segments = decodeSlash ? PATH_SEPARATOR.split(rawSegments, -1) : rawSegments.split("/", -1);
     var result = new ArrayList<String>(segments.length);
     for (var i = 0; i < segments.length; i++) {
       var segment = segments[i];
