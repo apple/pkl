@@ -3364,6 +3364,7 @@ The value will not have property `isPredatory = true` as the `default` property 
 <3> Assigning a `new` explicitly-typed value to a `Mapping` entry.
 The value will not have property `isPredatory = true` as the `default` property of the `Mapping` is not used.
 
+[[implicitly-typed-new]]
 ==== Implicitly Typed `new`
 
 When using the implicitly typed `new` invocation, there is no explicit parent value to amend.

@@ -1,7 +1,7 @@
 = Pkl 0.33 Release Notes
 :version: 0.33
 :version-minor: 0.33.0
-:release-date: November 4th, 2027
+:release-date: November 4th, 2026
 :version-next: 0.34
 :version-next-date: February 2027
 
@@ -9,7 +9,7 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
-[#generic-methods]
+[[generic-methods]]
 === Generic Methods
 
 Support for generic methods has been greatly expanded (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940]).
@@ -181,7 +181,7 @@ The Pkl CLI can now profile where an evaluation spends its CPU time (https://git
 Profiling is enabled by passing `--profile-cpu-output`, which sets the file to write the profile to.
 The profile is written in https://github.com/google/pprof[pprof] format, so it can be explored with any tool that reads it, such as `go tool pprof`.
 
-[source,shell]
+[source,shell,opts=novalidate]
 ----
 $ pkl eval --profile-cpu-output profile.pb.gz myConfig.pkl
 $ go tool pprof -http=:8080 profile.pb.gz
@@ -233,33 +233,32 @@ The `this` type has also been <<this-adoption,adopted in the standard library>>.
 
 To read more about the design, see https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0029-self-type.adoc[SPICE-0029].
 
-==== Deprecation of the `module` type in const scopes
-
-The `module` type may behave incorrectly or in undefined ways when it is used in a _const_ scope.
-Using the `module` type in these locations now emits a deprecation warning, and will become an error in a future release.
-
-To migrate, replace the `module` type with `this`, or import the current module and use the resulting module type.
-
 === Better `new {}` inference
 
-The type of an implicitly typed `new {}` expression can now be inferred from the parameter type of a method being called (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]), and from the type annotation of a `let` binding (https://github.com/apple/pkl/pull/1824[#1824]).
+An xref:language-reference:index.adoc#implicitly-typed-new[implicitly typed `new {}` expression] can now correctly infer its parent in more positions (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1824[#1824], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]).
+
+A `new {}` expression will infer the parent to amend.
+In Pkl 0.33, using `new {}` in the following positions will correctly infer its parent:
+
+* Method arguments
+* Let bindings
 
 [source,pkl]
 ----
-class Person {
+class Bird {
   name: String
 }
 
-function greet(person: Person): String = "Hello, \(person.name)"
+function greet(bird: Bird): String = "Hello, \(bird.name)"
 
 greeting1 = greet(new { name = "Pigeon" }) // <1>
 
 greeting2 =
-  let (person: Person = new { name = "Parrot" }) // <2>
-    greet(person)
+  let (bird: Bird = new { name = "Parrot" }) // <2>
+    greet(bird)
 ----
-<1> The argument is inferred to be a `Person`.
-<2> The `let` binding is inferred to be a `Person`.
+<1> The argument is inferred to be a `Bird`.
+<2> The `let` binding is inferred to be a `Bird`.
 
 Inference is not available where the parameter type is not known ahead of time.
 Additionally, it cannot be used for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
@@ -363,11 +362,13 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 ==== `pkl:base`
 
+
 * New property: link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`]
 * Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
 [[this-adoption]]
-* pkldoc:Any.getClass()[] now returns `Class<this>`
-* pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) \-> Result`
+* Properties refined with `this` type
+** pkldoc:Any.getClass()[] now returns `Class<this>`
+** pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) \-> Result`
 
 ==== `pkl:ref`
 
@@ -398,10 +399,10 @@ A `Class` value typechecked against `Class<T>` must be a subclass of `T` (https:
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
-=== Standard library `external` module properties are now marked `const`
+=== More standard library properties marked `const`
 
-Previously, module properties in `pkl:math` and `pkl:release` could be overriden by amending the module.
-Doing this makes little sense; these value are constants and overriding them by amending their module would be odd.
+Previously, module properties in `pkl:math` and `pkl:release` could be overridden by amending the module.
+Doing this makes little sense; these values are constants and overriding them by amending their module would be odd.
 These properties are now marked `const` (https://github.com/apple/pkl/pull/1864[#1864]).
 
 This is a breaking change for code that looks like this:
@@ -513,7 +514,7 @@ This purposefully introduces an ambiguity to the grammar: the following expressi
 foo < Int > (5)
 ----
 
-To resolve such ambiguities, such code is preferrably parsed as a generic method call.
+To resolve such ambiguities, such code is preferably parsed as a generic method call.
 
 This contrived example is nonsensical today, because it is an error to compare a boolean.
 However, there are times when such code might be written in a well-formed way, for example:
@@ -546,7 +547,7 @@ Previously, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
 Now, it is caught, and `catch()` returns its message.
 
-=== Abstract methods must be implemented in non-abstract classes/modules
+=== Abstract methods must be implemented in extending non-abstract classes/modules
 
 When extending an abstract class or module, it is now an error if any abstract methods are not implemented.
 
@@ -563,6 +564,48 @@ class Swallow extends Bird {
 }
 ----
 
+=== Removal of `module` type in const scopes
+
+The `module` type should no longer be used inside typealiases, class bodies, annotation bodies, and `const` scopes.
+Such usages will emit a deprecation warning, and will become a full error in a future release (https://github.com/apple/pkl/pull/1708[#1708]).
+
+The `module` type is a self-type, which refers to the `this` of the module.
+When a module is extended, the `module` type refers to the extending module.
+On the other hand, the definition of classes and typealiases cannot be changed by an extending module.
+
+The following snippet is misleading, because the module property `friend` _is_ a self-type, whereas class property `Feature.animal` is not.
+
+.Bird.pkl
+[source,pkl]
+----
+open module Bird
+
+friend: module? // <1>
+
+class Feature {
+  animal: module? // <2>
+}
+----
+<1> Self-type
+<2> Not a self-type
+
+To have clearer semantics, the `module` type can no longer be used inside const scopes.
+
+In most cases, such code should be replaced with a self-import.
+
+.Bird.pkl
+[source,pkl]
+----
+open module Bird
+
+import "Bird.pkl" // <1>
+
+class Feature {
+  animal: Bird // <2>
+}
+----
+<1> Self-import to use `Bird` as a type
+
 === Protobuf module deprecated
 
 The `pkl:protobuf` module is deprecated without replacement, and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
@@ -570,7 +613,7 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 == Miscellaneous [small]#🐸#
 
 * The `abstract` modifier is now a no-op for properties. (https://github.com/apple/pkl/pull/1781[#1781]).
-* Absract method in non-abstract classes and modules are now rejected (https://github.com/apple/pkl/pull/1647[#1647], https://github.com/apple/pkl/pull/1780[#1780]).
+* Abstract methods in non-abstract classes and modules are now rejected (https://github.com/apple/pkl/pull/1647[#1647], https://github.com/apple/pkl/pull/1780[#1780]).
 * Enforce that non-abstract classes implement all abstract methods from superclasses (https://github.com/apple/pkl/pull/1785[#1785]).
 * Introduce a new internal representation for type metadata (https://github.com/apple/pkl/pull/1838[#1838]).
 * Improve error message when amending a property with no value set (https://github.com/apple/pkl/pull/1867[#1867]).
@@ -578,7 +621,7 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 * `String.toInt()` now supports all hexadecimal, octal, and binary formats (https://github.com/apple/pkl/pull/1808[#1808]).
 * Handle conditional pluralization in error message (https://github.com/apple/pkl/pull/1848[#1848]).
 * Avoid using Java `Object.toString()` to present language-facing string representations (https://github.com/apple/pkl/pull/1850[#1850]).
-* Unify internal construction of objects (https://github.com/apple/pkl/pull/1873[#1873]). 
+* Unify internal construction of objects (https://github.com/apple/pkl/pull/1873[#1873]).
 * Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (https://github.com/apple/pkl/pull/1900[#1900]).
 * Typed values are rendered with more helpful type names in error messages and `Any.toString()` (https://github.com/apple/pkl/pull/1412[#1412]).
 * Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (https://github.com/apple/pkl/pull/1897[#1897]).
@@ -597,9 +640,9 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 * Improve performance of parent property and subscript access (https://github.com/apple/pkl/pull/1853[#1853]).
 * Improve performance of typechecking (https://github.com/apple/pkl/pull/1871[#1871]).
 * Improve performance of string literal union types in more cases (https://github.com/apple/pkl/pull/1875[#1875]).
+* Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869]).
 * Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]). Thank you to https://github.com/odenix[@odenix] for their contributions to this feature!
 * Fix some partial evaluation issues in the GraalVM compiler (https://github.com/apple/pkl/pull/1944[#1944]).
-* Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869])
 
 == Bug Fixes [small]#🐜#
 
@@ -637,8 +680,8 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* https://github.com/aashish254[@aashish254]
 * https://github.com/AAGAM17[@AAGAM17]
+* https://github.com/aashish254[@aashish254]
 * https://github.com/ayashjorden[@ayashjorden]
 * https://github.com/bioball[@bioball]
 * https://github.com/Carpe-Wang[@Carpe-Wang]
