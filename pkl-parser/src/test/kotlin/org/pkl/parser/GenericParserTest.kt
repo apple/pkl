@@ -45,4 +45,15 @@ class GenericParserTest {
     // 1 second should still catch if we see exponential regressions
     assertTimeoutPreemptively(Duration.ofSeconds(1)) { GenericParser().parseModule(code) }
   }
+
+  @Test
+  fun `parse colon seperator correctly`() {
+    val code = """
+    result = new Listing {
+      a;
+      (b) { c = 1 }
+    }
+    """.trimIndent()
+    GenericParser().parseExpressionInput(code)
+  }
 }

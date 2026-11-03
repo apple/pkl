@@ -1566,7 +1566,7 @@ class GenericParserImpl {
   }
 
   private boolean noSemicolonInbetween() {
-    return tokens.get(cursor - 1).token != Token.SEMICOLON;
+    return tokens.get(cursor).token != Token.SEMICOLON;
   }
 
   private void backtrackTo(int point) {
