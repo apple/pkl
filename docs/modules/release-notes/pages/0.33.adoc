@@ -12,12 +12,12 @@ include::partial$intro.adoc[]
 [#generic-methods]
 === Generic Methods
 
-Methods can now declare type parameters, and callers can provide type arguments explicitly after the method name (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940]).
+Support for generic methods has been greatly expanded (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940]).
 
-A "generic method" is a method that, in addition to accepting normal arguments, also accepts type arguments.
+A "generic method" is a method that accepts types as arguments.
 This is a powerful tool that allows writing business logic that works over a variety of types.
 
-For example, this code accepts two arguments; type argument `T`, and value argument `arg`.
+For example, this code accepts two arguments: type argument `T`, and value argument `arg`.
 
 [source,pkl]
 ----
@@ -27,7 +27,7 @@ function identity<T>(arg: T): T = arg
 Generic methods currently already exist in a limited sense:
 
 . Only the standard library can declare generic methods.
-. It is not possible to call a method with type arguments.
+. It is not possible to pass in type arguments when calling generic methods.
 
 In Pkl 0.33, both of these restrictions are lifted.
 
@@ -194,7 +194,7 @@ For more details, consult xref:pkl-cli:index.adoc#profile-cpu-output[the CLI doc
 
 === New type: `this`
 
-This release introduces the `this` type, a self type for use within modules and classes (https://github.com/apple/pkl/pull/1708[#1708]).
+The `this` keyword can now be used as a type (https://github.com/apple/pkl/pull/1708[#1708]).
 
 `this` refers to the type of the enclosing object.
 When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member.
@@ -270,7 +270,7 @@ It is an error for the parameter type to be `this` or `module`.
 
 Pkl now supports parsing `.netrc` files to configure HTTP Basic authentication headers (https://github.com/apple/pkl/pull/1817[#1817], https://github.com/apple/pkl/pull/1854[#1854]).
 
-A new method is introduced called `netRcHeaders` on class `pkl.EvaluatorSettings#Http`.
+A new method is introduced called `netRcHeaders()` on class `pkl.EvaluatorSettings#Http`.
 
 It can be used to read credentials directly from a local `.netrc` file and mapped to HTTP `Authorization` headers:
 
@@ -280,7 +280,7 @@ It can be used to read credentials directly from a local `.netrc` file and mappe
 amends "pkl:settings"
 
 http {
-  headers = netRcHeaders(read?("file:\(read("env:HOME"))/.netrc"))
+  headers = netRcHeaders(read("/Users/johnappleseed/.netrc"))
 }
 ----
 
@@ -367,17 +367,21 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 * Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
 [[this-adoption]]
 * pkldoc:Any.getClass()[] now returns `Class<this>`
-* pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) -> Result`
-* pkldoc:AbstractDomain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+* pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) \-> Result`
 
 ==== `pkl:ref`
 
 * Renamed class: `Domain` is now `AbstractDomain` (<<reference-changes,breaking change>>)
 * Changed method: `Reference()` now takes type arguments instead of a `Class` parameter (<<reference-changes,breaking change>>)
+* pkldoc:AbstractDomain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
 
 ==== `pkl:protobuf`
 
-* Module deprecated for removal in Pkl 0.34 (<<upcoming-breaking-changes,upcoming breaking change>>, https://github.com/apple/pkl/pull/1778[#1778]).
+* Module deprecated for removal in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
+
+==== `pkl:ref`
+
+* No longer considered experimental (TODO PR).
 
 == Breaking Changes [small]#💔#
 
@@ -400,7 +404,7 @@ If `T` does not resolve to a class type (i.e. it is a union type, nullable type,
 === Standard library `external` module properties are now marked `const`
 
 Previously, module properties in `pkl:math` and `pkl:release` could be overriden by amending the module.
-Doing this makes little sense—these value are constants and overriding them by amending their module would be odd.
+Doing this makes little sense; these value are constants and overriding them by amending their module would be odd.
 These properties are now marked `const` (https://github.com/apple/pkl/pull/1864[#1864]).
 
 This is a breaking change for code that looks like this:
@@ -507,13 +511,12 @@ To support <<generic-methods,generic method calls>>, the syntax for Pkl has chan
 
 This purposefully introduces an ambiguity to the grammar: the following expression can be parsed as either a generic method call, or as nested comparison expressions:
 
-[source,pkl]
+[source,{pkl-expr}]
 ----
 foo < Int > (5)
 ----
 
 To resolve such ambiguities, such code is preferrably parsed as a generic method call.
-However, this means that the semantic meaning of such existing code will change.
 
 This contrived example is nonsensical today, because it is an error to compare a boolean.
 However, there are times when such code might be written in a well-formed way, for example:
@@ -526,15 +529,16 @@ res = foo(
 )
 ----
 
-In Pkl 0.33, this above snippet will parse `bar` as a generic method call.
+In Pkl 0.33, this above snippet will interpret `bar` as a generic method call.
 To restore the old meaning, wrap the left-hand side with parentheses:
 
-[source,pkl]
+[source,diff]
 ----
-res = foo(
-  (bar) < baz,
-  qux > (corge + 3)
-)
+ res = foo(
+-  bar < baz,
++  (bar) < baz,
+   qux > (corge + 3)
+ )
 ----
 
 === `test.catch()` and `test.catchOrNull()` force their result
@@ -545,10 +549,26 @@ Previously, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
 Now, it is caught, and `catch()` returns its message.
 
-[[upcoming-breaking-changes]]
-=== Upcoming breaking changes
+=== Abstract methods must be implemented in non-abstract classes/modules
 
-The `pkl:protobuf` module is deprecated and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
+When extending an abstract class or module, it is now an error if any abstract methods are not implemented.
+
+In the following snippet, class `Swallow` is invalid because it does not implement `canCarry`:
+
+[source,pkl]
+----
+abstract class Bird {
+  abstract function canCarry(fruit: Fruit): Boolean
+}
+
+class Swallow extends Bird {
+  type: "European" | "African"
+}
+----
+
+=== Protobuf module deprecated
+
+The `pkl:protobuf` module is deprecated without replacement, and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
 
 == Miscellaneous [small]#🐸#
 
