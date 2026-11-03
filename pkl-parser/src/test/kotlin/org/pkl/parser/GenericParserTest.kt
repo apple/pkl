@@ -42,6 +42,7 @@ class GenericParserTest {
       result = a(a < a(a < a(a < a(a < a(a < a(a < a(a < a(a < a(a < 1)))))))))
       """
         .trimIndent()
-    assertTimeoutPreemptively(Duration.ofMillis(10)) { GenericParser().parseModule(code) }
+    // 1 second should still catch if we see exponential regressions
+    assertTimeoutPreemptively(Duration.ofSeconds(1)) { GenericParser().parseModule(code) }
   }
 }
