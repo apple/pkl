@@ -558,71 +558,44 @@ class IoUtilsTest {
 
   @Test
   fun `normalizeRawPath removes dot segments`() {
-    for (isWindows in listOf(false, true)) {
-      for (decodeSlash in listOf(false, true)) {
-        fun normalize(path: String) = IoUtils.normalizeRawPath(path, decodeSlash, isWindows)
-        assertThat(normalize("/a/b/../c")).isEqualTo("/a/c")
-        assertThat(normalize("/a/%2e%2E/b")).isEqualTo("/b")
-        assertThat(normalize("/a/./b/.")).isEqualTo("/a/b/")
-        assertThat(normalize("/a/b/..")).isEqualTo("/a/")
-        assertThat(normalize("/../x")).isEqualTo("/../x")
-        assertThat(normalize("/a/../..")).isEqualTo("/../")
-        assertThat(normalize("//etc/../x")).isEqualTo("//x")
-        assertThat(normalize("")).isEqualTo("")
-        assertThat(normalize("/")).isEqualTo("/")
-      }
+    for (decodeSlash in listOf(false, true)) {
+      fun normalize(path: String) = IoUtils.normalizeRawPath(path, decodeSlash)
+      assertThat(normalize("/a/b/../c")).isEqualTo("/a/c")
+      assertThat(normalize("/a/%2e%2E/b")).isEqualTo("/b")
+      assertThat(normalize("/a/./b/.")).isEqualTo("/a/b/")
+      assertThat(normalize("/a/b/..")).isEqualTo("/a/")
+      assertThat(normalize("/../x")).isEqualTo("/../x")
+      assertThat(normalize("/a/../..")).isEqualTo("/../")
+      assertThat(normalize("//etc/../x")).isEqualTo("//x")
+      assertThat(normalize("")).isEqualTo("")
+      assertThat(normalize("/")).isEqualTo("/")
     }
   }
 
   @Test
   fun `normalizeRawPath treats 2f as a path separator only if decodeSlash`() {
-    for (isWindows in listOf(false, true)) {
-      assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", true, isWindows)).isEqualTo("/b")
-      assertThat(IoUtils.normalizeRawPath("/a%2F..%2Fb", true, isWindows)).isEqualTo("/b")
-      assertThat(IoUtils.normalizeRawPath("/a%2fb", true, isWindows)).isEqualTo("/a/b")
-      assertThat(IoUtils.normalizeRawPath("/a/.%2f./b", true, isWindows)).isEqualTo("/a/b")
-      assertThat(IoUtils.normalizeRawPath("/%2f..%2fx", true, isWindows)).isEqualTo("/x")
-      // `%2F` is distinct from `/` if not decodeSlash
-      assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", false, isWindows)).isEqualTo("/a%2f..%2fb")
-      assertThat(IoUtils.normalizeRawPath("/a%2fb/./c", false, isWindows)).isEqualTo("/a%2fb/c")
-    }
+    assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", true)).isEqualTo("/b")
+    assertThat(IoUtils.normalizeRawPath("/a%2F..%2Fb", true)).isEqualTo("/b")
+    assertThat(IoUtils.normalizeRawPath("/a%2fb", true)).isEqualTo("/a/b")
+    assertThat(IoUtils.normalizeRawPath("/a/.%2f./b", true)).isEqualTo("/a/b")
+    assertThat(IoUtils.normalizeRawPath("/%2f..%2fx", true)).isEqualTo("/x")
+    // `%2F` is distinct from `/` if not decodeSlash
+    assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", false)).isEqualTo("/a%2f..%2fb")
+    assertThat(IoUtils.normalizeRawPath("/a%2fb/./c", false)).isEqualTo("/a%2fb/c")
   }
 
   @Test
   fun `normalizeRawPath does not decode 2f twice`() {
-    assertThat(IoUtils.normalizeRawPath("/a%252f..%2fb", true, false)).isEqualTo("/a%252f../b")
-    assertThat(IoUtils.normalizeRawPath("/a%255c..%5cb", true, true)).isEqualTo("/a%255c../b")
-  }
-
-  @Test
-  fun `normalizeRawPath treats 5c as a path separator only on Windows`() {
-    // on Windows, `\` is a path separator
-    assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", true, true)).isEqualTo("/b")
-    assertThat(IoUtils.normalizeRawPath("/a%5C..%5Cb", true, true)).isEqualTo("/b")
-    assertThat(IoUtils.normalizeRawPath("/a%5cb", true, true)).isEqualTo("/a/b")
-    assertThat(IoUtils.normalizeRawPath("/a/..%5c..%5cb", true, true)).isEqualTo("/../b")
-    assertThat(IoUtils.normalizeRawPath("/a%5c.%2f..%2fb", true, true)).isEqualTo("/b")
-    // on other platforms, `\` is a regular file name character
-    assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", true, false)).isEqualTo("/a%5c..%5cb")
-    assertThat(IoUtils.normalizeRawPath("/a%5C..%5Cb/./c", true, false)).isEqualTo("/a%5C..%5Cb/c")
-  }
-
-  @Test
-  fun `normalizeRawPath does not treat 5c as a path separator if not decodeSlash`() {
-    for (isWindows in listOf(false, true)) {
-      assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", false, isWindows)).isEqualTo("/a%5c..%5cb")
-    }
+    assertThat(IoUtils.normalizeRawPath("/a%252f..%2fb", true)).isEqualTo("/a%252f../b")
   }
 
   @Test
   fun `normalizeRawPath is idempotent`() {
-    for (isWindows in listOf(false, true)) {
-      for (decodeSlash in listOf(false, true)) {
-        for (path in
-          listOf("/a/../b", "/a%2f..%2fb", "/a%5c..%5cb", "/a/.%5c./b", "//x/../y", "/../../a")) {
-          val once = IoUtils.normalizeRawPath(path, decodeSlash, isWindows)
-          assertThat(IoUtils.normalizeRawPath(once, decodeSlash, isWindows)).isEqualTo(once)
-        }
+    for (decodeSlash in listOf(false, true)) {
+      for (path in
+        listOf("/a/../b", "/a%2f..%2fb", "/a%5c..%5cb", "/a/.%5c./b", "//x/../y", "/../../a")) {
+        val once = IoUtils.normalizeRawPath(path, decodeSlash)
+        assertThat(IoUtils.normalizeRawPath(once, decodeSlash)).isEqualTo(once)
       }
     }
   }
