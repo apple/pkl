@@ -35,7 +35,7 @@ module pkl.ref
 ///
 /// Example:
 /// ```
-/// myReference: Reference<MyDomain, Listing<String>> = Reference::<MyDomain, Listing<String>>(domain, data)
+/// myReference: Reference<MyDomain, Listing<String>> = Reference<MyDomain, Listing<String>>(domain, data)
 /// ```
 external const function Reference<Domain, Type>(
   domain: Domain(this is AbstractDomain),
@@ -153,7 +153,7 @@ external const function Reference<Domain, Type>(
 ///   properties: Mapping<String, String>
 /// }
 ///
-/// local outputs: FooReference<Outputs> = ref.Reference::<Foo, Outputs>(new Foo {}, "outputs")
+/// local outputs: FooReference<Outputs> = ref.Reference<Foo, Outputs>(new Foo {}, "outputs")
 ///
 /// // Dot access; gives a `Reference<Foo, String>`
 /// myFile = outputs.file

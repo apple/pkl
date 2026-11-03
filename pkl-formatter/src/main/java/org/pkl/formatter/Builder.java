@@ -261,7 +261,7 @@ final class Builder {
    * {@code foo.bar.baz(
    *   new { qux = 1 }
    * )}
-   * {@code foo.bar.baz::<
+   * {@code foo.bar.baz<
    *   Quux
    * >(
    *   new { qux = 1 }
@@ -368,7 +368,7 @@ final class Builder {
     var argListIdx = -1;
     for (var i = 0; i < lastNode.children.size(); i++) {
       var node = lastNode.children.get(i);
-      if (node.type == NodeType.DCOLON) {
+      if (node.type == NodeType.TYPE_ARGUMENT_LIST) {
         typeArgListIdx = i;
         continue;
       }

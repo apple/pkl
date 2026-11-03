@@ -930,7 +930,7 @@ class EvaluatorTest {
         evaluator.evaluateOutputText(
           text(
             """
-            res = List(1, 2, 3).map::<String>((it) -> it + 1)
+            res = List(1, 2, 3).map<String>((it) -> it + 1)
             """
               .trimIndent()
           )

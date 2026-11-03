@@ -18,6 +18,8 @@ package org.pkl.core.runtime;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
@@ -30,7 +32,8 @@ public final class MemberLookupSuggestions {
   // names that differ in their first character similar
   private static final double SIMILARITY_THRESHOLD = 0.77;
 
-  private final VmObjectLike composite;
+  private final VmObjectLike receiver;
+  private final VmObjectLike owner;
   private final Object memberName;
   // -1 for property, #arguments for function
   private final int memberArity;
@@ -39,8 +42,13 @@ public final class MemberLookupSuggestions {
   private final Set<Candidate> candidates = new LinkedHashSet<>();
 
   public MemberLookupSuggestions(
-      VmObjectLike composite, Object memberName, int memberArity, Set<Candidate.Kind> memberKinds) {
-    this.composite = composite;
+      VmObjectLike receiver,
+      VmObjectLike owner,
+      Object memberName,
+      int memberArity,
+      Set<Kind> memberKinds) {
+    this.receiver = receiver;
+    this.owner = owner;
     this.memberName = memberName;
     this.memberArity = memberArity;
     this.memberKinds = memberKinds;
@@ -49,45 +57,76 @@ public final class MemberLookupSuggestions {
   // use same search order as in member lookup,
   // so that in case of members with same name,
   // (only) the correct one is suggested
-  public List<Candidate> find(boolean isImplicitReceiver) {
+  public List<Candidate> find(MemberLookupMode memberLookupMode, @Nullable PklNode receiverNode) {
     candidates.clear();
-
-    if (isImplicitReceiver) {
-      for (var curr = composite; curr != null; curr = curr.getEnclosingOwner()) {
-        addPropertyCandidates(curr, true);
+    if (memberLookupMode.isImplicitReceiver()) {
+      for (var curr = receiver; curr != null; curr = curr.getEnclosingOwner()) {
+        addPropertyCandidates(curr, true, memberLookupMode, receiverNode);
         if (curr.isPrototype()) {
-          addMethodCandidates(curr.getVmClass().getDeclaredMethods(), true);
+          addMethodCandidates(
+              curr.getVmClass().getDeclaredMethods(), true, memberLookupMode, receiverNode);
         }
       }
-      addPropertyCandidates(BaseModule.getModule(), false);
-      addMethodCandidates(BaseModule.getModule().getVmClass().getMethods(), false);
+      // if we resolved to implicit `this` at parse time, try searching the lexical scope of the
+      // owner too.
+      for (var curr = owner; curr != null; curr = curr.getEnclosingOwner()) {
+        addPropertyCandidates(curr, true, memberLookupMode, receiverNode);
+        if (curr.isPrototype()) {
+          addMethodCandidates(
+              curr.getVmClass().getDeclaredMethods(), true, memberLookupMode, receiverNode);
+        }
+      }
+      addPropertyCandidates(BaseModule.getModule(), false, memberLookupMode, receiverNode);
+      addMethodCandidates(
+          BaseModule.getModule().getVmClass().getMethods(), false, memberLookupMode, receiverNode);
     }
 
-    for (var curr = composite; curr != null; curr = curr.getParent()) {
-      addPropertyCandidates(curr, false);
+    for (var curr = receiver; curr != null; curr = curr.getParent()) {
+      addPropertyCandidates(curr, false, memberLookupMode, receiverNode);
     }
-    addMethodCandidates(composite.getVmClass().getMethods(), false);
+    addMethodCandidates(receiver.getVmClass().getMethods(), false, memberLookupMode, receiverNode);
 
     return candidates.stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList());
   }
 
-  private void addPropertyCandidates(VmObjectLike object, boolean includeLocal) {
+  private void addPropertyCandidates(
+      VmObjectLike object,
+      boolean includeLocal,
+      MemberLookupMode memberLookupMode,
+      @Nullable PklNode receiverNode) {
     if (!memberKinds.contains(Kind.PROPERTY)) return;
 
     for (var member : EconomicMaps.getValues(object.getMembers())) {
-      addIfSimilar(member, Candidate.Kind.PROPERTY, -1, includeLocal);
+      addIfSimilar(
+          member, Candidate.Kind.PROPERTY, -1, includeLocal, memberLookupMode, receiverNode);
     }
   }
 
-  private void addMethodCandidates(Iterable<ClassMethod> methods, boolean includeLocal) {
+  private void addMethodCandidates(
+      Iterable<ClassMethod> methods,
+      boolean includeLocal,
+      MemberLookupMode memberLookupMode,
+      @Nullable PklNode receiverNode) {
     if (!memberKinds.contains(Kind.METHOD)) return;
 
     for (var method : methods) {
-      addIfSimilar(method, Candidate.Kind.METHOD, method.getParameterCount(), includeLocal);
+      addIfSimilar(
+          method,
+          Candidate.Kind.METHOD,
+          method.getParameterCount(),
+          includeLocal,
+          memberLookupMode,
+          receiverNode);
     }
   }
 
-  private void addIfSimilar(Member member, Candidate.Kind kind, int arity, boolean includeLocal) {
+  private void addIfSimilar(
+      Member member,
+      Kind kind,
+      int arity,
+      boolean includeLocal,
+      MemberLookupMode memberLookupMode,
+      @Nullable PklNode receiverNode) {
 
     var memberName = member.getNameOrNull();
     if (memberName == null) return;
@@ -99,15 +138,26 @@ public final class MemberLookupSuggestions {
         var arityDifference = Math.abs(arity - memberArity);
         var signature = member.getCallSignature();
         assert signature != null;
+        var nameWithReceiver = memberName.toString();
+        // `receiverNode` is not necessarily null; we use `MemberLookupMode.EXPLICIT_RECEIVER`
+        // in places that are not property/method calls, e.g.
+        // `org.pkl.core.ast.expression.literal.SpecializedObjectLiteralNode.checkIsValidTypedAmendment`
+        if (memberLookupMode == MemberLookupMode.EXPLICIT_RECEIVER && receiverNode != null) {
+          nameWithReceiver =
+              receiverNode.getSourceSection().getCharacters().toString() + "." + memberName;
+        } else if (memberLookupMode == MemberLookupMode.EXPLICIT_SUPER) {
+          nameWithReceiver = "super." + memberName;
+        }
         if (nameSimilarity < 1 || memberArity == 0) {
           candidates.add(
               new Candidate(
-                  kind, memberName.toString(), signature, nameSimilarity, arityDifference));
+                  kind, memberName, nameWithReceiver, signature, nameSimilarity, arityDifference));
         } else if (nameSimilarity == 1 && memberArity >= 0) {
           candidates.add(
               new Candidate(
                   kind,
-                  memberName.toString(),
+                  memberName,
+                  nameWithReceiver,
                   signature + ".apply(...)",
                   nameSimilarity,
                   arityDifference));
@@ -116,22 +166,14 @@ public final class MemberLookupSuggestions {
     }
   }
 
-  public static final class Candidate implements Comparable<Candidate> {
-    private final Kind kind;
-    private final String name;
-    private final String callSignature;
-    private final double nameSimilarity;
-    private final int arityDifference;
-
-    public Candidate(
-        Kind kind, String name, String callSignature, double nameSimilarity, int arityDifference) {
-      this.kind = kind;
-      this.name = name;
-      this.callSignature = callSignature;
-      this.nameSimilarity = nameSimilarity;
-      this.arityDifference = arityDifference;
-    }
-
+  public record Candidate(
+      Kind kind,
+      Identifier memberName,
+      String memberNameWithReceiver,
+      String callSignature,
+      double nameSimilarity,
+      int arityDifference)
+      implements Comparable<Candidate> {
     // note: not consistent with equals (hence cannot use TreeSet)
     @Override
     public int compareTo(Candidate other) {
@@ -146,12 +188,12 @@ public final class MemberLookupSuggestions {
       if (this == obj) return true;
       if (!(obj instanceof Candidate other)) return false;
       // member lookup is name rather than signature based (but distinguishes kind)
-      return kind == other.kind && name.equals(other.name);
+      return kind == other.kind && memberNameWithReceiver.equals(other.memberNameWithReceiver);
     }
 
     @Override
     public int hashCode() {
-      return kind.hashCode() * 31 + name.hashCode();
+      return kind.hashCode() * 31 + memberNameWithReceiver.hashCode();
     }
 
     @Override

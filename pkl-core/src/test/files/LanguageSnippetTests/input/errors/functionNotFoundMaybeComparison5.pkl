@@ -1,0 +1,19 @@
+fooz = true
+
+fool = false
+
+class Foo {
+  prop1: Int
+  prop2: Int
+  prop3: Int
+  qux: Boolean
+}
+
+res {
+  // exercise super long receivers
+  new Foo {
+    prop1 = 1
+    prop2 = 2
+    prop3 = 3
+  }.qux < bar > (fool)
+}

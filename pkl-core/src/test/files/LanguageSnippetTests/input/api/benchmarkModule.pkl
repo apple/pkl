@@ -30,8 +30,8 @@ facts {
         isVerbose = false
       }.run()
 
-    run::<Int>().iterations == 3
-    run::<String>().iterations == 3
+    run<Int>().iterations == 3
+    run<String>().iterations == 3
   }
   
   ["run output benchmark (in verbose mode)"] {

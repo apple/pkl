@@ -85,6 +85,49 @@ public final class Lexer {
     return new String(source, offset, size);
   }
 
+  /** Captures the lexer's current state so that it can later be rewound via {@link #restore}. */
+  public Snapshot snapshot() {
+    var scopes = new ArrayDeque<InterpolationScope>();
+    // `ArrayDeque.push` adds to the front, so iterate in reverse to preserve order.
+    var it = interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      scopes.push(it.next().copy());
+    }
+    return new Snapshot(
+        cursor,
+        sCursor,
+        line,
+        sLine,
+        col,
+        sCol,
+        lookahead,
+        state,
+        scopes,
+        stringEnded,
+        isEscape,
+        newLinesBetween);
+  }
+
+  public void restore(Snapshot snapshot) {
+    cursor = snapshot.cursor;
+    sCursor = snapshot.sCursor;
+    line = snapshot.line;
+    sLine = snapshot.sLine;
+    col = snapshot.col;
+    sCol = snapshot.sCol;
+    lookahead = snapshot.lookahead;
+    state = snapshot.state;
+    interpolationStack.clear();
+    // copy again so that the snapshot can be restored more than once
+    var it = snapshot.interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      interpolationStack.push(it.next().copy());
+    }
+    stringEnded = snapshot.stringEnded;
+    isEscape = snapshot.isEscape;
+    newLinesBetween = snapshot.newLinesBetween;
+  }
+
   public Token next() {
     sCursor = cursor;
     sLine = line;
@@ -137,12 +180,7 @@ public final class Lexer {
       case '}' -> Token.RBRACE;
       case ',' -> Token.COMMA;
       case '@' -> Token.AT;
-      case ':' -> {
-        if (lookahead == ':') {
-          nextChar();
-          yield Token.DCOLON;
-        } else yield Token.COLON;
-      }
+      case ':' -> Token.COLON;
       case '+' -> Token.PLUS;
       case '%' -> Token.MOD;
       case '[' -> {
@@ -864,7 +902,27 @@ public final class Lexer {
       this.quotes = quotes;
       this.pounds = pounds;
     }
+
+    InterpolationScope copy() {
+      var res = new InterpolationScope(quotes, pounds);
+      res.parens = parens;
+      return res;
+    }
   }
+
+  public record Snapshot(
+      int cursor,
+      int sCursor,
+      int line,
+      int sLine,
+      int col,
+      int sCol,
+      int lookahead,
+      State state,
+      Deque<InterpolationScope> interpolationStack,
+      boolean stringEnded,
+      boolean isEscape,
+      int newLinesBetween) {}
 
   private enum State {
     DEFAULT,

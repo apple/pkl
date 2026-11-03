@@ -4,4 +4,4 @@ function bar<T>() = new {
   prop = foo as T
 }
 
-res = bar::<Duration>()
+res = bar<Duration>()

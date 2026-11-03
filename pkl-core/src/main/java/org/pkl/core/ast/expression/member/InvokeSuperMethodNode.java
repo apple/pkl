@@ -23,6 +23,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
@@ -84,7 +85,14 @@ public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
     var parent = owner.getParent();
     assert parent != null;
     throw exceptionBuilder()
-        .cannotFindMethod(parent, methodName, argumentNodes.length, false)
+        .cannotFindMethod(
+            parent,
+            VmUtils.getOwner(frame),
+            methodName,
+            argumentNodes.length,
+            MemberLookupMode.EXPLICIT_SUPER,
+            unresolvedTypeArgumentNodes != null,
+            null)
         .build();
   }
 }

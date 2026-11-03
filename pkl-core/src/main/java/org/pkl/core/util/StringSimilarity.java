@@ -21,7 +21,7 @@ import java.util.Arrays;
 /**
  * The Jaro–Winkler distance metric is designed and best suited for short strings such as person
  * names, and to detect typos; it is (roughly) a variation of Damerau-Levenshtein, where the
- * substitution of 2 close characters is considered less important then the substitution of 2
+ * substitution of 2 close characters is considered less important than the substitution of 2
  * characters that a far from each other. Jaro-Winkler was developed in the area of record linkage
  * (duplicate detection) (Winkler, 1990). It returns a value in the interval [0.0, 1.0]. The
  * distance is computed as 1 - Jaro-Winkler similarity.
