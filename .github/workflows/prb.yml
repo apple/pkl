@@ -290,7 +290,7 @@ jobs:
         mkdir -p ~/staticdeps/
 
         ZLIB_VERSION="1.2.13"
-        MUSL_VERSION="1.2.5"
+        MUSL_VERSION="9fa28ece75d8a2191de7c5bb53bed224c5947417" # v1.2.6
 
         # install zlib
         if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -322,13 +322,28 @@ jobs:
           rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
         fi
 
+        declare -a MUSL_REPOS=(
+          https://git.musl-libc.org/git/musl
+          https://gogs.librecmc.org/OWEALS/musl.git
+        )
+
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
           # Download musl git repo
           cd /tmp
-          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          for repo in "${MUSL_REPOS[@]}"; do
+            if git clone --depth 1 --revision "$MUSL_VERSION" "$repo" /tmp/musl; then
+              break
+            else
+              rm -rf /tmp/musl
+            fi
+          done
           cd /tmp/musl
-          git checkout "v$MUSL_VERSION"
+          
+          for patch in $GITHUB_WORKSPACE/.github/scripts/musl-*.patch; do
+            echo "musl-${MUSL_VERSION}: applying $patch..."
+            cat "$patch" | git apply
+          done
           
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
@@ -623,7 +638,7 @@ jobs:
         mkdir -p ~/staticdeps/
 
         ZLIB_VERSION="1.2.13"
-        MUSL_VERSION="1.2.5"
+        MUSL_VERSION="9fa28ece75d8a2191de7c5bb53bed224c5947417" # v1.2.6
 
         # install zlib
         if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -655,13 +670,28 @@ jobs:
           rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
         fi
 
+        declare -a MUSL_REPOS=(
+          https://git.musl-libc.org/git/musl
+          https://gogs.librecmc.org/OWEALS/musl.git
+        )
+
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
           # Download musl git repo
           cd /tmp
-          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          for repo in "${MUSL_REPOS[@]}"; do
+            if git clone --depth 1 --revision "$MUSL_VERSION" "$repo" /tmp/musl; then
+              break
+            else
+              rm -rf /tmp/musl
+            fi
+          done
           cd /tmp/musl
-          git checkout "v$MUSL_VERSION"
+          
+          for patch in $GITHUB_WORKSPACE/.github/scripts/musl-*.patch; do
+            echo "musl-${MUSL_VERSION}: applying $patch..."
+            cat "$patch" | git apply
+          done
           
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
@@ -956,7 +986,7 @@ jobs:
         mkdir -p ~/staticdeps/
 
         ZLIB_VERSION="1.2.13"
-        MUSL_VERSION="1.2.5"
+        MUSL_VERSION="9fa28ece75d8a2191de7c5bb53bed224c5947417" # v1.2.6
 
         # install zlib
         if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -988,13 +1018,28 @@ jobs:
           rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
         fi
 
+        declare -a MUSL_REPOS=(
+          https://git.musl-libc.org/git/musl
+          https://gogs.librecmc.org/OWEALS/musl.git
+        )
+
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
           # Download musl git repo
           cd /tmp
-          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          for repo in "${MUSL_REPOS[@]}"; do
+            if git clone --depth 1 --revision "$MUSL_VERSION" "$repo" /tmp/musl; then
+              break
+            else
+              rm -rf /tmp/musl
+            fi
+          done
           cd /tmp/musl
-          git checkout "v$MUSL_VERSION"
+          
+          for patch in $GITHUB_WORKSPACE/.github/scripts/musl-*.patch; do
+            echo "musl-${MUSL_VERSION}: applying $patch..."
+            cat "$patch" | git apply
+          done
           
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
