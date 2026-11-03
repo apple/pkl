@@ -1,7 +1,7 @@
 = Pkl 0.33 Release Notes
 :version: 0.33
 :version-minor: 0.33.0
-:release-date: XXX
+:release-date: November 4th, 2027
 :version-next: 0.34
 :version-next-date: February 2027
 
@@ -9,32 +9,53 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
+[#generic-methods]
 === Generic Methods
 
-Methods can now declare type parameters, and callers can provide type arguments explicitly after the method name (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940], https://github.com/apple/pkl-evolution/pull/35[SPICE-0032]).
+Methods can now declare type parameters, and callers can provide type arguments explicitly after the method name (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940]).
+
+A "generic method" is a method that, in addition to accepting normal arguments, also accepts type arguments.
+This is a powerful tool that allows writing business logic that works over a variety of types.
+
+For example, this code accepts two arguments; type argument `T`, and value argument `arg`.
 
 [source,pkl]
 ----
-class Pigeon {
-  name: String
-}
-
-function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
-  for (n in names) {
-    new { name = n }
-  }
-}
-
-pigeonFlock = makeFlock<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // a Listing of Pigeons
+function identity<T>(arg: T): T = arg
 ----
 
-Both class methods and `local` object methods can be generic.
+Generic methods currently already exist in a limited sense:
+
+. Only the standard library can declare generic methods.
+. It is not possible to call a method with type arguments.
+
+In Pkl 0.33, both of these restrictions are lifted.
+
+To pass type arguments into a generic method, add them with angle brackets:
+
+[source,pkl]
+----
+result = identity<String>("Hello, World!")
+----
+
+If type arguments are omitted entirely, it behaves as calling the method with the `unknown` type.
+The following two are logically identical:
+
+[source,pkl]
+----
+result = identity("Hello, World!")
+result2 = identity<unknown>("Hello, World!")
+----
+
+This is a <<parser-rule-change-for-comparison,breaking change>>: in some cases, code that parses as a comparison expression now parses as a method call.
 
 To read more about generic methods, consult the xref:language-reference:index.adoc#generic-methods[language reference].
 
+To learn more about the design of generic method calls, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0032-generic-methods.adoc[SPICE-0032].
+
 === New standard library module: `pkl:net`
 
-This release introduces a new standard library module, link:{uri-stdlib-netModule}[`pkl:net`], which brings native URL support to Pkl (https://github.com/apple/pkl/pull/1834[#1834]).
+A new standard library module is introduced called link:{uri-stdlib-netModule}[`pkl:net`], for working with network types (https://github.com/apple/pkl/pull/1834[#1834]).
 
 Its centerpiece is link:{uri-stdlib-net-Url}[`net.Url`], a URL as defined by https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
 A string is parsed with `net.Url()`, which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
@@ -106,7 +127,7 @@ The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,br
 
 === New standard library module: `pkl:syntax`
 
-This release introduces a new standard library module, link:{uri-stdlib-syntaxModule}[`pkl:syntax`], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
+A new standard library module is introduced called link:{uri-stdlib-syntaxModule}[`pkl:syntax`], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
 
 It has three parts:
 
@@ -132,16 +153,24 @@ className = myModule.findChild((n) -> n.type == "class").findChildOfType("identi
 ifCount = myModule.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) // 0
 ----
 
-=== libpkl
+=== C Library (libpkl)
 
-Pkl now ships libpkl, a C library for driving Pkl evaluation (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
+A new C library is introduced, which exposes APIs for calling into Pkl evaluation (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
 
-libpkl exposes the xref:bindings-specification:message-passing-api.adoc[message passing API] through a small C interface (`pkl.h`).
-It is meant to be used by language binding libraries written in languages other than Java, so that they do not have to launch and manage a separate `pkl server` process.
+One of Pkl's major selling points is the ability to embed the language into another runtime as a library.
+However, currently, callers from non-JVM languages must spawn Pkl as a child process.
+This introduces a system dependency on downstream users, and also introduces complexity and overhead for the operating system.
+
+To address this pain point, a new library called "libpkl" is released for the C language.
+
+This is a low-level library meant to be called into from language binding libraries.
+It exposes the xref:bindings-specification:message-passing-api.adoc[message passing API] through a small C interface (`pkl.h`).
 
 Archives containing the header, both static and dynamic (shared) libraries, and `pkg-config` files are published for each supported OS and architecture, as part of the GitHub release.
 
 To read more about libpkl, consult the xref:libpkl:index.adoc[libpkl documentation].
+
+To read more about the design of this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0015-c-library-for-pkl.adoc[SPICE-0015].
 
 Thank you to https://github.com/KushalP[@KushalP] for their contributions to this feature!
 
@@ -165,7 +194,7 @@ For more details, consult xref:pkl-cli:index.adoc#profile-cpu-output[the CLI doc
 
 === New type: `this`
 
-This release introduces the `this` type, a self type for use within modules and classes (https://github.com/apple/pkl/pull/1708[#1708], https://github.com/apple/pkl-evolution/pull/32[SPICE-0029]).
+This release introduces the `this` type, a self type for use within modules and classes (https://github.com/apple/pkl/pull/1708[#1708]).
 
 `this` refers to the type of the enclosing object.
 When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member.
@@ -202,6 +231,8 @@ When used in a module, `this` is the type of the module that is being evaluated.
 
 The `this` type has also been <<this-adoption,adopted in the standard library>>.
 
+To read more about the design, see https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0029-self-type.adoc[SPICE-0029].
+
 ==== Deprecation of the `module` type in const scopes
 
 The `module` type may behave incorrectly or in undefined ways when it is used in a _const_ scope.
@@ -209,7 +240,7 @@ Using the `module` type in these locations now emits a deprecation warning, and 
 
 To migrate, replace the `module` type with `this`, or import the current module and use the resulting module type.
 
-=== Implicitly typed `new {}` can be inferred in more locations
+=== Better `new {}` inference
 
 The type of an implicitly typed `new {}` expression can now be inferred from the parameter type of a method being called (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]), and from the type annotation of a `let` binding (https://github.com/apple/pkl/pull/1824[#1824]).
 
@@ -230,14 +261,18 @@ greeting2 =
 <1> The argument is inferred to be a `Person`.
 <2> The `let` binding is inferred to be a `Person`.
 
-Inference is not available where the parameter type is not known ahead of time: for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
+Inference is not available where the parameter type is not known ahead of time.
+Additionally, it cannot be used for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
+
 It is an error for the parameter type to be `this` or `module`.
 
-=== Support for `.netrc` HTTP authentication
+=== Support for parsing `.netrc` files into HTTP headers
 
 Pkl now supports parsing `.netrc` files to configure HTTP Basic authentication headers (https://github.com/apple/pkl/pull/1817[#1817], https://github.com/apple/pkl/pull/1854[#1854]).
 
-Through the new `netRcHeaders` method on `pkl.EvaluatorSettings#Http`, credentials can be read directly from a local `.netrc` file and mapped to `Authorization` headers:
+A new method is introduced called `netRcHeaders` on class `pkl.EvaluatorSettings#Http`.
+
+It can be used to read credentials directly from a local `.netrc` file and mapped to HTTP `Authorization` headers:
 
 .~/.config/pkl/settings.pkl
 [source,pkl]
@@ -298,6 +333,10 @@ On every OS, these locations can be overridden with XDG-style env vars.
 For example, setting `XDG_CACHE_HOME` will configure the cache directory.
 
 Note that the existing `~/.pkl/cache` directory is ignored, so Pkl will download packages to populate its cache if configured to do so.
+
+To learn more about this design, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0031-os-base-directories.adoc[SPICE-0031].
+
+Thank you to https://github.com/florinungur[@florinungur] for their contributions to this feature!
 
 === Java Library Changes
 
@@ -461,21 +500,42 @@ myRef = ref.Reference<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
 <1> Previously `extends ref.Domain`.
 <2> Constraints in the referent type of a `Reference` type annotation are no longer an error, they are ignored.
 
-=== Type arguments in method calls can make `<` ambiguous
+[#parser-rule-change-for-comparison]
+=== Parser rule changes for comparison
 
-Generic method calls provide type arguments directly after the method name, as in `foo<Bar>(baz)` (https://github.com/apple/pkl/pull/1940[#1940]).
-This is ambiguous with a comparison expression.
-When a `<` that follows an identifier starts a well-formed type argument list that is directly followed by `(`, it is parsed as a method call with type arguments.
+To support <<generic-methods,generic method calls>>, the syntax for Pkl has changed to permit passing type arguments when calling a method.
 
-This is a breaking change for code that was previously parsed as a comparison:
+This purposefully introduces an ambiguity to the grammar: the following expression can be parsed as either a generic method call, or as nested comparison expressions:
 
 [source,pkl]
 ----
-res = foo<bar>(baz) // now a method call with type arguments
+foo < Int > (5)
 ----
 
-Affected code is likely to fail with an error like "Cannot find method `foo`".
-To restore the old meaning, wrap the left-hand side in parentheses.
+To resolve such ambiguities, such code is preferrably parsed as a generic method call.
+However, this means that the semantic meaning of such existing code will change.
+
+This contrived example is nonsensical today, because it is an error to compare a boolean.
+However, there are times when such code might be written in a well-formed way, for example:
+
+[source,pkl]
+----
+res = foo(
+  bar < baz,
+  qux > (corge + 3)
+)
+----
+
+In Pkl 0.33, this above snippet will parse `bar` as a generic method call.
+To restore the old meaning, wrap the left-hand side with parentheses:
+
+[source,pkl]
+----
+res = foo(
+  (bar) < baz,
+  qux > (corge + 3)
+)
+----
 
 === `test.catch()` and `test.catchOrNull()` force their result
 
