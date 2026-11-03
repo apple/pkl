@@ -11,7 +11,7 @@ include::partial$intro.adoc[]
 
 === Generic Methods
 
-Methods can now declare type parameters, and callers can provide type arguments explicitly with the `::<>` syntax (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl-evolution/pull/35[SPICE-0032]).
+Methods can now declare type parameters, and callers can provide type arguments explicitly after the method name (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940], https://github.com/apple/pkl-evolution/pull/35[SPICE-0032]).
 
 [source,pkl]
 ----
@@ -25,7 +25,7 @@ function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
   }
 }
 
-pigeonFlock = makeFlock::<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // a Listing of Pigeons
+pigeonFlock = makeFlock<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // a Listing of Pigeons
 ----
 
 Both class methods and `local` object methods can be generic.
@@ -456,10 +456,26 @@ class MyDomain extends ref.AbstractDomain { // <1>
 myRef = ref.Reference(new MyDomain {}, MyReferent, myData)
 
 // after
-myRef = ref.Reference::<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
+myRef = ref.Reference<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
 ----
 <1> Previously `extends ref.Domain`.
 <2> Constraints in the referent type of a `Reference` type annotation are no longer an error, they are ignored.
+
+=== Type arguments in method calls can make `<` ambiguous
+
+Generic method calls provide type arguments directly after the method name, as in `foo<Bar>(baz)` (https://github.com/apple/pkl/pull/1940[#1940]).
+This is ambiguous with a comparison expression.
+When a `<` that follows an identifier starts a well-formed type argument list that is directly followed by `(`, it is parsed as a method call with type arguments.
+
+This is a breaking change for code that was previously parsed as a comparison:
+
+[source,pkl]
+----
+res = foo<bar>(baz) // now a method call with type arguments
+----
+
+Affected code is likely to fail with an error like "Cannot find method `foo`".
+To restore the old meaning, wrap the left-hand side in parentheses.
 
 === `test.catch()` and `test.catchOrNull()` force their result
 
@@ -505,6 +521,7 @@ The `pkl:protobuf` module is deprecated and will be removed in Pkl 0.34 (https:/
 * Improve performance of typechecking (https://github.com/apple/pkl/pull/1871[#1871]).
 * Improve performance of string literal union types in more cases (https://github.com/apple/pkl/pull/1875[#1875]).
 * Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]). Thank you to https://github.com/odenix[@odenix] for their contributions to this feature!
+* Fix some partial evaluation issues in the GraalVM compiler (https://github.com/apple/pkl/pull/1944[#1944]).
 * Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869])
 
 == Bug Fixes [small]#🐜#
@@ -526,10 +543,14 @@ The `pkl:protobuf` module is deprecated and will be removed in Pkl 0.34 (https:/
 * Fix leak of external reader processes in the language binding server (https://github.com/apple/pkl/pull/1885[#1885]).
 * Fix decoding of `Regex` values from pkl-binary data (https://github.com/apple/pkl/pull/1895[#1895]).
 * Fix `pkl eval` of dependency notation source modules when using multiple file output (https://github.com/apple/pkl/pull/1942[#1942]).
-* Report an error, instead of overflowing the stack, when parsing or formatting code that is nested too deeply (https://github.com/apple/pkl/pull/1918[#1918]).
+* Report an error, instead of overflowing the stack, when parsing or formatting code that is nested too deeply (https://github.com/apple/pkl/pull/1918[#1918], https://github.com/apple/pkl/pull/1953[#1953]).
 * Fix type check of the `module` type when it is defined in a parent member body (https://github.com/apple/pkl/pull/1936[#1936]).
 * Fix type check of subscript key types for `Map` and `Mapping` references (https://github.com/apple/pkl/pull/1933[#1933]).
 * Fix `hashCode()` and `==` inconsistency for negative zero in `Duration` and `DataSize` (https://github.com/apple/pkl/pull/1932[#1932]).
+* Fix `hashCode()` inconsistency with `==` for `Listing`, `Duration`, and `DataSize` (https://github.com/apple/pkl/pull/1922[#1922]).
+* Fix `toString()` and `value` of `Duration` and `DataSize` values that are too large to fit in a `Long` (https://github.com/apple/pkl/pull/1935[#1935]).
+* Fix iteration over `Dynamic` objects that have a negative key, such as `new Dynamic { [-1] = 2 }` (https://github.com/apple/pkl/pull/1948[#1948]).
+* Fix enforcement of `const` member access inside methods (https://github.com/apple/pkl/pull/1945[#1945]).
 * Fix parameterized type checks in type alias constraints (https://github.com/apple/pkl/pull/1906[#1906]).
 * Fix resolution of qualified type names (https://github.com/apple/pkl/pull/1915[#1915]).
 * Fix lookaround regexes in `String.lastIndexOf()` and `String.replaceLast()` (https://github.com/apple/pkl/pull/1908[#1908]).
