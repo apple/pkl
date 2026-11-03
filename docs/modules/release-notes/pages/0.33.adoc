@@ -374,14 +374,11 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 * Renamed class: `Domain` is now `AbstractDomain` (<<reference-changes,breaking change>>)
 * Changed method: `Reference()` now takes type arguments instead of a `Class` parameter (<<reference-changes,breaking change>>)
 * pkldoc:AbstractDomain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+* No longer considered experimental.
 
 ==== `pkl:protobuf`
 
 * Module deprecated for removal in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
-
-==== `pkl:ref`
-
-* No longer considered experimental (TODO PR).
 
 == Breaking Changes [small]#💔#
 
