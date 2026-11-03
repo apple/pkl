@@ -49,6 +49,80 @@ class FormattingRenderer {
   external function render(node: Node): String
 }
 
+/// Renders a [Node] as an S-expression, similar to the output of tree-sitter.
+///
+/// Each node is rendered as its [Node.type] in parentheses, followed by its [Node.children], each
+/// on its own line and indented by two spaces.
+/// Nodes without children are rendered on a single line.
+///
+/// Only [Node]s can be rendered. Rendering any other value throws an error.
+/// [converters] and [convertPropertyTransformers] have no effect.
+///
+/// Example:
+/// ```
+/// new SExpressionRenderer {}.renderValue(new Parser {}.parseExpression("1 + 2"))
+/// // (binary_op_expr
+/// //   (int_literal_expr)
+/// //   (operator)
+/// //   (int_literal_expr))
+/// ```
+class SExpressionRenderer extends ValueRenderer {
+  extension = "sexp"
+
+  /// Whether to render the [Node.text] of terminal nodes whose text is not implied by their
+  /// [Node.type].
+  ///
+  /// If [true], the text follows the type as a quoted, escaped string, as in
+  /// `(int_literal_expr "5")`.
+  /// If [false], only the type is rendered.
+  renderTerminalText: Boolean = false
+
+  /// The types of the terminal nodes that [renderTerminalText] applies to.
+  local textTypes: Set<TerminalNodeType> =
+    Set(
+      "identifier",
+      "modifier",
+      "operator",
+      "bool_literal_expr",
+      "int_literal_expr",
+      "float_literal_expr",
+      "string_start",
+      "string_multi_start",
+      "string_end",
+      "interpolation_start",
+      "string_chars",
+      "string_escape",
+      "string_continuation",
+      "shebang",
+      "line_comment",
+      "block_comment",
+      "doc_comment_line",
+    )
+
+  /// Renders [value], which must be a [Node], followed by a newline.
+  function renderDocument(value: Any): String = renderValue(value) + "\n"
+
+  /// Renders [value], which must be a [Node].
+  function renderValue(value: Any): String =
+    if (value is Node)
+      renderIndented(value, "")
+    else
+      throw(
+        "Cannot render a value of type `\(value.getClass())` as an S-expression. Expected a `pkl.syntax#Node`."
+      )
+
+  local function renderIndented(node: Node, indent: String): String =
+    if (node.children.isEmpty)
+      if (renderTerminalText && textTypes.contains(node.type))
+        "\(indent)(\(node.type) \(new PcfRenderer {}.renderValue(node.text)))"
+      else
+        "\(indent)(\(node.type))"
+    else
+      "\(indent)(\(node.type)\n"
+        + node.children.map((child) -> renderIndented(child, indent + "  ")).join("\n")
+        + ")"
+}
+
 /// A generic, untyped node in the Pkl syntax tree.
 ///
 /// A node is either a *leaf*, carrying no [children], or a *branch*, whose content is its

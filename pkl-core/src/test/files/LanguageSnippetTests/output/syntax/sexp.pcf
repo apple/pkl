@@ -1,0 +1,72 @@
+facts {
+  ["terminal"] {
+    true
+  }
+  ["terminal with text"] {
+    true
+  }
+  ["nested nodes are indented"] {
+    true
+  }
+  ["nested nodes with terminal text"] {
+    true
+  }
+  ["keywords and punctuation are rendered without text"] {
+    true
+  }
+  ["terminal text is escaped"] {
+    true
+  }
+  ["renderDocument adds a trailing newline"] {
+    true
+  }
+  ["rendering a non-node throws"] {
+    true
+  }
+}
+examples {
+  ["module"] {
+    """
+    (module
+      (class_property
+        (class_property_header
+          (class_property_header_begin
+            (identifier)))
+        (assign)
+        (class_property_body
+          (int_literal_expr))))
+    """
+    """
+    (module
+      (class_property
+        (class_property_header
+          (class_property_header_begin
+            (identifier "x")))
+        (assign)
+        (class_property_body
+          (int_literal_expr "1"))))
+    """
+  }
+  ["class"] {
+    """
+    (module
+      (class
+        (class_header
+          (class_keyword)
+          (identifier))
+        (class_body
+          (lbrace)
+          (class_body_elements
+            (class_property
+              (class_property_header
+                (class_property_header_begin
+                  (identifier)))
+              (type_annotation
+                (colon)
+                (declared_type
+                  (qualified_identifier
+                    (identifier))))))
+          (rbrace))))
+    """
+  }
+}
