@@ -155,13 +155,13 @@ ifCount = myModule.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc
 
 === C Library (libpkl)
 
-A new C library is introduced, which exposes APIs for calling into Pkl evaluation (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
+A new C library, libpkl, is introduced (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
 
-One of Pkl's major selling points is the ability to embed the language into another runtime as a library.
+One of Pkl's selling points is the ability to embed the language into another runtime as a library.
 However, currently, callers from non-JVM languages must spawn Pkl as a child process.
 This introduces a system dependency on downstream users, and also introduces complexity and overhead for the operating system.
 
-To address this pain point, a new library called "libpkl" is released for the C language.
+To address this pain point, a new library called libpkl is released for the C language.
 
 This is a low-level library meant to be called into from language binding libraries.
 It exposes the xref:bindings-specification:message-passing-api.adoc[message passing API] through a small C interface (`pkl.h`).
