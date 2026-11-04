@@ -242,7 +242,7 @@ As a consequence, an invalid URI is now reported as a type constraint violation 
 
 == Bug Fixes [small]#🐜#
 
-* XXX
+* `org.pkl-lang:pkl-cli-java` is published to Maven Central again. The published file is the plain fat JAR, so it can be signed and run with `java -jar` or JBang (https://github.com/apple/pkl/issues/1917[#1917]).
 
 == Contributors [small]#🙏#
 
