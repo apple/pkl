@@ -45,4 +45,104 @@ class GenericParserTest {
     // 1 second should still catch if we see exponential regressions
     assertTimeoutPreemptively(Duration.ofSeconds(1)) { GenericParser().parseModule(code) }
   }
+
+  // TODO: move these into ParserSnippetTests
+  @Test
+  fun `parse separator correctly -- semicolon`() {
+    val code =
+      """
+      result = new Listing {
+        a;
+        (b) { c = 1 }
+      }
+      """
+        .trimIndent()
+    assertThat(renderGenericCode(code))
+      .isEqualTo(
+        """
+        (module
+          (classProperty
+            (identifier)
+            (newExpr
+              (declaredType
+                (qualifiedIdentifier
+                  (identifier)))
+              (objectBody
+                (objectElement
+                  (unqualifiedAccessExpr
+                    (identifier)))
+                (objectElement
+                  (amendsExpr
+                    (parenthesizedExpr
+                      (unqualifiedAccessExpr
+                        (identifier)))
+                    (objectBody
+                      (objectProperty
+                        (identifier)
+                        (intLiteralExpr)))))))))
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `parse separator correctly -- line comment in between`() {
+    val code =
+      """
+      result = new Listing {
+        a // some comment
+        (b) { c = 1 }
+      }
+      """
+        .trimIndent()
+    assertThat(renderGenericCode(code))
+      .isEqualTo(
+        """
+        (module
+          (classProperty
+            (identifier)
+            (newExpr
+              (declaredType
+                (qualifiedIdentifier
+                  (identifier)))
+              (objectBody
+                (objectElement
+                  (unqualifiedAccessExpr
+                    (identifier)))
+                (objectElement
+                  (amendsExpr
+                    (parenthesizedExpr
+                      (unqualifiedAccessExpr
+                        (identifier)))
+                    (objectBody
+                      (objectProperty
+                        (identifier)
+                        (intLiteralExpr)))))))))
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `parse type arg list -- comment in between`() {
+    val code = "foo = a /* some comment */ <b>(c)"
+    assertThat(renderGenericCode(code))
+      .isEqualTo(
+        """
+        (module
+          (classProperty
+            (identifier)
+            (unqualifiedAccessExpr
+              (identifier)
+              (typeArgumentList
+                (declaredType
+                  (qualifiedIdentifier
+                    (identifier))))
+              (argumentList
+                (unqualifiedAccessExpr
+                  (identifier))))))
+        """
+          .trimIndent()
+      )
+  }
 }

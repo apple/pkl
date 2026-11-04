@@ -64,13 +64,6 @@ class ParserComparisonTest {
       return renderer.render(mod)
     }
 
-    private fun renderGenericCode(code: String): String {
-      val parser = GenericParser()
-      val mod = parser.parseModule(code)
-      val renderer = GenericSexpRenderer(code)
-      return renderer.render(mod)
-    }
-
     // tests that are not syntactically valid Pkl
     private val exceptions =
       setOf(

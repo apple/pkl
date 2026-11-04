@@ -755,37 +755,43 @@ class GenericParserImpl {
 
   private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    var typeArgs = tryParseTypeArgumentList();
+    var typeArgs = tryParseTypeArgumentList(children);
     if (typeArgs != null) {
       // `tryParseTypeArgumentList` guarantees that an argument list follows
       children.add(typeArgs);
       ff(children);
       children.add(parseArgumentList());
-    } else if (lookahead() == Token.LPAREN
-        && noSemicolonInbetween()
-        && _lookahead.newLinesBetween == 0) {
-      ff(children);
-      children.add(parseArgumentList());
+    } else {
+      var fullLookahead = fullLookahead();
+      if (fullLookahead.tk.token == Token.LPAREN
+          && !fullLookahead.hasSemicolon
+          && fullLookahead.tk.newLinesBetween == 0) {
+        ff(children);
+        children.add(parseArgumentList());
+      }
     }
   }
 
-  private @Nullable Node tryParseTypeArgumentList() {
-    if (lookahead() != Token.LT
-        || !noSemicolonInbetween()
-        || _lookahead.newLinesBetween != 0
-        || failedTypeArgAttempts.contains(spanLookahead.charIndex())
-        || !isTypeArgCandidate(spanLookahead.charIndex())) {
+  private @Nullable Node tryParseTypeArgumentList(List<Node> children) {
+    var fullLookahead = fullLookahead();
+    if (fullLookahead.tk.token != Token.LT
+        || fullLookahead.hasSemicolon
+        || fullLookahead.tk.newLinesBetween != 0
+        || failedTypeArgAttempts.contains(fullLookahead.tk.span.charIndex())
+        || !isTypeArgCandidate(fullLookahead.tk.span.charIndex())) {
       return null;
     }
     var savedCursor = cursor;
-    var savedCharIndex = spanLookahead.charIndex();
+    var savedCharIndex = fullLookahead.tk.span.charIndex();
     var savedIsSpeculativeParse = isSpeculativeParse;
     isSpeculativeParse = true;
     try {
+      var affixes = new ArrayList<Node>();
+      ff(affixes);
       var typeArgs = parseTypeArgumentList();
-      if (lookahead() == Token.LPAREN
-          && noSemicolonInbetween()
-          && _lookahead.newLinesBetween == 0) {
+      var fla = fullLookahead();
+      if (fla.tk.token == Token.LPAREN && !fla.hasSemicolon && fla.tk.newLinesBetween == 0) {
+        children.addAll(affixes);
         return typeArgs;
       }
     } catch (GenericParserError ignored) {
@@ -1310,7 +1316,7 @@ class GenericParserImpl {
       }
       // constrained types: have to start in the same line as the type
       var fla = fullLookahead();
-      if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
+      if (fla.tk.token == Token.LPAREN && !fla.hasSemicolon && fla.tk.newLinesBetween == 0) {
         ff(children);
         var constraint = new ArrayList<Node>();
         constraint.add(makeTerminal(next()));
@@ -1563,10 +1569,6 @@ class GenericParserImpl {
     lookahead = _lookahead.token;
     spanLookahead = _lookahead.span;
     return tmp;
-  }
-
-  private boolean noSemicolonInbetween() {
-    return tokens.get(cursor - 1).token != Token.SEMICOLON;
   }
 
   private void backtrackTo(int point) {
