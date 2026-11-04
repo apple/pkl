@@ -1,0 +1,4 @@
+baz = 1
+
+// no error
+const foo = let (x = 1) this.baz

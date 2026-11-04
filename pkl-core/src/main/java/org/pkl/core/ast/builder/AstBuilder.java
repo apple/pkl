@@ -125,6 +125,7 @@ import org.pkl.core.ast.expression.member.ReadQualifiedLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNodeGen;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
+import org.pkl.core.ast.expression.primary.GetCustomThisReceiverClassNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -434,13 +435,24 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitThisType(ThisType type) {
     var sourceSection = createSourceSection(type);
+    var currentScope = symbolTable.getCurrentScope();
+    if (!currentScope.isCustomThisScope()
+        && currentScope.getConstLevel() == ConstLevel.ALL
+        && currentScope.getConstDepth() == -1) {
+      var message =
+          currentScope.isPropertyScope() ? "invalidThisTypeInProperty" : "invalidThisTypeInMethod";
+      throw exceptionBuilder()
+          .evalError(message, currentScope.getQualifiedName())
+          .withSourceSection(sourceSection)
+          .build();
+    }
     // need to pass explicit class name for property and method arg/return type annotations.
     // this is because type annotations on class properties/methods are initialized when the
     // ClassNode
     // is executed, and the frame's receiver is the enclosing module rather than the class.
     // do not need: when in any object or at the module level (where `this` is the receiver's class)
     org.pkl.core.runtime.Identifier className = null;
-    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
+    for (var scope = currentScope; scope != null; scope = scope.getParent()) {
       if (scope.isObjectScope() || scope.isCustomThisScope()) {
         break;
       }
@@ -462,7 +474,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (isBaseModule && className != null) {
       getClassNode = new GetBaseModuleClassNode(className);
     } else if (className == null) {
-      getClassNode = new GetReceiverClassNode(sourceSection);
+      getClassNode =
+          currentScope.isCustomThisScope()
+              ? new GetCustomThisReceiverClassNode(sourceSection)
+              : new GetReceiverClassNode(sourceSection);
     } else if (className.isLocalProp()) {
       getClassNode =
           new ReadQualifiedLocalPropertyNode(

@@ -58,8 +58,7 @@ res11d = res11.res6a.x
 
 res12 = test.catch(() -> res11.fun(module)[0].x)
 
-// this type not affected by custom this scope:
-hidden res13: List(this is List<this>) = List(module)
+hidden res13: List(this is this) = List(module)
 res13a = res13[0].x
 
 // test generic typealias through inheritance from module
