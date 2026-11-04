@@ -1,0 +1,6 @@
+qux = "qux"
+
+const foo = new {
+  // `myself` here is the module; this escapes the const scope
+  [let (myself: this = this) myself.qux] = 5
+}

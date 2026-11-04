@@ -434,6 +434,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitThisType(ThisType type) {
     var sourceSection = createSourceSection(type);
+    var currentScope = symbolTable.getCurrentScope();
+    if (currentScope.getConstLevel() == ConstLevel.ALL && currentScope.getConstDepth() == -1) {
+      var message =
+          currentScope.isPropertyScope() ? "invalidThisTypeInProperty" : "invalidThisTypeInMethod";
+      throw exceptionBuilder()
+          .evalError(message, currentScope.getQualifiedName())
+          .withSourceSection(sourceSection)
+          .build();
+    }
     // need to pass explicit class name for property and method arg/return type annotations.
     // this is because type annotations on class properties/methods are initialized when the
     // ClassNode

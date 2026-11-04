@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `this` type from const property `thisType7#foo`.
+
+x | const foo: this
+               ^^^^
+at thisType7#foo (file:///$snippetsDir/input/types/thisType7.pkl)
