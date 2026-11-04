@@ -125,7 +125,28 @@ tasks.shadowJar {
   exclude("module-info.*")
 
   for ((from, to) in relocations) {
-    relocate(from, to)
+    relocate(from, to) {
+      if (from == "kotlin.") {
+        // kotlin-reflect cannot be relocated: it resolves its implementation
+        // classes (e.g. `ReflectionFactoryImpl`) and `kotlin.Metadata`
+        // annotations by name, and declares services under its own name in
+        // META-INF/services.
+        // https://github.com/apple/pkl/issues/794
+        exclude("kotlin.reflect.**")
+        // `KDeclarationContainerImpl` loads this class by name; keeping it
+        // unrelocated also preserves synthetic-constructor marker checks.
+        exclude("kotlin.jvm.internal.DefaultConstructorMarker")
+        // kotlin-reflect loads `.kotlin_builtins` resources by literal
+        // classpath path, so they must not be relocated.
+        exclude("kotlin/**/*.kotlin_builtins")
+        // kotlin-reflect stores platform `kotlin.*` names as string literals
+        // (e.g. the name tables in `JavaToKotlinClassMap`) and looks them up
+        // by their original values, so they must not be rewritten. This also
+        // preserves qualified names, serializer names, and `kotlin.Metadata`
+        // annotation descriptors used outside kotlin-reflect.
+        skipStringConstants = true
+      }
+    }
   }
 
   // necessary for service files to be adapted to relocation
@@ -166,6 +187,12 @@ val validateFatJar =
           !(fileDetails.isDirectory ||
             path.startsWith("org/pkl/") ||
             path.startsWith("META-INF/") ||
+            // kotlin-reflect, `DefaultConstructorMarker`, and `.kotlin_builtins`
+            // resource files are deliberately not relocated; see the `exclude`
+            // calls in `tasks.shadowJar`.
+            path.startsWith("kotlin/reflect/") ||
+            path == "kotlin/jvm/internal/DefaultConstructorMarker.class" ||
+            (path.startsWith("kotlin/") && path.endsWith(".kotlin_builtins")) ||
             nonRelocations.any { path.startsWith(it) })
         ) {
           // don't throw exception inside `visit`
@@ -194,6 +221,7 @@ val fatSourcesJar =
 
     mergedBinaryJars.from(tasks.shadowJar)
     relocatedPackages.set(relocations)
+    excludedPackages.set(listOf("kotlin.reflect."))
     outputJar.fileProvider(
       provider {
         file(tasks.shadowJar.get().archiveFile.get().asFile.path.replace(".jar", "-sources.jar"))

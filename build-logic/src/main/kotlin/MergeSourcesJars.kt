@@ -37,6 +37,11 @@ open class MergeSourcesJars : DefaultTask() {
 
   @get:Input val relocatedPackages: MapProperty<String, String> = project.objects.mapProperty()
 
+  /** Packages excluded from relocation, e.g. `kotlin.reflect.`. */
+  @get:Input
+  val excludedPackages: ListProperty<String> =
+    project.objects.listProperty<String>().convention(listOf())
+
   @get:Input
   var sourceFileExtensions: ListProperty<String> =
     project.objects.listProperty<String>().convention(listOf(".java", ".kt"))
@@ -115,9 +120,13 @@ open class MergeSourcesJars : DefaultTask() {
   ): String {
     val matcher = importPattern.matcher(sourceText)
     val buffer = StringBuffer()
+    val excludedPkgs = excludedPackages.get()
     logger.debug("Inspecting file: {}", details.relativePath)
     while (matcher.find()) {
-      val newStat = relocatedPkgs[matcher.group(2)]
+      // keep matches that are really prefixes of excluded packages
+      // (e.g. `kotlin.` matching `kotlin.reflect.`)
+      val excluded = excludedPkgs.any { sourceText.startsWith(it, matcher.start(2)) }
+      val newStat = if (excluded) matcher.group(2) else relocatedPkgs[matcher.group(2)]
       logger.debug("Old: {}", matcher.group())
       logger.debug("New: {}", newStat)
       matcher.appendReplacement(buffer, Matcher.quoteReplacement(newStat))
