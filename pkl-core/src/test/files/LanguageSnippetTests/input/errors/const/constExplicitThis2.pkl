@@ -1,3 +1,4 @@
 baz = 1
 
-const foo = new Listing { for (i in List(1)) { baz } }
+// no error
+const foo = let (x = 1) this.baz
