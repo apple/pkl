@@ -55,10 +55,10 @@ To learn more about the design of generic method calls, consult https://github.c
 
 === New standard library module: `pkl:net`
 
-A new standard library module is introduced called link:{uri-stdlib-netModule}[`pkl:net`], for working with network types (https://github.com/apple/pkl/pull/1834[#1834]).
+A new standard library module is introduced called pkldoc:#[pkl:net], for working with network types (https://github.com/apple/pkl/pull/1834[#1834]).
 
-Its centerpiece is link:{uri-stdlib-net-Url}[`net.Url`], a URL as defined by https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
-A string is parsed with `net.Url()`, which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
+Its centerpiece is pkldoc:Url[pkl:net], a URL as defined by https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
+A string is parsed with pkldoc:Url()[pkl:net], which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
 
 [source,pkl]
 ----
@@ -119,23 +119,23 @@ To instead compare them as the *syntax-based normalization* of RFC 3986, where s
 same = net.Url("HTTPS://Example.com/%7Euser").equals(net.Url("https://example.com/~user")) // true
 ----
 
-The module also provides standalone helpers: `net.encodeUrlComponent()` and `net.decodeUrlComponent()` for percent-encoding, and `net.buildQuery()` and `net.parseQuery()` for `application/x-www-form-urlencoded` queries.
+The module also provides standalone helpers: pkldoc:encodeUrlComponent()[pkl:net] and pkldoc:decodeUrlComponent()[pkl:net] for percent-encoding, and pkldoc:buildQuery()[pkl:net] and pkldoc:parseQuery()[pkl:net] for `application/x-www-form-urlencoded` queries.
 
-Alongside this module, `pkl:base` gains link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`], which tells whether a string is a valid absolute URL.
+Alongside this module, `pkl:base` gains pkldoc:String#isValidUrl[], which tells whether a string is a valid absolute URL.
 It is stricter than `net.Url()`, which also parses a relative reference, and which percent-encodes whatever cannot appear literally in a URL component.
 The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,breaking change>>.
 
 === New standard library module: `pkl:syntax`
 
-A new standard library module is introduced called link:{uri-stdlib-syntaxModule}[`pkl:syntax`], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
+A new standard library module is introduced called pkldoc:#[pkl:syntax], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
 
 It has three parts:
 
-* link:{uri-stdlib-syntax-Parser}[`Parser`] parses a string or resource into a syntax tree, as either a module or an expression.
-* link:{uri-stdlib-syntax-Node}[`Node`] is a node of that tree.
+* pkldoc:Parser[pkl:syntax] parses a string or resource into a syntax tree, as either a module or an expression.
+* pkldoc:Node[pkl:syntax] is a node of that tree.
 It has a `type`, `children`, the verbatim source `text`, and the source `span`.
 Nodes can be searched, folded, and replaced with the `find*`, `fold`, and `replace*` methods.
-* link:{uri-stdlib-syntax-FormattingRenderer}[`FormattingRenderer`] renders a tree back to Pkl source code, using the canonical Pkl formatter.
+* pkldoc:FormattingRenderer[pkl:syntax] renders a tree back to Pkl source code, using the canonical Pkl formatter.
 
 [source,pkl]
 ----
@@ -299,7 +299,7 @@ Thank you to https://github.com/ayashjorden[@ayashjorden] for their contribution
 
 ==== Package installation to the local cache
 
-The `pkl project package` command has gained a new `--install` command that triggers installation of the built package(s) into the module cache (https://github.com/apple/pkl/pull/1795[#1795]).
+The `pkl project package` command has gained a new `--install` flag that triggers installation of the built package(s) into the module cache (https://github.com/apple/pkl/pull/1795[#1795]).
 
 Local cache installation is useful for local end-to-end testing of dependency trees.
 This functionality is also available via pkl-gradle.
@@ -351,7 +351,7 @@ Thank you to https://github.com/florinungur[@florinungur] for their contribution
 
 The JVM bindings now understand the new `pkl.net#Url` class (https://github.com/apple/pkl/pull/1834[#1834]).
 
-The Java and Kotlin code generators generate a `java.net.URI` for a property whose type is `net.Url`.
+The Java and Kotlin code generators generate a `java.net.URI` for a property whose type is pkldoc:Url[pkl:net].
 
 Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part of the preconfigured set:
 
@@ -371,8 +371,8 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 ==== `pkl:base`
 
 
-* New property: link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`]
-* Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
+* New property: pkldoc:String#isValidUrl[]
+* Changed typealias: pkldoc:Uri[] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
 [[this-adoption]]
 * Properties refined with `this` type
 ** pkldoc:Any.getClass()[] now returns `Class<this>`
@@ -416,21 +416,21 @@ Doing this makes little sense; these values are constants and overriding them by
 
 The following properties are now `const` and cannot be amended:
 
-* `math.minInt`
-* `math.maxInt`
-* `math.maxInt8`
-* `math.maxInt16`
-* `math.maxInt32`
-* `math.maxUInt`
-* `math.maxUInt8`
-* `math.maxUInt16`
-* `math.maxUInt32`
-* `math.minFiniteFloat`
-* `math.maxFiniteFloat`
-* `math.minPositiveFloat`
-* `math.e`
-* `math.pi`
-* `release.current`
+* pkldoc:minInt[pkl:math]
+* pkldoc:maxInt[pkl:math]
+* pkldoc:maxInt8[pkl:math]
+* pkldoc:maxInt16[pkl:math]
+* pkldoc:maxInt32[pkl:math]
+* pkldoc:maxUInt[pkl:math]
+* pkldoc:maxUInt8[pkl:math]
+* pkldoc:maxUInt16[pkl:math]
+* pkldoc:maxUInt32[pkl:math]
+* pkldoc:minFiniteFloat[pkl:math]
+* pkldoc:maxFiniteFloat[pkl:math]
+* pkldoc:minPositiveFloat[pkl:math]
+* pkldoc:e[pkl:math]
+* pkldoc:pi[pkl:math]
+* pkldoc:current[pkl:release]
 
 This is a breaking change for code that looks like this:
 [source,pkl]
@@ -487,7 +487,7 @@ res = """
 [[uri-validates]]
 === `Uri` validates its value
 
-The link:{uri-stdlib-Uri}[`Uri`] typealias in `pkl:base` is now `String(isValidUrl)` instead of a plain `String` (https://github.com/apple/pkl/pull/1834[#1834]).
+The pkldoc:Uri[] typealias in `pkl:base` is now `String(isValidUrl)` instead of a plain `String` (https://github.com/apple/pkl/pull/1834[#1834]).
 
 A value typed as `Uri` must be a valid absolute URL according to https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
 This means that a relative reference, or a URL containing a character that must be percent-encoded, no longer type-checks:
@@ -500,7 +500,7 @@ bad1: Uri = "./some/path"                   // throws: not absolute
 bad2: Uri = "https://example.com/some path" // throws: space must be percent-encoded
 ----
 
-This affects every standard library member typed as `Uri`, among them link:{uri-stdlib-Resource}#uri[`Resource.uri`], link:{uri-stdlib-analyzeModule}#importGraph()[`analyze.importGraph()`], and the URI-valued properties of `pkl:Project`, `pkl:EvaluatorSettings` and `pkl:DocPackageInfo`.
+This affects every standard library member typed as `Uri`, among them pkldoc:Resource#uri[], pkldoc:importGraph()[pkl:analyze], and the URI-valued properties of pkldoc:#[Project], pkldoc:#[EvaluatorSettings] and pkldoc:#[DocPackageInfo].
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
@@ -568,7 +568,7 @@ To restore the old meaning, wrap the left-hand side with parentheses:
 
 === `test.catch()` and `test.catchOrNull()` force their result
 
-The `catch()` and `catchOrNull()` methods in `pkl:test` now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
+The pkldoc:catch()[pkl:test] and pkldoc:catchOrNull()[pkl:test] methods now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
 
 Currently, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
@@ -594,7 +594,7 @@ class Swallow extends Bird {
 === Removal of `module` type in const scopes
 
 The `module` type should no longer be used inside typealiases, class bodies, annotation bodies, and `const` scopes.
-Such usages will emit a deprecation warning, and will become a full error in a future release (https://github.com/apple/pkl/pull/1708[#1708]).
+Such usages will emit a deprecation warning, and will become a full error in Pkl 0.34 (https://github.com/apple/pkl/pull/1708[#1708]).
 
 The `module` type is a self-type, which refers to the `this` of the module.
 When a module is extended, the `module` type refers to the extending module.
@@ -655,12 +655,12 @@ Users of protobuf are encouraged render Pkl into https://protobuf.dev/programmin
 * Introduce a new internal representation for type metadata (https://github.com/apple/pkl/pull/1838[#1838]).
 * Improve error message when amending a property with no value set (https://github.com/apple/pkl/pull/1867[#1867]).
 * Use `EnumSet` for token categories (https://github.com/apple/pkl/pull/1803[#1803]).
-* `String.toInt()` now supports all hexadecimal, octal, and binary formats (https://github.com/apple/pkl/pull/1808[#1808]).
+* pkldoc:String.toInt()[] now supports all hexadecimal, octal, and binary formats (https://github.com/apple/pkl/pull/1808[#1808]).
 * Handle conditional pluralization in error message (https://github.com/apple/pkl/pull/1848[#1848]).
 * Avoid using Java `Object.toString()` to present language-facing string representations (https://github.com/apple/pkl/pull/1850[#1850]).
 * Unify internal construction of objects (https://github.com/apple/pkl/pull/1873[#1873]).
 * Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (https://github.com/apple/pkl/pull/1900[#1900]).
-* Typed values are rendered with more helpful type names in error messages and `Any.toString()` (https://github.com/apple/pkl/pull/1412[#1412]).
+* Typed values are rendered with more helpful type names in error messages and pkldoc:Any.toString()[] (https://github.com/apple/pkl/pull/1412[#1412]).
 * Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (https://github.com/apple/pkl/pull/1897[#1897]).
 * Improve error message when instantiating a class that cannot be instantiated (https://github.com/apple/pkl/pull/1916[#1916]).
 * Improve error messages when a type alias fails to type check (https://github.com/apple/pkl/pull/1914[#1914]).
@@ -694,7 +694,7 @@ Users of protobuf are encouraged render Pkl into https://protobuf.dev/programmin
 * Escape characters that cannot appear literally in rendered YAML (https://github.com/apple/pkl/pull/1846[#1846]).
 * Fix invalid prefix when generating spring boot config (https://github.com/apple/pkl/pull/1862[#1862]).
 * Fix `pkl run` behaviors where (sub)commands amend `pkl:Command` without extending it (https://github.com/apple/pkl/pull/1882[#1882]).
-* Fix `String.endsWith()` for overlapping regex matches (https://github.com/apple/pkl/pull/1880[#1880], https://github.com/apple/pkl/pull/1884[#1884]).
+* Fix pkldoc:String.endsWith()[] for overlapping regex matches (https://github.com/apple/pkl/pull/1880[#1880], https://github.com/apple/pkl/pull/1884[#1884]).
 * Fix leak of external reader processes in the language binding server (https://github.com/apple/pkl/pull/1885[#1885]).
 * Fix decoding of `Regex` values from pkl-binary data (https://github.com/apple/pkl/pull/1895[#1895]).
 * Fix `pkl eval` of dependency notation source modules when using multiple file output (https://github.com/apple/pkl/pull/1942[#1942]).
@@ -708,7 +708,7 @@ Users of protobuf are encouraged render Pkl into https://protobuf.dev/programmin
 * Fix enforcement of `const` member access inside methods (https://github.com/apple/pkl/pull/1945[#1945]).
 * Fix parameterized type checks in type alias constraints (https://github.com/apple/pkl/pull/1906[#1906]).
 * Fix resolution of qualified type names (https://github.com/apple/pkl/pull/1915[#1915]).
-* Fix lookaround regexes in `String.lastIndexOf()` and `String.replaceLast()` (https://github.com/apple/pkl/pull/1908[#1908]).
+* Fix lookaround regexes in pkldoc:String.lastIndexOf()[] and pkldoc:String.replaceLast()[] (https://github.com/apple/pkl/pull/1908[#1908]).
 * Fix formatter instability (https://github.com/apple/pkl/pull/1911[#1911]).
 * Improve normalization of URIs (https://github.com/apple/pkl/pull/1937[#1937], https://github.com/apple/pkl/pull/1954[#1954]).
 * Missing const checks which allow accessing non-const members (https://github.com/apple/pkl/issues/1963[#1963]).

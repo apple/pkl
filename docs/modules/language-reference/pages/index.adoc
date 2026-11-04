@@ -3372,6 +3372,8 @@ In these cases, Pkl infers the amend operation's parent value based on context:
 
 * When assigning to a declared property, the property's default value is amended (<<amend-null, including `null`>>).
 If there is no type associated with the property, an empty `Dynamic` object is amended.
+* In method argument, method return value, and let binding positions, the annotated type's default value is amended.
+If there is no type annotation, an empty `Dynamic` object is amended.
 * When assigning to an entry (e.g. a `Mapping` member) or element (e.g. a `Listing` member), the enclosing object's `default` property is applied to the corresponding index or key, respectively, to produce the value to be amended.
 * In other cases, evaluation fails with the error message "Cannot tell which parent to amend".
 
@@ -3383,29 +3385,29 @@ In this case, the argument's type should be specified explicitly.
 class Bird {
   name: String
 
-  function listHatchlings(items: Listing<String>): Listing<String> = new {
+  function listHatchlings(items: Listing<String>): Listing<String> = new { // <1>
     for (item in items) {
       "\(name):\(item)"
     }
   }
 }
 
-typedProperty: Bird = new { // <1>
+typedProperty: Bird = new { // <2>
   name = "Swift"
 }
 
-untypedProperty = new { // <2>
+untypedProperty = new { // <3>
   hello = "world"
 }
 
 typedListing: Listing<Bird> = new {
-  new { // <3>
+  new { // <4>
     name = "Kite"
   }
 }
 
 untypedListing: Listing = new {
-  new { // <4>
+  new { // <5>
     hello = "there"
   }
 }
@@ -3414,13 +3416,13 @@ typedMapping: Mapping<String, Bird> = new {
   default { entryKey ->
     name = entryKey
   }
-  ["Saltmarsh Sparrow"] = new { // <5>
+  ["Saltmarsh Sparrow"] = new { // <6>
     name = "Sharp-tailed Sparrow"
   }
 }
 
 amendedMapping = (typedMapping) {
-  ["Saltmarsh Sparrow"] = new {} // <6>
+  ["Saltmarsh Sparrow"] = new {} // <7>
 }
 
 class Aviary {
@@ -3430,22 +3432,27 @@ class Aviary {
 }
 
 aviary: Aviary = new {
-  birds = new { // <7>
+  birds = new { // <8>
     new { name = "Kiwi" }
   }
 }
 
-swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
-----
+swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <9>
 
-<1> Assignment to a property with an explicitly declared type, amending `new Bird {}`.
-<2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
-<3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
-<4> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
-<5> `Mapping` value assignment, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
-<6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
-<7> Amending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
-<8> Error: Cannot tell which parent to amend.
+pigeonHatchlings =
+  let (hatchlingNames: Listing<String> = new { "Polly"; "Daisy" }) // <10>
+    new Bird { name = "Pigeon" }.listHatchlings(hatchlingNames)
+----
+<1> Instantiation of a method return value, amending the return type's default value `new Listing<String> {}`. 
+<2> Assignment to a property with an explicitly declared type, amending `new Bird {}`.
+<3> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
+<4> `Listing` element creation, amending implicit `default`, `new Bird {}`.
+<5> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
+<6> `Mapping` value assignment, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<7> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<8> Amending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
+<9> Instantiation of a method argument, amending the parameter type's default value `new Listing<String> {}`.
+<10> Instantiation inside a <<let-expressions,`let` binding>>, amending the binding's type's default value `new Listing<String> {}`.
 
 [[let-expressions]]
 === Let Expressions
