@@ -776,6 +776,7 @@ class GenericParserImpl {
     var fullLookahead = fullLookahead();
     if (fullLookahead.tk.token != Token.LT
         || fullLookahead.hasSemicolon
+        || fullLookahead.tk.newLinesBetween != 0
         || failedTypeArgAttempts.contains(fullLookahead.tk.span.charIndex())
         || !isTypeArgCandidate(fullLookahead.tk.span.charIndex())) {
       return null;

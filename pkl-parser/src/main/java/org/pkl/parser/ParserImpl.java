@@ -1579,6 +1579,7 @@ final class ParserImpl {
   private @Nullable TypeArgumentList tryParseTypeArgumentList() {
     if (lookahead != Token.LT
         || precededBySemicolon
+        || _lookahead.newLinesBetween != 0
         || failedTypeArgAttempts.contains(spanLookahead.charIndex())
         || !isTypeArgCandidate(spanLookahead.charIndex())) {
       return null;
