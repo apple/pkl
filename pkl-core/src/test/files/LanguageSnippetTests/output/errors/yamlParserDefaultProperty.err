@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Error parsing YAML document.
+
+x | res = new yaml.Parser {}.parse("""
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at yamlParserDefaultProperty#res (file:///$snippetsDir/input/errors/yamlParserDefaultProperty.pkl)
+
+Cannot parse an object with key `default` into a `Dynamic`.
+Try parsing into a `Mapping` instead, by setting `useMapping = true` in the `pkl.yaml#Parser`. in input_string, line 2, column 1:
+    default: greeting
+    ^
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
