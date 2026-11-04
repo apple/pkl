@@ -449,7 +449,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     // is executed, and the frame's receiver is the enclosing module rather than the class.
     // do not need: when in any object or at the module level (where `this` is the receiver's class)
     org.pkl.core.runtime.Identifier className = null;
-    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
+    for (var scope = currentScope; scope != null; scope = scope.getParent()) {
       if (scope.isObjectScope() || scope.isCustomThisScope()) {
         break;
       }
