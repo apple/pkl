@@ -125,6 +125,7 @@ import org.pkl.core.ast.expression.member.ReadQualifiedLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNodeGen;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
+import org.pkl.core.ast.expression.primary.GetCustomThisReceiverClassNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -435,7 +436,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public UnresolvedTypeNode visitThisType(ThisType type) {
     var sourceSection = createSourceSection(type);
     var currentScope = symbolTable.getCurrentScope();
-    if (currentScope.getConstLevel() == ConstLevel.ALL && currentScope.getConstDepth() == -1) {
+    if (!currentScope.isCustomThisScope()
+        && currentScope.getConstLevel() == ConstLevel.ALL
+        && currentScope.getConstDepth() == -1) {
       var message =
           currentScope.isPropertyScope() ? "invalidThisTypeInProperty" : "invalidThisTypeInMethod";
       throw exceptionBuilder()
@@ -471,7 +474,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (isBaseModule && className != null) {
       getClassNode = new GetBaseModuleClassNode(className);
     } else if (className == null) {
-      getClassNode = new GetReceiverClassNode(sourceSection);
+      getClassNode =
+          currentScope.isCustomThisScope()
+              ? new GetCustomThisReceiverClassNode(sourceSection)
+              : new GetReceiverClassNode(sourceSection);
     } else if (className.isLocalProp()) {
       getClassNode =
           new ReadQualifiedLocalPropertyNode(

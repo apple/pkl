@@ -1,5 +1,5 @@
 key = "hello"
 
 const result = new {
-  [this.key] = "world" 
+  [this.key] = "world"
 }
