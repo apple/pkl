@@ -64,6 +64,11 @@ class FatJarKotlinReflectTest {
     assertTrue(
         Class.forName("kotlin.reflect.KClass").isInstance(kClass),
         "KClassImpl must implement the unrelocated kotlin.reflect.KClass API");
+    Object qualifiedName = kClass.getClass().getMethod("getQualifiedName").invoke(kClass);
+    assertEquals(
+        "kotlin.reflect.jvm.internal.KClassImpl",
+        qualifiedName,
+        "KClass.getQualifiedName must resolve the original Kotlin name");
     Object members = kClass.getClass().getMethod("getMembers").invoke(kClass);
     assertFalse(
         (Boolean) members.getClass().getMethod("isEmpty").invoke(members),
