@@ -7,6 +7,14 @@ It is designed to be a low-level API that interacts with Pkl via the xref:bindin
 It is meant to be paired with higher level logic written in a host language within the context of a Pkl language binding library.
 The higher level logic deals with implementing the evaluator API, and serializing/deserializing messages according to the message passing API.
 
+== Installing libpkl
+
+Currently, we do not publish libpkl.
+Therefore, libpkl needs to be built from source, by cloning this repository and running the steps laid out in <<build-from-source>>.
+
+Once built, it can be <<linking-to-libpkl,linked against>>, either statically or dynamically.
+
+[[linking-to-libpkl]]
 == Linking to libpkl
 
 It is possible to link to libpkl either as a static library or a dynamic library.
@@ -15,50 +23,6 @@ Statically linking to libpkl means that it is possible to copy libpkl's library 
 However, this impacts the binary size of your application, as libpkl's library files are around 100MB.
 
 On the other hand, dynamically linking to libpkl has negligible impact on binary size, but requires that end users have libpkl installed on their OS.
-
-== Distribution
-
-We publish archives that contain header files, as well as both shared and static libraries.
-
-The distributions are published as releases on GitHub, and can be downloaded for the appropriate OS/architecture.
-
-The archives contain both statically linked and dynamically linked binaries for each OS.
-
-The archive has the following structure:
-
-[source]
-----
-.
-└── libpkl-<version>-<os>-<arch>
-    ├── include
-    │   └── pkl.h
-    ├── lib
-    │   ├── libpkl.<shared library extension>
-    │   ├── libpkl.<static library extension>
-    │   └── pkgconfig
-    │       ├── libpkl-static.pc
-    │       └── libpkl.pc
-    ├── LICENSE.txt
-    ├── README.md
-    └── THIRD-PARTY-NOTICES.txt
-----
-
-The file extensions are as follows:
-|===
-|OS |Static Library Extension |Shared library extension
-
-|macOS
-|`.a`
-|`.dylib`
-
-|Linux
-|`.a`
-|`.so`
-
-|Windows
-|`.lib`
-|`.dll`
-|===
 
 === Linking to the static vs. shared library
 
@@ -98,6 +62,7 @@ cc -Wl,-Bstatic $(pkg-config --libs --cflags libpkl)
 ----
 ====
 
+[[build-from-source]]
 == Building libpkl from source
 
 To build libpkl from source, the apple/pkl repository first must be cloned down to a host OS.
@@ -125,6 +90,46 @@ This results in two directories of interest:
 * `libpkl/build/native-libs/<os>-<arch>`: directory containing the built library files (the inner structure of the archive).
 
 Cross-compilation is not supported.
+
+=== Distribution layout
+
+The built distribution archive contains both statically linked and dynamically linked binaries for each OS.
+
+The archive has the following structure:
+
+[source]
+----
+.
+└── libpkl-<version>-<os>-<arch>
+    ├── include
+    │   └── pkl.h
+    ├── lib
+    │   ├── libpkl.<shared library extension>
+    │   ├── libpkl.<static library extension>
+    │   └── pkgconfig
+    │       ├── libpkl-static.pc
+    │       └── libpkl.pc
+    ├── LICENSE.txt
+    ├── README.md
+    └── THIRD-PARTY-NOTICES.txt
+----
+
+The file extensions are as follows:
+|===
+|OS |Static Library Extension |Shared library extension
+
+|macOS
+|`.a`
+|`.dylib`
+
+|Linux
+|`.a`
+|`.so`
+
+|Windows
+|`.lib`
+|`.dll`
+|===
 
 == ABI compatibility
 

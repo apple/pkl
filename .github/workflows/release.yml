@@ -1341,7 +1341,7 @@ jobs:
           --target "${GIT_SHA}" \
           --verify-tag \
           --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
-          */build/executable/* */build/distributions/*
+          */build/executable/*
   publish-test-results:
     if: '!cancelled()'
     needs:
