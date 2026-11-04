@@ -365,7 +365,10 @@ public final class SymbolTable {
         }
         // LambdaScope inherits constLevel but doesn't create a const scope barrier.
         // Method scopes, let expression scopes, and for generator scopes don't level up.
-        if (scope instanceof LambdaScope || scope instanceof MethodScope || scope instanceof LetExpressionScope || scope instanceof ForGeneratorScope) {
+        if (scope instanceof LambdaScope
+            || scope instanceof MethodScope
+            || scope instanceof LetExpressionScope
+            || scope instanceof ForGeneratorScope) {
           continue;
         }
         if (scope instanceof LexicalScope) {
