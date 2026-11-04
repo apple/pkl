@@ -14,10 +14,10 @@ include::partial$intro.adoc[]
 
 Support for generic methods has been greatly expanded (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl/pull/1940[#1940]).
 
-A "generic method" is a method that accepts types as arguments.
+A generic method is a method that accepts types as arguments.
 This is a powerful tool that allows writing business logic that works over a variety of types.
 
-For example, this code accepts two arguments: type argument `T`, and value argument `arg`.
+For example, this code declares two parameters: type parameter `T`, and value parameter `arg`.
 
 [source,pkl]
 ----
@@ -31,7 +31,7 @@ Generic methods currently already exist in a limited sense:
 
 In Pkl 0.33, both of these restrictions are lifted.
 
-To pass type arguments into a generic method, add them with angle brackets:
+To pass type arguments into a generic method, add the type surrounded by angle brackets:
 
 [source,pkl]
 ----
@@ -192,13 +192,20 @@ For more details, consult xref:pkl-cli:index.adoc#profile-cpu-output[the CLI doc
 
 == Noteworthy [small]#🎶#
 
-=== New type: `this`
+=== `this` as a type
 
 The `this` keyword can now be used as a type (https://github.com/apple/pkl/pull/1708[#1708]).
 
-`this` refers to the type of the enclosing object.
-When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member.
-This makes it possible to express that a member relates to the _same_ type as the object it is on:
+A self type is the type of the object that a member is accessed on.
+Self types are useful when building class hierarchies, because they let a member refer to the _same_ type as the object it belongs to, even after the class is extended.
+
+Currently, Pkl has a self-type, `module`, but it specifically describes the type of the module object.
+There is no equivalent for regular classes nor objects.
+
+To address this shortcoming, the `this` keyword is now also a type.
+It refers to the self-type of the directly enclosing object, class, or module.
+
+When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member:
 
 [source,pkl]
 ----
@@ -227,7 +234,6 @@ bad: SpecialNode = new {
 
 The `this` type can be used in properties, method parameters and return types, function types, and type arguments.
 It cannot be used in a type alias body.
-When used in a module, `this` is the type of the module that is being evaluated.
 
 The `this` type has also been <<this-adoption,adopted in the standard library>>.
 
@@ -235,10 +241,12 @@ To read more about the design, see https://github.com/apple/pkl-evolution/blob/m
 
 === Better `new {}` inference
 
-An xref:language-reference:index.adoc#implicitly-typed-new[implicitly typed `new {}` expression] can now correctly infer its parent in more positions (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1824[#1824], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]).
+The `new {}` expression can now correctly infer its parent in more positions (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1824[#1824], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]).
 
-A `new {}` expression will infer the parent to amend.
-In Pkl 0.33, using `new {}` in the following positions will correctly infer its parent:
+An xref:language-reference:index.adoc#implicitly-typed-new[implicitly typed `new {}` expression] tells Pkl to infer the parent when amending.
+When used inside a property, for example, it amends the class property default.
+
+Using `new {}` in the following positions currently throw, and will work in Pkl 0.33:
 
 * Method arguments
 * Let bindings
@@ -385,13 +393,13 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 === Removal of macOS amd64 (Intel) Binaries
 
-Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published with Pkl releases.
+Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published with Pkl releases (https://github.com/apple/pkl/pull/1769[#1769]).
 
 To continue running new Pkl releases on these systems, use an appropriate Java runtime and the `jpkl` and `jpkldoc` Java executables.
 
 === Type check changes for `Class<T>`
 
-In prior versions of Pkl, type arguments to the `Class` type were erased.
+Currently, type arguments to the `Class` type are erased.
 Any `Class` value would typecheck against `Class<T>` for any value of `T`.
 
 In Pkl 0.33, this erasure has been removed.
@@ -399,11 +407,30 @@ A `Class` value typechecked against `Class<T>` must be a subclass of `T` (https:
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
-=== More standard library properties marked `const`
+=== Standard library properties marked `const`
 
-Previously, module properties in `pkl:math` and `pkl:release` could be overridden by amending the module.
+Some properties within the `pkl:math` and `pkl:release` modules have been marked `const` (https://github.com/apple/pkl/pull/1864[#1864]).
+
+Currently, module properties in `pkl:math` and `pkl:release` can be overridden by amending the module.
 Doing this makes little sense; these values are constants and overriding them by amending their module would be odd.
-These properties are now marked `const` (https://github.com/apple/pkl/pull/1864[#1864]).
+
+The following properties are now `const` and cannot be amended:
+
+* `math.minInt`
+* `math.maxInt`
+* `math.maxInt8`
+* `math.maxInt16`
+* `math.maxInt32`
+* `math.maxUInt`
+* `math.maxUInt8`
+* `math.maxUInt16`
+* `math.maxUInt32`
+* `math.minFiniteFloat`
+* `math.maxFiniteFloat`
+* `math.minPositiveFloat`
+* `math.e`
+* `math.pi`
+* `release.current`
 
 This is a breaking change for code that looks like this:
 [source,pkl]
@@ -493,13 +520,13 @@ class MyDomain extends ref.AbstractDomain { // <1>
   function renderReference(reference: ref.Reference<MyDomain, Any>): String = "..."
 }
 
-// before
+// current
 myRef = ref.Reference(new MyDomain {}, MyReferent, myData)
 
-// after
+// new
 myRef = ref.Reference<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
 ----
-<1> Previously `extends ref.Domain`.
+<1> In Pkl 0.32, `extends ref.Domain`.
 <2> Constraints in the referent type of a `Reference` type annotation are no longer an error, they are ignored.
 
 [#parser-rule-change-for-comparison]
@@ -543,9 +570,9 @@ To restore the old meaning, wrap the left-hand side with parentheses:
 
 The `catch()` and `catchOrNull()` methods in `pkl:test` now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
 
-Previously, an error nested inside the returned value was not caught.
+Currently, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
-Now, it is caught, and `catch()` returns its message.
+In Pkl 0.33, it is caught, and `catch()` returns its message.
 
 === Abstract methods must be implemented in extending non-abstract classes/modules
 
@@ -608,7 +635,17 @@ class Feature {
 
 === Protobuf module deprecated
 
-The `pkl:protobuf` module is deprecated without replacement, and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
+The `pkl:protobuf` module is deprecated without replacement (https://github.com/apple/pkl/pull/1778[#1778]).
+
+The protobuf module renders Pkl data into the "textproto" format.
+However, Pkl is more expressive than protobuf, which means that Pkl's renderer needs to make rendering choices that are bespoke to Pkl's renderer itself.
+
+For example, there is no native equivalent for Pkl's `null` literal.
+To address this, Pkl's protobuf renderer renders these as a "null" scalar.
+
+These rendering choices are somewhat ad-hoc and likely to break from one usage to the next.
+
+Users of protobuf are encouraged render Pkl into https://protobuf.dev/programming-guides/json/[ProtoJSON] instead.
 
 == Miscellaneous [small]#🐸#
 
@@ -640,13 +677,11 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 * Improve performance of parent property and subscript access (https://github.com/apple/pkl/pull/1853[#1853]).
 * Improve performance of typechecking (https://github.com/apple/pkl/pull/1871[#1871]).
 * Improve performance of string literal union types in more cases (https://github.com/apple/pkl/pull/1875[#1875]).
-* Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869]).
 * Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]). Thank you to https://github.com/odenix[@odenix] for their contributions to this feature!
 * Fix some partial evaluation issues in the GraalVM compiler (https://github.com/apple/pkl/pull/1944[#1944]).
 
 == Bug Fixes [small]#🐜#
 
-* Fix error when rendering error messages for multi-line expressions (https://github.com/apple/pkl/pull/1793[#1793]).
 * Fix incorrect behavior when objects are partially forced (https://github.com/apple/pkl/pull/1790[#1790]).
 * Fix issues publishing pkl-gradle (https://github.com/apple/pkl/pull/1777[#1777], https://github.com/apple/pkl/pull/1807[#1807]).
 * Fix resolution of the `module` type in typealias bodies (https://github.com/apple/pkl/pull/1796[#1796]).
@@ -675,6 +710,7 @@ The `pkl:protobuf` module is deprecated without replacement, and will be removed
 * Fix resolution of qualified type names (https://github.com/apple/pkl/pull/1915[#1915]).
 * Fix lookaround regexes in `String.lastIndexOf()` and `String.replaceLast()` (https://github.com/apple/pkl/pull/1908[#1908]).
 * Fix formatter instability (https://github.com/apple/pkl/pull/1911[#1911]).
+* Improve normalization of URIs (https://github.com/apple/pkl/pull/1937[#1937], https://github.com/apple/pkl/pull/1954[#1954]).
 
 == Contributors [small]#🙏#
 
