@@ -8,15 +8,22 @@ res1 = foo.length
 local baz: Listing = new {
   new Listing { "hello" }
   new Mapping { ["hello"] = "world" }
-  module
 }
 
 res2 = (baz) {
-  [[this is this]] {
-    res2 = "blah"
-  }
   when (module is this) {
     123
   }
   module is this
+}
+
+local res3: Listing<Listing<String>> = new {
+  new { "one" }
+  new { "two" }
+}
+
+res4 = (res3) {
+  [[this is this]] {
+    "three"
+  }
 }
