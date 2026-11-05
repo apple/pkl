@@ -135,25 +135,25 @@ facts {
   }
 
   ["replaceChild replaces only the first match"] {
-    renderer.render(
+    renderer.renderValue(
       mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
     ) == "x = 9 + 1\n"
   }
 
   ["replaceChild leaves the tree unchanged when nothing matches"] {
-    renderer.render(
+    renderer.renderValue(
       mod("x = 1").replaceChild((n) -> n.type == "when_generator", (_n) -> intLiteral(9)),
     ) == "x = 1\n"
   }
 
   ["replaceChildren replaces every match"] {
-    renderer.render(
+    renderer.renderValue(
       mod("x = 1 + 1").replaceChildren((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
     ) == "x = 9 + 9\n"
   }
 
   ["a replacer sees the node it replaces"] {
-    renderer.render(
+    renderer.renderValue(
       mod("x = 1 + 2")
         .replaceChildren(
           (n) -> n.type == "int_literal_expr",
@@ -164,14 +164,14 @@ facts {
 
   ["a replacement is not searched for further matches"] {
     // replacing an identifier with an identifier terminates instead of looping
-    renderer.render(
+    renderer.renderValue(
       mod("foo = 1").replaceChildrenOfType("identifier", (n) -> (n) { text = "\(n.text!!)Bar" }),
     ) == "fooBar = 1\n"
   }
 
   ["replaceChildOfType agrees with replaceChild"] {
-    renderer.render(mod("x = 1 + 1").replaceChildOfType("int_literal_expr", (_n) -> intLiteral(9)))
-      == renderer.render(
+    renderer.renderValue(mod("x = 1 + 1").replaceChildOfType("int_literal_expr", (_n) -> intLiteral(9)))
+      == renderer.renderValue(
         mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
       )
   }
@@ -182,14 +182,14 @@ facts {
         .replaceChildOfType("int_literal_expr", (n) ->
           if (n.hasParentOfType("class_property")) intLiteral(9) else intLiteral(0)
         )
-    renderer.render(result) == "x = 9\n"
+    renderer.renderValue(result) == "x = 9\n"
   }
 
   ["a replace does not change the tree it walks"] {
     local original = mod("x = 1")
     local rewritten = original.replaceChildrenOfType("int_literal_expr", (_n) -> intLiteral(9))
-    let (rendered = renderer.render(rewritten))
-      rendered == "x = 9\n" && renderer.render(original) == "x = 1\n"
+    let (rendered = renderer.renderValue(rewritten))
+      rendered == "x = 9\n" && renderer.renderValue(original) == "x = 1\n"
   }
 
   ["the root of a replaced tree has no parent"] {
@@ -221,7 +221,7 @@ facts {
           .findChildrenOfType("int_literal_expr")
           .fold(0, (acc, c) -> acc + c.text!!.toInt()),
       )
-    renderer.render(mod("x = 1 + 2").replaceChildrenOfType("int_literal_expr", sumOfSiblings))
+    renderer.renderValue(mod("x = 1 + 2").replaceChildrenOfType("int_literal_expr", sumOfSiblings))
       == "x = 3 + 3\n"
   }
 
@@ -234,7 +234,7 @@ facts {
   }
 
   ["rebuilds ancestors of a replacement"] {
-    renderer.render(
+    renderer.renderValue(
       mod("x = if (cond) 41 else 0")
         .replaceChildrenOfType("int_literal_expr", (n) -> intLiteral(n.text!!.toInt() + 1)),
     ) == "x = if (cond) 42 else 1\n"
@@ -246,7 +246,7 @@ facts {
         throw("searched inside a match")
       else
         n.type == "parenthesized_expr"
-    renderer.render(mod("x = (1)").replaceChildren(predicate, (_) -> intLiteral(9))) == "x = 9\n"
+    renderer.renderValue(mod("x = (1)").replaceChildren(predicate, (_) -> intLiteral(9))) == "x = 9\n"
   }
 
   ["replacement is eager"] {

@@ -5,10 +5,9 @@ import "pkl:test"
 
 local renderer = new syntax.FormattingRenderer {}
 
-local function roundTrip(source: String) = renderer.render(parseNode(source))
+local function roundTrip(source: String) = renderer.renderValue(parseNode(source))
 
-local function parseNode(source: String): syntax.Node =
-  new syntax.Parser {}.parseModule(source)
+local function parseNode(source: String): syntax.Node = new syntax.Parser {}.parseModule(source)
 
 local function replaceLeaf(
   node: syntax.Node,
@@ -340,37 +339,37 @@ facts {
   ["modify identifier"] {
     local root = parseNode("x = 1")
     local modified = replaceLeaf(root, "identifier", "x", "y")
-    renderer.render(modified) == "y = 1\n"
+    renderer.renderValue(modified) == "y = 1\n"
   }
 
   ["modify modifier"] {
     local root = parseNode("hidden x = 1")
     local modified = replaceLeaf(root, "modifier", "hidden", "local")
-    renderer.render(modified) == "local x = 1\n"
+    renderer.renderValue(modified) == "local x = 1\n"
   }
 
   ["modify string content"] {
     local root = parseNode(#"x = "hello""#)
     local modified = replaceLeaf(root, "string_chars", "hello", "world")
-    renderer.render(modified) == #"x = "world"\#n"#
+    renderer.renderValue(modified) == #"x = "world"\#n"#
   }
 
   ["modify int literal"] {
     local root = parseNode("x = 42")
     local modified = replaceLeaf(root, "int_literal_expr", "42", "99")
-    renderer.render(modified) == "x = 99\n"
+    renderer.renderValue(modified) == "x = 99\n"
   }
 
   ["modify boolean literal"] {
     local root = parseNode("x = true")
     local modified = replaceLeaf(root, "bool_literal_expr", "true", "false")
-    renderer.render(modified) == "x = false\n"
+    renderer.renderValue(modified) == "x = false\n"
   }
 
   ["modify float literal"] {
     local root = parseNode("x = 3.14")
     local modified = replaceLeaf(root, "float_literal_expr", "3.14", "2.72")
-    renderer.render(modified) == "x = 2.72\n"
+    renderer.renderValue(modified) == "x = 2.72\n"
   }
 
   ["add new modifier"] {
@@ -384,7 +383,8 @@ facts {
         children = List(constModifier) + n.children
       })
     // modifier order is switched by the formatter
-    renderer.render(modified) == """
+    renderer.renderValue(modified)
+      == """
       local const x = 1
 
       """
@@ -392,14 +392,17 @@ facts {
 
   ["a default renderer targets the V2 grammar"] {
     local node = parseNode("x = 1")
-    renderer.render(node) == new syntax.FormattingRenderer { grammarVersion = "V2" }.render(node)
+    renderer.renderValue(node)
+      == new syntax.FormattingRenderer { grammarVersion = "V2" }.renderValue(node)
   }
 
   ["renderer honors the grammar version"] {
     local node =
-      parseNode("x = fn(argument1, argument2, argument3, argument4, argument5, argument6, argument7, argument8, argument9)")
-    new syntax.FormattingRenderer { grammarVersion = "V1" }.render(node)
-      != new syntax.FormattingRenderer { grammarVersion = "V2" }.render(node)
+      parseNode(
+        "x = fn(argument1, argument2, argument3, argument4, argument5, argument6, argument7, argument8, argument9)",
+      )
+    new syntax.FormattingRenderer { grammarVersion = "V1" }.renderValue(node)
+      != new syntax.FormattingRenderer { grammarVersion = "V2" }.renderValue(node)
   }
 
   ["a malformed tree is reported as such"] {
@@ -407,7 +410,8 @@ facts {
       type = "object_element"
       children = List()
     }
-    test.catch(() -> renderer.render(malformed))
+    test
+      .catch(() -> renderer.renderValue(malformed))
       .contains("Could not render node of type `object_element` as Pkl source")
   }
 }

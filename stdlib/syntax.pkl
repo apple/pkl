@@ -46,7 +46,7 @@ class FormattingRenderer {
   grammarVersion: "V1" | "V2" = "V2"
 
   /// Render [node] as Pkl source code.
-  external function render(node: Node): String
+  external function renderValue(node: Node): String
 }
 
 /// A generic, untyped node in the Pkl syntax tree.
