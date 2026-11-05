@@ -58,7 +58,7 @@ To learn more about the design of generic method calls, consult https://github.c
 A new standard library module is introduced called pkldoc:#[pkl:net], for working with network types (https://github.com/apple/pkl/pull/1834[#1834]).
 
 Its centerpiece is pkldoc:Url[pkl:net], a URL as defined by https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
-A string is parsed with pkldoc:Url()[pkl:net], which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
+A string is parsed with pkldoc:#Url()[pkl:net], which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
 
 [source,pkl]
 ----
@@ -119,7 +119,7 @@ To instead compare them as the *syntax-based normalization* of RFC 3986, where s
 same = net.Url("HTTPS://Example.com/%7Euser").equals(net.Url("https://example.com/~user")) // true
 ----
 
-The module also provides standalone helpers: pkldoc:encodeUrlComponent()[pkl:net] and pkldoc:decodeUrlComponent()[pkl:net] for percent-encoding, and pkldoc:buildQuery()[pkl:net] and pkldoc:parseQuery()[pkl:net] for `application/x-www-form-urlencoded` queries.
+The module also provides standalone helpers: pkldoc:#encodeUrlComponent()[pkl:net] and pkldoc:#decodeUrlComponent()[pkl:net] for percent-encoding, and pkldoc:#buildQuery()[pkl:net] and pkldoc:#parseQuery()[pkl:net] for `application/x-www-form-urlencoded` queries.
 
 Alongside this module, `pkl:base` gains pkldoc:String#isValidUrl[], which tells whether a string is a valid absolute URL.
 It is stricter than `net.Url()`, which also parses a relative reference, and which percent-encodes whatever cannot appear literally in a URL component.
@@ -498,7 +498,7 @@ bad1: Uri = "./some/path"                   // throws: not absolute
 bad2: Uri = "https://example.com/some path" // throws: space must be percent-encoded
 ----
 
-This affects every standard library member typed as `Uri`, among them pkldoc:Resource#uri[], pkldoc:importGraph()[pkl:analyze], and the URI-valued properties of pkldoc:#[pkl:Project], pkldoc:#[pkl:EvaluatorSettings] and pkldoc:#[pkl:DocPackageInfo].
+This affects every standard library member typed as `Uri`, among them pkldoc:Resource#uri[], pkldoc:#importGraph()[pkl:analyze], and the URI-valued properties of pkldoc:#[pkl:Project], pkldoc:#[pkl:EvaluatorSettings] and pkldoc:#[pkl:DocPackageInfo].
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
@@ -566,7 +566,7 @@ To restore the old meaning, wrap the left-hand side with parentheses:
 
 === `test.catch()` and `test.catchOrNull()` force their result
 
-The pkldoc:catch()[pkl:test] and pkldoc:catchOrNull()[pkl:test] methods now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
+The pkldoc:#catch()[pkl:test] and pkldoc:#catchOrNull()[pkl:test] methods now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
 
 Currently, an error nested inside the returned value was not caught.
 It surfaced later, when the value was used.
