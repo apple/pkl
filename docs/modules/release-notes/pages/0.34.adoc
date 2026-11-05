@@ -1,0 +1,47 @@
+= Pkl 0.34 Release Notes
+
+:version: 0.34
+:version-minor: 0.34.0
+:release-date: TBD
+:version-next: 0.35.0
+:version-next-date: June 2027
+
+link:partial$intro.adoc[role=include]
+
+== Highlights [small]#💖#
+
+News you don't want to miss.
+
+=== XXX
+
+== Noteworthy [small]#🎶#
+
+Ready when you need them.
+
+=== XXX
+
+== Breaking Changes [small]#💔#
+
+Things to watch out for when upgrading.
+
+=== XXX
+
+== Miscellaneous [small]#🐸#
+
+* XXX
+* XXX
+
+== Bug Fixes [small]#🐜#
+
+* XXX
+* XXX
+
+== Security Fixes [small]#🔒#
+
+The following security vulnerabilities were fixed:
+
+== Contributors [small]#🙏#
+
+We would like to thank the contributors to this release (in alphabetical order):
+
+* XXX

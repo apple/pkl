@@ -1,6 +1,11 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.34.0]]
+== 0.34.0 (UNRELEASED)
+
+xref:0.34.adoc[Release Notes]
+
 [[release-0.33.0]]
 == 0.33.0 (2026-11-05)
 
