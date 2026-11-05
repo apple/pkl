@@ -37,6 +37,11 @@ open class MergeSourcesJars : DefaultTask() {
 
   @get:Input val relocatedPackages: MapProperty<String, String> = project.objects.mapProperty()
 
+  /** Package or class name prefixes excluded from relocation, e.g. `kotlin.reflect.`. */
+  @get:Input
+  val excludedPackages: ListProperty<String> =
+    project.objects.listProperty<String>().convention(listOf())
+
   @get:Input
   var sourceFileExtensions: ListProperty<String> =
     project.objects.listProperty<String>().convention(listOf(".java", ".kt"))
@@ -52,6 +57,12 @@ open class MergeSourcesJars : DefaultTask() {
 
     val relocatedPaths =
       relocatedPkgs.entries.associate { (key, value) -> toPath(key) to toPath(value) }
+
+    // Path prefixes that keep their original location, e.g. `kotlin/reflect/`.
+    // Exclusions are matched against each entry's full path so that single
+    // classes like `kotlin/jvm/internal/DefaultConstructorMarker` are covered
+    // while their package siblings are still relocated.
+    val excludedPaths = excludedPackages.get().map { toPath(it) }
 
     // use negative lookbehind to match any that don't precede with
     // a word or a period character. should catch most cases.
@@ -71,9 +82,11 @@ open class MergeSourcesJars : DefaultTask() {
         if (details.isDirectory) return@visit
 
         var path = details.relativePath.parent!!.pathString
-        val relocatedPath = relocatedPaths.keys.find { path.startsWith(it) }
-        if (relocatedPath != null) {
-          path = path.replace(relocatedPath, relocatedPaths.getValue(relocatedPath))
+        if (excludedPaths.none { details.relativePath.pathString.startsWith(it) }) {
+          val relocatedPath = relocatedPaths.keys.find { path.startsWith(it) }
+          if (relocatedPath != null) {
+            path = path.replace(relocatedPath, relocatedPaths.getValue(relocatedPath))
+          }
         }
         // conservative shrinking
         if (!binaryPaths.contains(path)) return@visit
@@ -115,9 +128,13 @@ open class MergeSourcesJars : DefaultTask() {
   ): String {
     val matcher = importPattern.matcher(sourceText)
     val buffer = StringBuffer()
+    val excludedPkgs = excludedPackages.get()
     logger.debug("Inspecting file: {}", details.relativePath)
     while (matcher.find()) {
-      val newStat = relocatedPkgs[matcher.group(2)]
+      // keep matches that are really prefixes of excluded packages
+      // (e.g. `kotlin.` matching `kotlin.reflect.`)
+      val excluded = excludedPkgs.any { sourceText.startsWith(it, matcher.start(2)) }
+      val newStat = if (excluded) matcher.group(2) else relocatedPkgs[matcher.group(2)]
       logger.debug("Old: {}", matcher.group())
       logger.debug("New: {}", newStat)
       matcher.appendReplacement(buffer, Matcher.quoteReplacement(newStat))
