@@ -31,7 +31,7 @@ import org.pkl.parser.syntax.generic.Node;
 public final class FormattingRendererNodes {
   private FormattingRendererNodes() {}
 
-  public abstract static class render extends ExternalMethod1Node {
+  public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     protected String eval(
         VmTyped self, VmTyped nodeVm, @Cached("create()") IndirectCallNode callNode) {
