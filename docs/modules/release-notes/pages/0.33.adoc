@@ -127,7 +127,7 @@ The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,br
 
 === New standard library module: `pkl:syntax`
 
-A new standard library module is introduced called pkldoc:#[pkl:syntax], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
+A new standard library module is introduced called pkldoc:#[pkl:syntax], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821], https://github.com/apple/pkl/pull/1955[#1955]).
 
 It has three parts:
 
