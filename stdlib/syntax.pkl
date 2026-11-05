@@ -38,13 +38,8 @@ class Parser {
   external function parseExpressionOrNull(source: String | Resource): Node?
 }
 
-/// A renderer for syntax tree [Node]s.
-abstract class SyntaxRenderer {
-  abstract function render(node: Node): String
-}
-
 /// Renders a [Node] back to Pkl source code, using the canonical Pkl formatter.
-class FormattingRenderer extends SyntaxRenderer {
+class FormattingRenderer {
   /// The grammar version to target.
   ///
   /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
@@ -54,28 +49,36 @@ class FormattingRenderer extends SyntaxRenderer {
   external function render(node: Node): String
 }
 
-/// Renders a [Node] as an S-expression, similar to the output of tree-sitter.
+/// Renders a [Node] as an [S-expression](https://en.wikipedia.org/wiki/S-expression).
 ///
-/// Each node is rendered as its [Node.type] in parentheses, followed by its [Node.children], each
-/// on its own line and indented by two spaces.
+/// Each node is rendered as its [type][Node.type] in parentheses, followed by its
+/// [children][Node.children], each on its own line and indented by two spaces.
 /// Nodes without children are rendered on a single line.
 ///
 /// Example:
 /// ```
 /// new SExpressionRenderer {}.renderValue(new Parser {}.parseExpression("1 + 2"))
-/// // (binary_op_expr
-/// //   (int_literal_expr)
-/// //   (operator)
-/// //   (int_literal_expr))
 /// ```
-class SExpressionRenderer extends SyntaxRenderer {
+///
+/// The above evaluates to:
+///
+/// ```
+/// result =
+///   """
+///   (binary_op_expr
+///     (int_literal_expr)
+///     (operator)
+///     (int_literal_expr))
+///   """
+/// ```
+class SExpressionRenderer {
   /// Whether to render the [Node.text] of terminal nodes whose text is not implied by their
   /// [Node.type].
   ///
   /// If [true], the text follows the type as a quoted, escaped string, as in
   /// `(int_literal_expr "5")`.
   /// If [false], only the type is rendered.
-  renderTerminalText: Boolean = false
+  renderTerminalText: Boolean = true
 
   /// The types of the terminal nodes that [renderTerminalText] applies to.
   local textTypes: Set<TerminalNodeType> =
@@ -100,7 +103,7 @@ class SExpressionRenderer extends SyntaxRenderer {
     )
 
   /// Renders [value] as a S-expression.
-  function render(value: Node): String = renderIndented(value, "")
+  function renderValue(value: Node): String = renderIndented(value, "")
 
   local function renderIndented(node: Node, indent: String): String =
     if (node.children.isEmpty)

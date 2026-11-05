@@ -5,20 +5,54 @@ facts {
   ["terminal with text"] {
     true
   }
-  ["nested nodes are indented"] {
-    true
-  }
-  ["nested nodes with terminal text"] {
-    true
-  }
-  ["keywords and punctuation are rendered without text"] {
-    true
-  }
-  ["terminal text is escaped"] {
-    true
-  }
 }
 examples {
+  ["nested nodes are indented"] {
+    """
+    (binary_op_expr
+      (int_literal_expr)
+      (operator)
+      (int_literal_expr))
+    """
+  }
+  ["nested nodes with terminal text"] {
+    """
+    (binary_op_expr
+      (int_literal_expr "1")
+      (operator "+")
+      (int_literal_expr "2"))
+    """
+  }
+  ["keywords and punctuation are rendered without text"] {
+    """
+    (if_expr
+      (if_header
+        (if_keyword)
+        (if_condition
+          (lparen)
+          (if_condition_expr
+            (bool_literal_expr "true"))
+          (rparen)))
+      (if_then_expr
+        (unqualified_access_expr
+          (identifier "x")))
+      (else_keyword)
+      (if_else_expr
+        (int_literal_expr "0")))
+    """
+  }
+  ["terminal text is escaped"] {
+    """
+    (single_line_string_literal_expr
+      (string_start "\\"")
+      (string_chars "a ")
+      (string_escape "\\\\\\"")
+      (string_chars "b")
+      (string_escape "\\\\\\"")
+      (string_escape "\\\\n")
+      (string_end "\\""))
+    """
+  }
   ["module"] {
     """
     (module
