@@ -370,11 +370,9 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 ==== `pkl:base`
 
-
 * New property: pkldoc:String#isValidUrl[]
 * Changed typealias: pkldoc:Uri[] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
-[[this-adoption]]
-* Properties refined with `this` type
+* [[this-adoption]] Properties refined with `this` type
 ** pkldoc:Any.getClass()[] now returns `Class<this>`
 ** pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) \-> Result`
 
@@ -500,7 +498,7 @@ bad1: Uri = "./some/path"                   // throws: not absolute
 bad2: Uri = "https://example.com/some path" // throws: space must be percent-encoded
 ----
 
-This affects every standard library member typed as `Uri`, among them pkldoc:Resource#uri[], pkldoc:importGraph()[pkl:analyze], and the URI-valued properties of pkldoc:#[Project], pkldoc:#[EvaluatorSettings] and pkldoc:#[DocPackageInfo].
+This affects every standard library member typed as `Uri`, among them pkldoc:Resource#uri[], pkldoc:importGraph()[pkl:analyze], and the URI-valued properties of pkldoc:#[pkl:Project], pkldoc:#[pkl:EvaluatorSettings] and pkldoc:#[pkl:DocPackageInfo].
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
