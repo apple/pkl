@@ -30,6 +30,7 @@ fixed job {
       run =
         #"""
         gh release create ${TAG_NAME} \
+          --draft \
           --title "${TAG_NAME}" \
           --target "${GIT_SHA}" \
           --verify-tag \
