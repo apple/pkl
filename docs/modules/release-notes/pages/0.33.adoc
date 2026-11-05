@@ -638,7 +638,7 @@ class Feature {
 The `pkl:protobuf` module is deprecated without replacement (https://github.com/apple/pkl/pull/1778[#1778]).
 
 The protobuf module renders Pkl data into the "textproto" format.
-However, Pkl is more expressive than protobuf, which means that Pkl's renderer needs to make rendering choices that are bespoke to Pkl's renderer itself.
+However, Pkl is more expressive than protobuf, which means that Pkl's renderer needs to make rendering choices that are bespoke to Pkl's protobuf renderer.
 
 For example, there is no native equivalent for Pkl's `null` literal.
 To address this, Pkl's protobuf renderer renders these as a "null" scalar.
