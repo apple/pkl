@@ -60,16 +60,13 @@ class FormattingRenderer {
 /// new SExpressionRenderer {}.renderValue(new Parser {}.parseExpression("1 + 2"))
 /// ```
 ///
-/// The above evaluates to:
+/// The above renders:
 ///
 /// ```
-/// result =
-///   """
-///   (binary_op_expr
-///     (int_literal_expr)
-///     (operator)
-///     (int_literal_expr))
-///   """
+/// (binary_op_expr
+///   (int_literal_expr "1")
+///   (operator "+")
+///   (int_literal_expr "2"))
 /// ```
 class SExpressionRenderer {
   /// Whether to render the [Node.text] of terminal nodes whose text is not implied by their
