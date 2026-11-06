@@ -1,0 +1,22 @@
+examples {
+  ["symlink to file is included"] {
+    new {
+      "../../input-helper/globtest-symlink/linked.pkl"
+      "../../input-helper/globtest-symlink/real-target.pkl"
+    }
+  }
+  ["symlink target content is read through symlink"] {
+    new {
+      "real-target"
+      "real-target"
+    }
+  }
+  ["directory symlink is followed"] {
+    new {
+      "../../input-helper/globtest-symlink/linked.pkl"
+      "../../input-helper/globtest-symlink/real-target.pkl"
+      "../../input-helper/globtest-symlink/linked-dir/inner.pkl"
+      "../../input-helper/globtest-symlink/subdir/inner.pkl"
+    }
+  }
+}
