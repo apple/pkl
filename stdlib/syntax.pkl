@@ -514,10 +514,39 @@ abstract class SyntaxNode {
   /// rebuilt from their fields.
   ///
   /// Operands are parenthesized where they would otherwise be parsed back into a different tree
-  /// or be syntacticaly invalid.
-  /// For example, the operand of a [LogicalNotExprNode] is only left as-is if it binds at least as
-  /// tightly as `!`, so a [LogicalAndExprNode] operand yields `!(a && b)`.
+  /// or be syntacticaly invalid: `!(a && b)`.
   external fixed builtNode: Node
+
+  /// Fold [operator] over this node and its descendants, top-down in pre-order.
+  ///
+  /// Example:
+  /// ```
+  /// // count the if-expressions in a module
+  /// module.fold(0, (acc, n) -> if (n is IfExprNode) acc + 1 else acc)
+  /// ```
+  external function fold<Result>(initial: Result, operator: (Result, SyntaxNode) -> Result): Result
+
+  /// Returns the first descendant matching [predicate], searching depth-first in source order.
+  ///
+  /// This node itself is not considered.
+  /// The search stops at the first match.
+  ///
+  /// Throws if no descendant matches [predicate].
+  ///
+  /// Example:
+  /// ```
+  /// // the first class declared in a module
+  /// module.findChild((n) -> n is ClassNode) as ClassNode
+  /// ```
+  external function findChild(predicate: (SyntaxNode) -> Boolean): SyntaxNode
+
+  /// Same as [findChild()] but returns [null] if no descendant matches [predicate].
+  external function findChildOrNull(predicate: (SyntaxNode) -> Boolean): SyntaxNode?
+
+  /// Returns every descendant matching [predicate], in depth-first source order.
+  ///
+  /// A matching node is searched for further matches, so a match may contain another.
+  external function findChildren(predicate: (SyntaxNode) -> Boolean): List<SyntaxNode>
 }
 
 /// Base class for expression nodes.

@@ -193,6 +193,10 @@ public final class SyntaxModule extends StdLibModule {
     return StringLiteralTypeNodeClass.instance;
   }
 
+  public static VmClass getSyntaxNodeClass() {
+    return SyntaxNodeClass.instance;
+  }
+
   public static VmClass getExprNodeClass() {
     return ExprNodeClass.instance;
   }
@@ -543,6 +547,10 @@ public final class SyntaxModule extends StdLibModule {
 
   private static final class StringLiteralTypeNodeClass {
     static final VmClass instance = loadClass("StringLiteralTypeNode");
+  }
+
+  private static final class SyntaxNodeClass {
+    static final VmClass instance = loadClass("SyntaxNode");
   }
 
   private static final class ExprNodeClass {

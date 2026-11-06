@@ -15,19 +15,31 @@
  */
 package org.pkl.core.stdlib.syntax;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.nodes.Node;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmListing;
+import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
@@ -45,6 +57,142 @@ public final class SyntaxNodeNodes {
     @TruffleBoundary
     protected Object eval(VmTyped self) {
       return build(self);
+    }
+  }
+
+  public abstract static class fold extends ExternalMethod2Node {
+    @Child private ApplyVmFunction2Node applyAccumulate = ApplyVmFunction2NodeGen.create();
+    @Child private IndirectCallNode callNode = IndirectCallNode.create();
+
+    @Specialization
+    protected Object eval(VmTyped self, Object initial, VmFunction operator) {
+      var pending = new ArrayDeque<VmTyped>();
+      pending.push(self);
+      var result = initial;
+      var visited = 0;
+      while (!pending.isEmpty()) {
+        var node = pending.pop();
+        result = applyAccumulate.execute(operator, result, node);
+        pushChildren(pending, node, callNode);
+        visited += 1;
+      }
+      LoopNode.reportLoopCount(this, visited);
+      return result;
+    }
+  }
+
+  public abstract static class findChild extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+    @Child private IndirectCallNode callNode = IndirectCallNode.create();
+
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction predicate) {
+      var result = findFirstChild(this, self, predicate, applyPredicate, callNode);
+      if (result == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("cannotFindMatchingChildNode").build();
+      }
+      return result;
+    }
+  }
+
+  public abstract static class findChildOrNull extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+    @Child private IndirectCallNode callNode = IndirectCallNode.create();
+
+    @Specialization
+    protected Object eval(VmTyped self, VmFunction predicate) {
+      return VmNull.lift(findFirstChild(this, self, predicate, applyPredicate, callNode));
+    }
+  }
+
+  public abstract static class findChildren extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+    @Child private IndirectCallNode callNode = IndirectCallNode.create();
+
+    @Specialization
+    protected VmList eval(VmTyped self, VmFunction predicate) {
+      var matches = new ArrayList<VmTyped>();
+      var pending = new ArrayDeque<VmTyped>();
+      pushChildren(pending, self, callNode);
+      var visited = 0;
+      while (!pending.isEmpty()) {
+        var node = pending.pop();
+        visited += 1;
+        if (applyPredicate.executeBoolean(predicate, node)) {
+          matches.add(node);
+        }
+        pushChildren(pending, node, callNode);
+      }
+      LoopNode.reportLoopCount(this, visited);
+      return VmList.create(matches);
+    }
+  }
+
+  private static @Nullable VmTyped findFirstChild(
+      Node owner,
+      VmTyped self,
+      VmFunction predicate,
+      ApplyVmFunction1Node applyPredicate,
+      IndirectCallNode callNode) {
+    var pending = new ArrayDeque<VmTyped>();
+    pushChildren(pending, self, callNode);
+    var visited = 0;
+    try {
+      while (!pending.isEmpty()) {
+        var node = pending.pop();
+        visited += 1;
+        if (applyPredicate.executeBoolean(predicate, node)) {
+          return node;
+        }
+        pushChildren(pending, node, callNode);
+      }
+      return null;
+    } finally {
+      LoopNode.reportLoopCount(owner, visited);
+    }
+  }
+
+  private static void pushChildren(
+      ArrayDeque<VmTyped> pending, VmTyped node, IndirectCallNode callNode) {
+    var children = childrenOf(node, callNode);
+    for (var i = children.size() - 1; i >= 0; i--) {
+      pending.push(children.get(i));
+    }
+  }
+
+  // The syntax nodes directly below `node`, in source order.
+  @TruffleBoundary
+  private static List<VmTyped> childrenOf(VmTyped node, IndirectCallNode callNode) {
+    var vmClass = node.getVmClass();
+    var result = new ArrayList<VmTyped>();
+    for (var name : vmClass.getAllRegularPropertyNames()) {
+      var property = vmClass.getProperty((Identifier) name);
+      if (property != null && property.isFixed()) {
+        continue;
+      }
+      var value = VmUtils.readMember(node, name, callNode);
+      if (value instanceof VmListing listing) {
+        for (var i = 0; i < listing.getLength(); i++) {
+          addChild(result, VmUtils.readMember(listing, (long) i, callNode), callNode);
+        }
+      } else {
+        addChild(result, value, callNode);
+      }
+    }
+    return result;
+  }
+
+  private static void addChild(List<VmTyped> children, Object value, IndirectCallNode callNode) {
+    if (!(value instanceof VmTyped typed)) {
+      return;
+    }
+    var vmClass = typed.getVmClass();
+    if (vmClass.isSubclassOf(SyntaxModule.getSyntaxNodeClass())) {
+      children.add(typed);
+    } else if (vmClass == SyntaxModule.getStringInterpolationNodeClass()) {
+      // not a syntax node itself, but the expression it holds is
+      children.add((VmTyped) VmUtils.readMember(typed, Identifier.EXPRESSION, callNode));
     }
   }
 

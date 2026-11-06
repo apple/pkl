@@ -44,7 +44,6 @@ import org.pkl.core.stdlib.syntax.SyntaxNodes.Rebuild;
 public final class NodeNodes {
   private NodeNodes() {}
 
-  // Truffle strips the `Node` suffix off the generated class name, so the name must be explicit.
   @PklName("toSyntaxNode")
   public abstract static class toSyntaxNode extends ExternalMethod0Node {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
