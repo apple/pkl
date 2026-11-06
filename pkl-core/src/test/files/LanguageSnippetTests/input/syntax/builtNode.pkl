@@ -1,0 +1,109 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local function mod(source: String): syntax.Node = parser.parseModule(source)
+
+local renderer = new syntax.FormattingRenderer {}
+
+local function fmt(source: String): String = renderer.renderValue(mod(source))
+
+local function replaceFormat(
+  source: String,
+  predicate: (syntax.Node) -> Boolean,
+  replacer: (syntax.Node) -> syntax.Node,
+): String = renderer.renderValue(mod(source).replaceChildren(predicate, replacer))
+
+local function isInt(n: syntax.Node, text: String) =
+  n.type == "int_literal_expr" && n.text == text
+
+local function renameIdentifier(source: String, oldText: String, newName: String): String =
+  replaceFormat(
+    source,
+    (n) -> n.type == "identifier" && n.text == oldText,
+    (_) -> new syntax.IdentifierNode { name = newName }.builtNode,
+  )
+
+local function accessNamed(newName: String): String =
+  replaceFormat(
+    "x = 0",
+    (n) -> n.type == "int_literal_expr",
+    (_) ->
+      new syntax.UnqualifiedAccessExprNode {
+        identifier = new syntax.IdentifierNode { name = newName }
+        arguments = null
+      }.builtNode,
+  )
+
+facts {
+  ["replace a leaf via a typed node"] {
+    replaceFormat(
+      "x = 0",
+      (n) -> isInt(n, "0"),
+      (_) -> new syntax.IntLiteralExprNode { value = 100 }.builtNode,
+    ) == fmt("x = 100")
+  }
+
+  ["rebuilds ancestors of a changed node"] {
+    replaceFormat(
+      "x = if (cond) 41 else 0",
+      (n) -> isInt(n, "41") || isInt(n, "0"),
+      (n) ->
+        new syntax.IntLiteralExprNode { value = if (n.text == "41") 42 else 100 }.builtNode,
+    ) == fmt("x = if (cond) 42 else 100")
+  }
+
+  ["replacement is a typed parenthesized expression"] {
+    replaceFormat(
+      "x = 0",
+      (n) -> isInt(n, "0"),
+      (_) ->
+        new syntax.ParenthesizedExprNode {
+          expression = new syntax.IntLiteralExprNode { value = 1 }
+        }.builtNode,
+    ) == fmt("x = (1)")
+  }
+
+  ["build super access from scratch"] {
+    replaceFormat(
+      "x = 0",
+      (n) -> n.type == "int_literal_expr",
+      (_) ->
+        new syntax.SuperAccessExprNode {
+          identifier = new syntax.IdentifierNode { name = "foo" }
+          arguments = null
+        }.builtNode,
+    ) == fmt("x = super.foo")
+
+    replaceFormat(
+      "x = 0",
+      (n) -> n.type == "int_literal_expr",
+      (_) ->
+        new syntax.SuperAccessExprNode {
+          identifier = new syntax.IdentifierNode { name = "foo" }
+          arguments { new syntax.IntLiteralExprNode { value = 1 } }
+        }.builtNode,
+    ) == fmt("x = super.foo(1)")
+  }
+
+  ["build super subscript from scratch"] {
+    replaceFormat(
+      "x = 0",
+      (n) -> n.type == "int_literal_expr",
+      (_) ->
+        new syntax.SuperSubscriptExprNode {
+          index = new syntax.IntLiteralExprNode { value = 0 }
+        }.builtNode,
+    ) == fmt("x = super[0]")
+  }
+
+  ["an identifier name is quoted as needed"] {
+    accessNamed("foo") == fmt("x = foo")
+    accessNamed("my ## foo") == fmt("x = `my ## foo`")
+    accessNamed("class") == fmt("x = `class`")
+    renameIdentifier("x = someProp", "someProp", "other prop") == fmt("x = `other prop`")
+    renameIdentifier("x = `some prop`", "`some prop`", "otherProp") == fmt("x = otherProp")
+  }
+}

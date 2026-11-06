@@ -1,0 +1,142 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+import "pkl:test"
+
+local parser = new syntax.Parser {}
+
+local function mod(source: String): syntax.ModuleNode =
+  parser.parseModule(source).toSyntaxNode() as syntax.ModuleNode
+
+local sample: syntax.ModuleNode =
+  mod(
+    """
+    class Point {
+      x: Int
+      y: Int
+    }
+
+    class Line {
+      start: Point
+    }
+
+    function abs(a) = if (a > 0) a else -a
+    """,
+  )
+
+local function typeNames(node: syntax.SyntaxNode): List<String> =
+  node.fold(List(), (acc: List<String>, n) -> acc.add(n.getClass().simpleName))
+
+local function classNamed(name: String): syntax.ClassNode =
+  sample.findChild((n) -> n is syntax.ClassNode && n.identifier.name == name)
+    as syntax.ClassNode
+
+facts {
+  ["fold counts nodes by class"] {
+    sample.fold(0, (acc, n) -> if (n is syntax.ClassNode) acc + 1 else acc) == 2
+    sample.fold(0, (acc, n) -> if (n is syntax.IfExprNode) acc + 1 else acc) == 1
+    sample.fold(0, (acc, n) -> if (n is syntax.LetExprNode) acc + 1 else acc) == 0
+  }
+
+  ["fold visits this node first, then descendants in source order"] {
+    typeNames(mod("x = 1 + 2")) == List(
+      "ModuleNode",
+      "ClassPropertyNode",
+      "IdentifierNode",
+      "AdditionExprNode",
+      "IntLiteralExprNode",
+      "IntLiteralExprNode",
+    )
+  }
+
+  ["children follow source order, not the order of derived views"] {
+    typeNames(mod("/// docs\n@Deprecated\nfoo: Int = 1").members[0]) == List(
+      "ClassPropertyNode",
+      "DocCommentNode",
+      "AnnotationNode",
+      "DeclaredTypeNode",
+      "QualifiedIdentifierNode",
+      "IdentifierNode",
+      "IdentifierNode",
+      "DeclaredTypeNode",
+      "QualifiedIdentifierNode",
+      "IdentifierNode",
+      "IntLiteralExprNode",
+    )
+  }
+
+  ["findChild returns the first match in source order"] {
+    classNamed("Line").identifier.name == "Line"
+    (sample.findChild((n) -> n is syntax.IdentifierNode) as syntax.IdentifierNode).name == "Point"
+    (sample.findChild((n) -> n is syntax.IntLiteralExprNode) as syntax.IntLiteralExprNode).value
+      == "0"
+  }
+
+  ["findChild does not consider this node"] {
+    classNamed("Point")
+      .findChildOrNull((n) -> n is syntax.ClassNode) == null
+  }
+
+  ["findChild throws when nothing matches"] {
+    test
+      .catch(() -> sample.findChild((n) -> n is syntax.LetExprNode))
+      .contains("Cannot find a child node matching the predicate")
+  }
+
+  ["findChildOrNull returns null when nothing matches"] {
+    sample.findChildOrNull((n) -> n is syntax.LetExprNode) == null
+    sample.findChildOrNull((n) -> n is syntax.IfExprNode) is syntax.IfExprNode
+  }
+
+  ["findChildren returns every match in source order"] {
+    sample
+      .findChildren((n) -> n is syntax.UnqualifiedAccessExprNode)
+      .map((n) -> (n as syntax.UnqualifiedAccessExprNode).identifier.name) == List("a", "a", "a")
+    sample
+      .findChildren((n) -> n is syntax.DeclaredTypeNode)
+      .map((n) -> (n as syntax.DeclaredTypeNode).name.value) == List("Int", "Int", "Point")
+  }
+
+  ["findChildren searches matches for further matches"] {
+    mod("x = (1 + 2) + 3")
+      .findChildren((n) -> n is syntax.AdditionExprNode)
+      .length == 2
+  }
+
+  ["findChildren returns an empty list when nothing matches"] {
+    sample.findChildren((n) -> n is syntax.LetExprNode).isEmpty
+  }
+
+  ["expressions in string interpolations are children"] {
+    local source = mod(#"x = "a \(foo) b \(bar + 1)""#)
+    source
+      .findChildren((n) -> n is syntax.UnqualifiedAccessExprNode)
+      .map((n) -> (n as syntax.UnqualifiedAccessExprNode).identifier.name) == List("foo", "bar")
+    source.findChildren((n) -> n is syntax.AdditionExprNode).length == 1
+  }
+
+  ["a node built from scratch is traversable"] {
+    local ifExpr = new syntax.IfExprNode {
+      condition = new syntax.BooleanLiteralExprNode { value = true }
+      thenExpr = new syntax.IntLiteralExprNode { value = 1 }
+      elseExpr = new syntax.IntLiteralExprNode { value = 2 }
+    }
+    typeNames(ifExpr) == List(
+      "IfExprNode",
+      "BooleanLiteralExprNode",
+      "IntLiteralExprNode",
+      "IntLiteralExprNode",
+    )
+  }
+
+  ["an amended node is traversed with its overrides"] {
+    local ifExpr =
+      mod("x = if (c) 1 else 2").findChild((n) -> n is syntax.IfExprNode) as syntax.IfExprNode
+    local amended = (ifExpr) {
+      elseExpr = new syntax.IntLiteralExprNode { value = 99 }
+    }
+    amended
+      .findChildren((n) -> n is syntax.IntLiteralExprNode)
+      .map((n) -> (n as syntax.IntLiteralExprNode).value.toString()) == List("1", "99")
+  }
+}
