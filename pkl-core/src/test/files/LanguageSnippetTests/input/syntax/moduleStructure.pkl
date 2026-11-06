@@ -293,7 +293,7 @@ facts {
         """,
       )
 
-    new syntax.FormattingRenderer {}.render(mod.builtNode)
+    new syntax.FormattingRenderer {}.renderValue(mod.builtNode)
       == """
       a = 1
       typealias A = Int

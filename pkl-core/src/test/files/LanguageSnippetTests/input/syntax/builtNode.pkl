@@ -8,13 +8,13 @@ local function mod(source: String): syntax.Node = parser.parseModule(source)
 
 local renderer = new syntax.FormattingRenderer {}
 
-local function fmt(source: String): String = renderer.render(mod(source))
+local function fmt(source: String): String = renderer.renderValue(mod(source))
 
 local function replaceFormat(
   source: String,
   predicate: (syntax.Node) -> Boolean,
   replacer: (syntax.Node) -> syntax.Node,
-): String = renderer.render(mod(source).replaceChildren(predicate, replacer))
+): String = renderer.renderValue(mod(source).replaceChildren(predicate, replacer))
 
 local function isInt(n: syntax.Node, text: String) =
   n.type == "int_literal_expr" && n.text == text

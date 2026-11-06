@@ -69,7 +69,7 @@ facts {
       .renderValue(new syntax.Node { type = "int_literal_expr"; text = "42" })
       .trim() == "42"
     new syntax.FormattingRenderer {}
-      .render(new syntax.IntLiteralExprNode { value = 42 }.builtNode)
+      .renderValue(new syntax.IntLiteralExprNode { value = 42 }.builtNode)
       .trim() == "42"
   }
 

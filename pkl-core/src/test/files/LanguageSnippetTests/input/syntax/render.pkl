@@ -9,7 +9,7 @@ local function roundTrip(source: String) = renderer.renderValue(parseNode(source
 
 local function parseNode(source: String): syntax.Node = new syntax.Parser {}.parseModule(source)
 
-local function renderExpr(node: syntax.ExprNode) = renderer.render(node.builtNode).trim()
+local function renderExpr(node: syntax.ExprNode) = renderer.renderValue(node.builtNode).trim()
 
 local function replaceLeaf(
   node: syntax.Node,

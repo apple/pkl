@@ -6,9 +6,9 @@ local renderer = new syntax.FormattingRenderer {}
 
 local parser = new syntax.Parser {}
 
-local function render(node: syntax.ExprNode) = renderer.render(node.builtNode).trim()
+local function render(node: syntax.ExprNode) = renderer.renderValue(node.builtNode).trim()
 
-local function renderType(node: syntax.TypeNode) = renderer.render(node.builtNode).trim()
+local function renderType(node: syntax.TypeNode) = renderer.renderValue(node.builtNode).trim()
 
 local function shape(node: syntax.Node): String =
   if (node.children.isEmpty)
@@ -326,11 +326,11 @@ facts {
         }
       }
     }
-    renderer.render(modified.builtNode) == "x = !(c || d)\n"
+    renderer.renderValue(modified.builtNode) == "x = !(c || d)\n"
   }
 
   ["parentheses of a parsed operand are kept"] {
     local module_: syntax.ModuleNode = parser.parseModule("x = !(a && b)").toSyntaxNode()
-    renderer.render(module_.builtNode) == "x = !(a && b)\n"
+    renderer.renderValue(module_.builtNode) == "x = !(a && b)\n"
   }
 }
