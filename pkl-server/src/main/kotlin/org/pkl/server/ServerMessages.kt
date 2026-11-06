@@ -42,6 +42,7 @@ data class CreateEvaluatorRequest(
   val externalModuleReaders: Map<String, ExternalReader>?,
   val externalResourceReaders: Map<String, ExternalReader>?,
   val traceMode: TraceMode?,
+  val featureFlags: Map<String, Boolean>?,
 ) : Message.Client.Request {
 
   override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST

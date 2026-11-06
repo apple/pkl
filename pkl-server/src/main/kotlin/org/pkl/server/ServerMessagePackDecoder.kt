@@ -34,6 +34,8 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
   override fun decodeMessage(msgType: Message.Type, map: Map<Value, Value>): Message? {
     return when (msgType) {
       Message.Type.CREATE_EVALUATOR_REQUEST ->
+        // Changes here should be reflected in
+        // docs/modules/bindings-specification/pages/message-passing-api.adoc
         CreateEvaluatorRequest(
           get(map, "requestId").asIntegerValue().asLong(),
           unpackStringListOrNull(map, "allowedModules"),
@@ -41,17 +43,22 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           unpackListOrNull(map, "clientModuleReaders") { unpackModuleReaderSpec(it)!! },
           unpackListOrNull(map, "clientResourceReaders") { unpackResourceReaderSpec(it)!! },
           unpackStringListOrNull(map, "modulePaths", Path::of),
-          unpackStringMapOrNull(map, "env"),
-          unpackStringMapOrNull(map, "properties"),
+          unpackMapOrNull(map, "env") { it.asStringValue().asString() },
+          unpackMapOrNull(map, "properties") { it.asStringValue().asString() },
           unpackLongOrNull(map, "timeoutSeconds", Duration::ofSeconds),
           unpackStringOrNull(map, "rootDir", Path::of),
           unpackStringOrNull(map, "cacheDir", Path::of),
           unpackStringOrNull(map, "outputFormat"),
           map.unpackProject(),
           map.unpackHttp(),
-          unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
-          unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader),
+          unpackMapOrNull(map, "externalModuleReaders") {
+            unpackExternalReader(it.asMapValue().map())
+          },
+          unpackMapOrNull(map, "externalResourceReaders") {
+            unpackExternalReader(it.asMapValue().map())
+          },
           unpackStringOrNull(map, "traceMode") { TraceMode.valueOf(it.uppercase()) },
+          unpackMapOrNull(map, "featureFlags") { it.asBooleanValue().boolean },
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(

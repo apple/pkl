@@ -92,7 +92,8 @@ public class ReplServer implements AutoCloseable {
       Path workingDir,
       StackFrameTransformer frameTransformer,
       boolean color,
-      TraceMode traceMode) {
+      TraceMode traceMode,
+      Map<FeatureFlag, Boolean> featureFlags) {
 
     this.workingDir = workingDir;
     this.securityManager = securityManager;
@@ -128,7 +129,8 @@ public class ReplServer implements AutoCloseable {
                       packageResolver,
                       projectDependenciesManager,
                       traceMode,
-                      true));
+                      true,
+                      featureFlags));
             });
     language = languageRef.get();
   }
