@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 1
+
+x | res = new Mapping<String, String> {
+                              ^^^^^^
+at mappingTypeCheckError1#res (file:///$snippetsDir/input/errors/mappingTypeCheckError1.pkl)
+
+x | ["foo"] = 1
+              ^
+at mappingTypeCheckError1#res["foo"] (file:///$snippetsDir/input/errors/mappingTypeCheckError1.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,0 +1,97 @@
+/*
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.parser.syntax;
+
+import java.util.List;
+import org.jspecify.annotations.Nullable;
+import org.pkl.parser.ParserVisitor;
+import org.pkl.parser.Span;
+
+public final class Class extends AbstractNode {
+  private final int modifiersOffset;
+  private final int keywordOffset;
+
+  public Class(List<@Nullable Node> nodes, int modifiersOffset, int keywordOffset, Span span) {
+    super(span, nodes);
+    this.modifiersOffset = modifiersOffset;
+    this.keywordOffset = keywordOffset;
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<T> visitor) {
+    return visitor.visitClass(this);
+  }
+
+  public @Nullable DocComment getDocComment() {
+    return (DocComment) children.get(0);
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<Annotation> getAnnotations() {
+    return (List<Annotation>) children.subList(1, modifiersOffset);
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<Modifier> getModifiers() {
+    return (List<Modifier>) children.subList(modifiersOffset, keywordOffset);
+  }
+
+  public Keyword getClassKeyword() {
+    var ret = (Keyword) children.get(keywordOffset);
+    assert ret != null;
+    return ret;
+  }
+
+  public Identifier getName() {
+    var ret = (Identifier) children.get(keywordOffset + 1);
+    assert ret != null;
+    return ret;
+  }
+
+  public @Nullable TypeParameterList getTypeParameterList() {
+    return (TypeParameterList) children.get(keywordOffset + 2);
+  }
+
+  public @Nullable Type getSuperClass() {
+    return (Type) children.get(keywordOffset + 3);
+  }
+
+  public @Nullable ClassBody getBody() {
+    return (ClassBody) children.get(keywordOffset + 4);
+  }
+
+  @SuppressWarnings("DuplicatedCode")
+  public Span getHeaderSpan() {
+    Span start = null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        start = child.span();
+        break;
+      }
+    }
+    Span end;
+    if (getSuperClass() != null) {
+      end = getSuperClass().span();
+    } else if (getTypeParameterList() != null) {
+      end = getTypeParameterList().span();
+    } else {
+      end = getName().span();
+    }
+    assert start != null;
+    return start.endWith(end);
+  }
+}

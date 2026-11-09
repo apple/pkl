@@ -1,0 +1,17 @@
+import "pkl:jsonnet"
+
+hello {
+  world {
+    1
+    "foo\nbar"
+  }
+}
+
+emptyArray = List()
+emptyObject {}
+
+output {
+  renderer = new jsonnet.Renderer {
+    indent = ""
+  }
+}

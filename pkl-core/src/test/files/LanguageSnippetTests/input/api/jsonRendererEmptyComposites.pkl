@@ -1,0 +1,21 @@
+a1 = List()
+a2 = Set()
+a3 = new Listing {}
+
+b1 = Map()
+b2 = new Mapping {}
+b3 = new Dynamic {}
+
+nested {
+  a1 = List()
+  a2 = Set()
+  a3 = new Listing {}
+
+  b1 = Map()
+  b2 = new Mapping {}
+  b3 = new Dynamic {}
+}
+
+output {
+  renderer = new JsonRenderer {}
+}

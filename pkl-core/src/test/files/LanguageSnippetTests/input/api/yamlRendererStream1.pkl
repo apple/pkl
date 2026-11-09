@@ -1,0 +1,28 @@
+local renderer = new YamlRenderer { isStream = true }
+
+local stream = new Listing {
+  "pigeon"
+  42
+  new Listing {
+    "barn owl"
+    "parrot"
+  }
+  new Mapping {
+    ["surfing"] {
+      skill = "low"
+    }
+    ["firemaking"] {
+      skill = "high"
+    }
+  }
+  new Dynamic {
+    street = "Norton St."
+    zip = 12345
+  }
+}
+
+a = renderer.renderDocument(stream)
+
+b = renderer.renderDocument(stream.toList())
+
+c = renderer.renderDocument(stream.toSet())

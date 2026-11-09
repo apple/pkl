@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `->`. Expected `,` or `)`.
+
+x | f: (String -> String
+               ^^
+at missingFunctionType1ParameterListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingFunctionType1ParameterListDelimiter.pkl)

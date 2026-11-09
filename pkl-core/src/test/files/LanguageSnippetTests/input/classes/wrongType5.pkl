@@ -1,0 +1,19 @@
+import "pkl:test"
+
+open class Person {
+  name: String
+}
+
+class Person2 extends Person {
+  name: Int // currently allowed
+}
+
+class Person3 extends Person {
+  name = "Pigeon"
+}
+
+res1 = test.catch(() -> new Person { name = 42 }.name)
+
+res2 = test.catch(() -> new Person2 { name = "42" }.name)
+
+res3 = test.catch(() -> new Person3 { name = 42 }.name)

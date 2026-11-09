@@ -1,0 +1,20 @@
+class WrapTypeWithName extends ConvertProperty {
+  // render: (Pair<String, Any>, BaseValueRenderer) -> Pair<String, Any>
+  render = (p, _) ->
+    Pair(p.key, new Mapping {
+      [p.value.getClass().simpleName] = p.value
+    })
+}
+
+class Something {
+  @WrapTypeWithName
+  prop1: String
+  prop2: Int
+}
+
+a: Something = new Something {
+  prop2 = 1
+}
+
+// this should result in: Tried to read property `prop1` but its value is undefined.
+// any other error would result from an error in the reporting path

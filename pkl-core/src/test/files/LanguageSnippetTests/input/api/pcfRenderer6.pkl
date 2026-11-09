@@ -1,0 +1,26 @@
+foo = null
+bar = null
+baz {
+  qux = 42
+  quux = null
+  corge = new Listing {
+    null
+    1337
+    null
+    "Hello World"
+  }
+  grault = new Mapping {
+    ["garply"] = null
+    ["waldo"] = 42
+    [new Listing {
+      "pigeon"
+    }] = null
+  }
+  thud = Pair(new Dynamic {}, new Listing {})
+}
+
+output {
+  renderer = new PcfRenderer {
+    omitNullProperties = true
+  }
+}

@@ -1,0 +1,27 @@
+import "pkl:test"
+
+class X {
+  function int(int: Int(isPositive)) = int
+  function l(l: List<String(!isEmpty)>(!isEmpty)) = l
+  function map(map: Map<String(!isEmpty), Int(isPositive)>(!isEmpty)) = map
+  function optional(optional: String(!isEmpty)?) = optional
+}
+
+class Y {
+  function int(int): Int(isPositive) = int
+  function l(l): List<String(!isEmpty)>(!isEmpty) = l
+  function map(map): Map<String(!isEmpty), Int(isPositive)>(!isEmpty) = map
+  function optional(optional): String(!isEmpty)? = optional
+}
+
+local x = new X {}
+res1 = test.catch(() -> x.int(-3))
+res2 = test.catch(() -> x.l(List("1", "")))
+res3 = test.catch(() -> x.map(Map("1", 1, "2", -2)))
+res4 = test.catch(() -> x.optional(""))
+
+local y = new Y {}
+res5 = test.catch(() -> y.int(-3))
+res6 = test.catch(() -> y.l(List("1", "")))
+res7 = test.catch(() -> y.map(Map("1", 1, "2", -2)))
+res8 = test.catch(() -> y.optional(""))

@@ -1,0 +1,3 @@
+import "file:///foo^bar.pkl" as _foo
+
+foo = _foo

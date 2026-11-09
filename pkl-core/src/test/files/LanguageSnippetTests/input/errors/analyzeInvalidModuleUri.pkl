@@ -1,0 +1,3 @@
+import "pkl:analyze"
+
+result = analyze.importGraph(Set("foo <>"))

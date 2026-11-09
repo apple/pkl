@@ -1,0 +1,16 @@
+{
+  "knownVersions": [
+    {
+      "text": "0.7.0",
+      "href": "../../0.7.0/catalog/index.html"
+    },
+    {
+      "text": "0.6.0",
+      "href": "../../0.6.0/catalog/index.html"
+    },
+    {
+      "text": "0.5.0",
+      "href": "../../0.5.0/catalog/index.html"
+    }
+  ]
+}

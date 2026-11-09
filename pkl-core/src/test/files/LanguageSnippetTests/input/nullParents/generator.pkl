@@ -1,0 +1,68 @@
+// Covers GeneratorObjectLiteralNode's specializations for amending a `VmNull` whose default value
+// is each of the underlying parent types it supports. Each body contains a `for`- or
+// when-generator, which is what forces this node type instead of ElementsLiteralNode/
+// EntriesLiteralNode/PropertiesLiteralNode.
+import "pkl:test"
+
+local class Person {
+  name: String
+  age: Int = 0
+}
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { a = 1 })
+res1 = (dynamic) {
+  for (i in List(2, 3)) {
+    i
+  }
+}
+
+// evalNullWithTypedDefault
+local person = Null(new Person { name = "Pigeon" })
+res2 = (person) {
+  when (true) {
+    age = 10
+  }
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "a" })
+res3 = (listing) {
+  for (i in List(2, 3)) {
+    i
+  }
+}
+
+// evalNullableMapping
+local mapping = Null(new Mapping { ["a"] = 1 })
+res4 = (mapping) {
+  for (i in List(2, 3)) {
+    [i] = i
+  }
+}
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Dynamic { a = 1 })
+local amendedFun = (fun) {
+  for (i in List(2, 3)) {
+    i
+  }
+}
+res5 = amendedFun.apply()
+
+// error: listing amendment cannot have parameters
+res6 = test.catch(() -> (Null(new Listing { "a" })) { x -> for (i in List(2)) { i } })
+
+// error: mapping amendment cannot have parameters
+res7 = test.catch(() -> (Null(new Mapping { ["a"] = 1 })) { x -> for (i in List(2)) { [i] = i } })
+
+// error: object amendment cannot have parameters
+res8 = test.catch(() -> (Null(new Dynamic { a = 1 })) { x -> for (i in List(2)) { i } })
+
+hidden foo: "foo"?
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res9 = test.catch(() -> (foo) { for (i in List(2)) { i } })
+
+hidden x: List<Int>?
+res10 = test.catch(() -> ((x) { when (true) { foo = 1 } }))

@@ -1,0 +1,15 @@
+import "pkl:reflect"
+import "pkl:test"
+
+class Foo {
+  bar: String(startsWith("a"))
+}
+
+// regression test for VmTyped.getImports()
+// which walks module members that are imports and casts their bodies to ImportNode
+// the catch activates instrumentation by failing a constraint check
+// so that the reflected import member bodies are wrapper nodes instead of ImportNode directly
+// the fix for this unwraps the wrapper before casting to ImportNode
+foo =
+  let (_ = test.catchOrNull(() -> new Foo { bar = "baz" }.bar))
+    reflect.Module(module).imports

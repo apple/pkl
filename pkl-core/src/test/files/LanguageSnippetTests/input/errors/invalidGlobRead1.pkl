@@ -1,0 +1,1 @@
+res = read*("{foo{bar}}.txt")

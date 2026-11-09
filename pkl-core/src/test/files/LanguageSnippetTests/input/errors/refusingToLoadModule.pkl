@@ -1,0 +1,3 @@
+import "birds:///foo.pkl"
+
+output = foo

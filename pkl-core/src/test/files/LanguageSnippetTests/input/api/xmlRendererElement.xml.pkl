@@ -1,0 +1,12 @@
+import "pkl:xml"
+
+diskSizes = new Listing { 1200.gb; 2.tb }
+
+output {
+  renderer = new xml.Renderer {
+    rootElementName = "machine"
+    converters {
+      ["diskSizes"] = (dss) -> dss.toList().map((ds) -> (xml.Element("disk")) { (xml.Element(ds.unit)) { ds.value } })
+    }
+  }
+}

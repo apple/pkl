@@ -1,0 +1,1 @@
+foo: String(this == "foo") | String(this == "qux") = "bar"

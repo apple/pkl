@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "badLocalProject": {
+      "type": "local",
+      "path": "../badLocalProject"
+    }
+  }
+}

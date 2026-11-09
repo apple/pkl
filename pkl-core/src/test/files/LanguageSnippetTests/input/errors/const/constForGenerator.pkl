@@ -1,0 +1,3 @@
+baz = 1
+
+const foo = new Listing { for (i in List(1)) { baz } }

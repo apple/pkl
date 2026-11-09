@@ -1,0 +1,6 @@
+class MyAnn extends Annotation
+
+local myAnn = MyAnn
+
+@myAnn
+foo = 1

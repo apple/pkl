@@ -1,0 +1,3 @@
+function throws(): nothing = throw("throwing a message")
+
+myValue: String = throws()

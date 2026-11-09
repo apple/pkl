@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Modifier `const` cannot be applied to property `x`.
+
+x | const x = 2
+    ^^^^^
+at constSubclass2#Bar (file:///$snippetsDir/input/errors/const/constSubclass2.pkl)
+
+Property `x` cannot be declared const, because it overrides a non-const property on parent class `constSubclass2#Foo`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

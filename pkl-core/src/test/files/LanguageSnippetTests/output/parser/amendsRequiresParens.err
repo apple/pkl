@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Unexpected token: `{`.
+
+If you meant to write an amends expression, wrap the parent in parentheses. Try: `(bar) { ... }`
+
+x | (bar { "baz" })
+         ^
+at amendsRequiresParens (file:///$snippetsDir/input/parser/amendsRequiresParens.pkl)

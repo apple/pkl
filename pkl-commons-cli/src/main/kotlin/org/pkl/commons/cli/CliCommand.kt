@@ -1,0 +1,334 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.commons.cli
+
+import com.github.ajalt.clikt.core.CliktError
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.regex.Pattern
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.isRegularFile
+import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.TraceMode
+import org.pkl.core.externalreader.ExternalReaderProcess
+import org.pkl.core.http.HttpClient
+import org.pkl.core.module.ModuleKeyFactories
+import org.pkl.core.module.ModuleKeyFactory
+import org.pkl.core.module.ModulePathResolver
+import org.pkl.core.project.Project
+import org.pkl.core.resource.ResourceReader
+import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.settings.PklSettings
+import org.pkl.core.util.DebugLogger
+import org.pkl.core.util.IoUtils
+
+/** Building block for CLI commands. Configured programmatically to allow for embedding. */
+abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
+  /** Runs this command. */
+  fun run() {
+    if (cliOptions.testMode) {
+      IoUtils.setTestMode()
+    }
+
+    try {
+      proxyAddress?.let(IoUtils::setSystemProxy)
+      doRun()
+    } catch (e: PklException) {
+      if (e.cause is CliktError) throw e.cause!!
+      throw CliException(e.message!!)
+    } catch (e: CliException) {
+      throw e
+    } catch (e: Exception) {
+      throw CliBugException(e)
+    }
+  }
+
+  /**
+   * Implements this command. May throw [PklException] or [CliException]. Any other thrown exception
+   * is treated as a bug.
+   */
+  protected abstract fun doRun()
+
+  /** The Pkl settings used by this command. */
+  @Suppress("MemberVisibilityCanBePrivate")
+  protected val settings: PklSettings by lazy {
+    try {
+      if (cliOptions.normalizedSettingsModule != null) {
+        PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule), cliModuleCacheDir)
+      } else {
+        PklSettings.loadFromSystem(cliModuleCacheDir)
+      }
+    } catch (e: PklException) {
+      // do not use `errorRenderer` because it depends on `settings`
+      throw CliException(e.toString())
+    }
+  }
+
+  /** The Project used by this command. */
+  protected val project: Project? by lazy {
+    if (cliOptions.noProject) {
+      null
+    } else {
+      cliOptions.normalizedProjectFile?.let { loadProject(it) }
+    }
+  }
+
+  protected fun loadProject(projectFile: Path): Project {
+    val securityManager =
+      SecurityManagers.standard(
+        cliOptions.allowedModules ?: SecurityManagers.defaultAllowedModules,
+        cliOptions.allowedResources ?: SecurityManagers.defaultAllowedResources,
+        SecurityManagers.defaultTrustLevels,
+        cliOptions.normalizedRootDir,
+      )
+    val envVars = cliOptions.environmentVariables ?: System.getenv()
+    val stackFrameTransformer =
+      if (IoUtils.isTestMode()) StackFrameTransformers.empty
+      else StackFrameTransformers.defaultTransformer
+    return Project.loadFromPath(
+      projectFile,
+      securityManager,
+      cliOptions.timeout,
+      stackFrameTransformer,
+      envVars,
+      cliOptions.powerAssertionsEnabled,
+      cliModuleCacheDir,
+    )
+  }
+
+  /**
+   * The module cache dir as determined by CLI options alone. Used to evaluate the settings and
+   * project files, which are loaded before project evaluator settings are known.
+   */
+  private val cliModuleCacheDir: Path? by lazy {
+    if (cliOptions.noCache) null
+    else cliOptions.normalizedModuleCacheDir ?: IoUtils.getSystemModuleCacheDir()
+  }
+
+  private val evaluatorSettings: PklEvaluatorSettings? by lazy {
+    @Suppress("PklCliDirectProjectEvaluatorSettingsAccess")
+    if (cliOptions.omitProjectSettings) null else project?.resolvedEvaluatorSettings
+  }
+
+  protected val allowedModules: List<Pattern> by lazy {
+    cliOptions.allowedModules
+      ?: evaluatorSettings?.allowedModules
+      ?: (SecurityManagers.defaultAllowedModules +
+        externalModuleReaders.keys.map { Pattern.compile(Pattern.quote("$it:")) }.toList())
+  }
+
+  protected val allowedResources: List<Pattern> by lazy {
+    cliOptions.allowedResources
+      ?: evaluatorSettings?.allowedResources
+      ?: (SecurityManagers.defaultAllowedResources +
+        externalResourceReaders.keys.map { Pattern.compile(Pattern.quote("$it:")) }.toList())
+  }
+
+  protected val rootDir: Path? by lazy {
+    cliOptions.normalizedRootDir ?: evaluatorSettings?.rootDir
+  }
+
+  protected val environmentVariables: Map<String, String> by lazy {
+    cliOptions.environmentVariables ?: evaluatorSettings?.env ?: System.getenv()
+  }
+
+  protected val externalProperties: Map<String, String> by lazy {
+    cliOptions.externalProperties ?: evaluatorSettings?.externalProperties ?: emptyMap()
+  }
+
+  protected val moduleCacheDir: Path? by lazy {
+    if (cliOptions.noCache) null
+    else
+      cliOptions.normalizedModuleCacheDir
+        ?: evaluatorSettings?.let { settings ->
+          if (settings.noCache == true) null else settings.moduleCacheDir
+        }
+        ?: IoUtils.getSystemModuleCacheDir()
+  }
+
+  protected val modulePath: List<Path> by lazy {
+    cliOptions.normalizedModulePath ?: evaluatorSettings?.modulePath ?: emptyList()
+  }
+
+  protected val stackFrameTransformer: StackFrameTransformer by lazy {
+    if (cliOptions.testMode) {
+      StackFrameTransformers.empty
+    } else {
+      StackFrameTransformers.createDefault(settings)
+    }
+  }
+
+  protected val securityManager: SecurityManager by lazy {
+    SecurityManagers.standard(
+      allowedModules,
+      allowedResources,
+      SecurityManagers.defaultTrustLevels,
+      rootDir,
+    )
+  }
+
+  protected val useColor: Boolean by lazy {
+    cliOptions.color?.hasColor() ?: evaluatorSettings?.color?.hasColor() ?: false
+  }
+
+  protected val proxyAddress: URI? by lazy {
+    cliOptions.httpProxy ?: evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+  }
+
+  protected val noProxy: List<String>? by lazy {
+    cliOptions.httpNoProxy
+      ?: evaluatorSettings?.http?.proxy?.noProxy
+      ?: settings.http?.proxy?.noProxy
+  }
+
+  protected val httpRewrites: Map<URI, URI>? by lazy {
+    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites
+  }
+
+  private val httpHeaders: Map<String, Map<String, List<String>>>? by lazy {
+    cliOptions.httpHeaders ?: evaluatorSettings?.http?.headers ?: settings.http?.headers
+  }
+
+  protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    cliOptions.externalModuleReaders ?: evaluatorSettings?.externalModuleReaders ?: mapOf()
+  }
+
+  protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    cliOptions.externalResourceReaders ?: evaluatorSettings?.externalResourceReaders ?: mapOf()
+  }
+
+  private val externalProcesses:
+    Map<PklEvaluatorSettings.ExternalReader, ExternalReaderProcess> by lazy {
+    // Share ExternalReaderProcess instances between configured external resource/module readers
+    // with the same spec. This avoids spawning multiple subprocesses if the same reader implements
+    // both reader types and/or multiple schemes.
+    (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
+      ExternalReaderProcess.of(it)
+    }
+  }
+
+  private val traceMode: TraceMode by lazy {
+    cliOptions.traceMode ?: evaluatorSettings?.traceMode ?: TraceMode.COMPACT
+  }
+
+  private fun HttpClient.Builder.addDefaultCliCertificates() {
+    val caCertsDir = IoUtils.getSystemCaCertsDir()
+    var certsAdded = false
+    if (Files.isDirectory(caCertsDir)) {
+      Files.list(caCertsDir)
+        .filter { it.isRegularFile() && !it.fileName.toString().startsWith(".") }
+        .forEach { cert ->
+          certsAdded = true
+          addCertificates(cert)
+        }
+    }
+    if (certsAdded) {
+      DebugLogger.log("Loading CA certificates from ${caCertsDir.normalize().absolutePathString()}")
+    } else {
+      DebugLogger.log("Using built-in CA certificates")
+      val defaultCerts =
+        this@CliCommand.javaClass.classLoader.getResourceAsStream(
+          "org/pkl/commons/cli/PklCARoots.pem"
+        ) ?: throw CliException("Could not find bundled certificates")
+      addCertificates(defaultCerts.readAllBytes())
+    }
+  }
+
+  /**
+   * The HTTP client used for this command.
+   *
+   * To release resources held by the HTTP client in a timely manner, call [HttpClient.close].
+   */
+  val httpClient: HttpClient by lazy {
+    with(HttpClient.builder()) {
+      setTestPort(cliOptions.testPort)
+      if (cliOptions.normalizedCaCertificates.isEmpty()) {
+        addDefaultCliCertificates()
+      } else {
+        for (file in cliOptions.normalizedCaCertificates) addCertificates(file)
+      }
+      if ((proxyAddress ?: noProxy) != null) {
+        setProxy(proxyAddress, noProxy ?: listOf())
+      }
+      httpRewrites?.let(::setRewrites)
+      httpHeaders?.let(::setHeaders)
+      // Lazy building significantly reduces execution time of commands that do minimal work.
+      // However, it means that HTTP client initialization errors won't surface until an HTTP
+      // request is made.
+      buildLazily()
+    }
+  }
+
+  protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
+    return buildList {
+      externalModuleReaders.forEach { (key, value) ->
+        add(ModuleKeyFactories.externalProcess(key, externalProcesses[value]!!))
+      }
+      add(ModuleKeyFactories.standardLibrary)
+      add(ModuleKeyFactories.modulePath(modulePathResolver))
+      add(ModuleKeyFactories.pkg)
+      add(ModuleKeyFactories.projectpackage)
+      addAll(ModuleKeyFactories.fromServiceProviders())
+      add(ModuleKeyFactories.file)
+      add(ModuleKeyFactories.http)
+      add(ModuleKeyFactories.genericUrl)
+    }
+  }
+
+  private fun resourceReaders(modulePathResolver: ModulePathResolver): List<ResourceReader> {
+    return buildList {
+      add(ResourceReaders.environmentVariable())
+      add(ResourceReaders.externalProperty())
+      add(ResourceReaders.modulePath(modulePathResolver))
+      add(ResourceReaders.pkg())
+      add(ResourceReaders.projectpackage())
+      addAll(ResourceReaders.fromServiceProviders())
+      add(ResourceReaders.file())
+      add(ResourceReaders.http())
+      add(ResourceReaders.https())
+      externalResourceReaders.forEach { (key, value) ->
+        add(ResourceReaders.externalProcess(key, externalProcesses[value]!!))
+      }
+    }
+  }
+
+  /**
+   * Creates an [EvaluatorBuilder] preconfigured according to [cliOptions]. To avoid resource leaks,
+   * `ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)` must be called once the returned
+   * builder and evaluators built by it are no longer in use.
+   */
+  protected fun evaluatorBuilder(): EvaluatorBuilder {
+    // indirectly closed by `ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)`
+    val modulePathResolver = ModulePathResolver(modulePath)
+    return EvaluatorBuilder.unconfigured()
+      .setStackFrameTransformer(stackFrameTransformer)
+      .apply { project?.let { setProjectDependencies(it.dependencies) } }
+      .setSecurityManager(securityManager)
+      .setHttpClient(httpClient)
+      .setExternalProperties(externalProperties)
+      .setEnvironmentVariables(environmentVariables)
+      .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
+      .addResourceReaders(resourceReaders(modulePathResolver))
+      .setColor(useColor)
+      .setLogger(Loggers.stdErr())
+      .setTimeout(cliOptions.timeout)
+      .setModuleCacheDir(moduleCacheDir)
+      .setTraceMode(traceMode)
+      .setPowerAssertionsEnabled(cliOptions.powerAssertionsEnabled)
+  }
+}

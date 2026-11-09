@@ -1,0 +1,7 @@
+open module com.package1.baseModule
+
+baseProperty = 42
+
+function baseMethod() = 42
+
+class BaseClass {}

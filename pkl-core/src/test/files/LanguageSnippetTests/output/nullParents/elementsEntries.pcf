@@ -1,0 +1,18 @@
+res1 {
+  "updated a"
+  "b"
+}
+res2 {
+  "updated a"
+  "b"
+  "c"
+}
+res3 {
+  "updated a"
+  "b"
+}
+res4 = "Object of type `Mapping` cannot have an element."
+res5 = "Element index `5` is out of range `0`..`0`."
+res6 = "Object of type `Listing` cannot have a property (other than `default`)."
+res7 = "Expected a function with 1 parameters, but got 2."
+res8 = "Expected value of type `Object | Function<Object>`, but got type `Int`. Value: 42"

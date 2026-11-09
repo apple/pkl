@@ -1,0 +1,24 @@
+examples {
+  ["TODO()"] {
+    "TODO"
+  }
+  ["Undefined()"] {
+    "Undefined value."
+    "Undefined value."
+  }
+  ["Regex"] {
+    Regex("")
+    Regex(#"[ab]\s+"#)
+    "Syntax error in regex `(`: Unclosed group near index 1 ("
+  }
+  ["Pair()"] {
+    Pair(1, "two")
+  }
+  ["NaN"] {
+    NaN
+  }
+  ["Infinity"] {
+    Infinity
+    -Infinity
+  }
+}

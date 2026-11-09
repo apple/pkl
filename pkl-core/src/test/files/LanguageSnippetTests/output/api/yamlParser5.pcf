@@ -1,0 +1,15 @@
+examples {
+  ["maxCollectionAliases -- happy path"] {
+    new {
+      lol1 {
+        "lol"
+      }
+      lol2 {
+        "lol"
+      }
+    }
+  }
+  ["maxCollectionAliases -- failing"] {
+    "Error parsing YAML document: The number of aliases for collection nodes exceeds the allowed maximum of 1."
+  }
+}

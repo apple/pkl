@@ -1,0 +1,12 @@
+import ".../input-helper/types/moduleInParentMemberA.pkl" as A
+import ".../input-helper/types/moduleInParentMemberB.pkl" as B
+
+check {
+  a = A.check.apply(A)
+  b = B.check.apply(B)
+}
+
+`local` {
+  a = A.readLocal.res is A
+  b = B.readLocal.res is B
+}

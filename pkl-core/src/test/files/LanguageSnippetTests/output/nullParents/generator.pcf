@@ -1,0 +1,29 @@
+res1 {
+  a = 1
+  2
+  3
+}
+res2 {
+  name = "Pigeon"
+  age = 10
+}
+res3 {
+  "a"
+  2
+  3
+}
+res4 {
+  ["a"] = 1
+  [2] = 2
+  [3] = 3
+}
+res5 {
+  a = 1
+  2
+  3
+}
+res6 = "Expected a function that returns a `Listing`, but got a `Listing`."
+res7 = "Expected a function that returns a `Mapping`, but got a `Mapping`."
+res8 = "Expected a function that returns an object, but got an object."
+res9 = "Cannot instantiate, or amend an instance of, external class `String`."
+res10 = "Cannot instantiate, or amend an instance of, external class `List`."

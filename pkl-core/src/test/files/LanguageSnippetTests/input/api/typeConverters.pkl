@@ -1,0 +1,44 @@
+open class Animal {
+  name: String
+}
+
+open class Bird extends Animal {}
+
+open class Cat extends Animal {}
+
+class Goose extends Bird {}
+
+class Swallow extends Bird {}
+
+class Robin extends Bird {}
+
+animals = new Listing {
+  new Animal {
+    name = "Wolf"
+  }
+  new Bird {
+    name = "Tweet"
+  }
+  new Cat {
+    name = "Whiskers"
+  }
+  new Goose {
+    name = "Neck"
+  }
+  new Swallow {
+    name = "Snow"
+  }
+  new Robin {
+    name = "Rainbow"
+  }
+}
+
+output {
+  renderer = new PcfRenderer {
+    converters {
+      [Animal] = (a) -> "\(a.name) Animal"
+      [Goose] = (a) -> "Angry \(a.name)"
+      [Bird] = (a) -> "Mr. \(a.name)"
+    }
+  }
+}

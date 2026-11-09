@@ -1,0 +1,17 @@
+–– Pkl Error ––
+Cannot instantiate abstract class `cannotInstantiateAbstractModule`.
+
+x | res1 = new module {}
+               ^^^^^^
+at cannotInstantiateAbstractModule#res1 (file:///$snippetsDir/input/errors/cannotInstantiateAbstractModule.pkl)
+
+Abstract classes cannot be instantiated.
+Instead, instantiate a concrete subclass.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

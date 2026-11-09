@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `"` delimiter.
+
+x | singleLineStringCannotSpanLines = "
+                                       ^
+at stringError1 (file:///$snippetsDir/input/basic/stringError1.pkl)

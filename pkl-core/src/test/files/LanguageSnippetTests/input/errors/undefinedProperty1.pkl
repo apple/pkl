@@ -1,0 +1,5 @@
+class Person {
+  name: String
+}
+
+res1: Person

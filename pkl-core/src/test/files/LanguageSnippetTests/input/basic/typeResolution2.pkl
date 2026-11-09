@@ -1,0 +1,6 @@
+extends "typeResolution1.pkl"
+
+class Person2 { name = "person2" }
+
+pp1: Person1
+pp2: Person2

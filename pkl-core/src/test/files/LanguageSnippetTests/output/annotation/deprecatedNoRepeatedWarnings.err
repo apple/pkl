@@ -1,0 +1,8 @@
+shouldWarnForFirstCallToFooFromBar = 0
+shouldNotWarnForRepeatedCallToFooFromBar1 = 0
+shouldNotWarnForRepeatedCallToFooFromBar2 = 0
+shouldWarnForDirectCallToFoo = 0
+shouldWarnForRepeatedDirectCallToFoo = 0
+pkl: WARN: Method `deprecatedNoRepeatedWarnings#foo` is deprecated (file:///$snippetsDir/input/annotation/deprecatedNoRepeatedWarnings.pkl)
+pkl: WARN: Method `deprecatedNoRepeatedWarnings#foo` is deprecated (file:///$snippetsDir/input/annotation/deprecatedNoRepeatedWarnings.pkl)
+pkl: WARN: Method `deprecatedNoRepeatedWarnings#foo` is deprecated (file:///$snippetsDir/input/annotation/deprecatedNoRepeatedWarnings.pkl)

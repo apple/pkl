@@ -1,0 +1,6 @@
+ex1 = List()
+ex2 = List(1, 2, 3)
+ex3 = Set(1, 2, 3)
+ex4 = List(1, 2, 3.3)
+ex5 = List(true, false, true)
+ex6 = List(new Dynamic { name = "pigeon"; age = 40 }, new Dynamic { name = "parrot"; age = 30 })

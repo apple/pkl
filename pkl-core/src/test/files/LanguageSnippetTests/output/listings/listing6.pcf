@@ -1,0 +1,18 @@
+examples {
+  ["name resolution in type constraint"] {
+    "Type constraint `isLongString` violated. Value: \"too short\""
+    new {
+      prop {
+        "this is long enough"
+      }
+    }
+  }
+  ["resolves the receiver"] {
+    new {
+      prop {
+        "long enough"
+      }
+    }
+    "Type constraint `length > requiredLength` violated. Value: \"too short\""
+  }
+}

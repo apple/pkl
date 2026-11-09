@@ -1,0 +1,3 @@
+class Foo
+local Foo2 = Foo
+foo2 = new Foo2 {}

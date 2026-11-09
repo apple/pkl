@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot expand glob pattern `https://www.google.com/**.pkl` because scheme `https` is not globbable.
+
+x | res = read*("https://www.google.com/**.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobRead3#res (file:///$snippetsDir/input/errors/invalidGlobRead3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

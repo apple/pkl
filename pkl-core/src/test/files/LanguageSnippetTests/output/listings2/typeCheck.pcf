@@ -1,0 +1,7 @@
+res1 = "Expected value of type `String`, but got type `Int`. Value: 42"
+res2 = "Type constraint `length > 3` violated. Value: \"bob\""
+res3 = "Type constraint `!isEmpty` violated. Value: new Listing {}"
+res4 = true
+res5 = true
+res6 = true
+res7 = true

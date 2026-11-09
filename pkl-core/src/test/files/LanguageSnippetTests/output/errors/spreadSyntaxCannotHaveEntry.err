@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Cannot spread object containing entries into object of type `Listing`.
+
+x | ...source
+    ^^^^^^^^^
+at spreadSyntaxCannotHaveEntry#res (file:///$snippetsDir/input/errors/spreadSyntaxCannotHaveEntry.pkl)
+
+x | ["foo"] = 1
+     ^^^^^
+at spreadSyntaxCannotHaveEntry#source["foo"] (file:///$snippetsDir/input/errors/spreadSyntaxCannotHaveEntry.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

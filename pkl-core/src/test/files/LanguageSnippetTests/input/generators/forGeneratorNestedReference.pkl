@@ -1,0 +1,57 @@
+class Aviary {
+  birds: Listing<Bird>
+}
+
+class Bird {
+  age: Int
+}
+
+function Bird(_age: Int) = new Bird { age = _age }
+
+res1 {
+  for (i in IntSeq(1, 1)) {
+    for (j in 
+      new Aviary {
+        birds {
+          Bird(i)
+        }
+      }.birds
+    ) {
+      j
+    }
+  }
+}
+
+res2 {
+  for (i in IntSeq(1, 1)) {
+    ...new Aviary {
+      birds {
+        Bird(i)
+      }
+    }.birds
+  }
+}
+
+res3 {
+  for (key, _ in Map("hello-there", 5)) {
+    ...myself(new Listing {
+      new Listing {
+        key
+      }
+    })
+  }
+}
+
+res4 {
+  for (key, _ in Map("hello-there", 5)) {
+    ...myself2.apply(new Listing {
+      new Listing {
+        key
+      }
+    })
+  }
+}
+
+function myself(l: Listing<Listing<String>>) = l
+
+local myself2 = (l: Listing<Listing<String>>) -> l

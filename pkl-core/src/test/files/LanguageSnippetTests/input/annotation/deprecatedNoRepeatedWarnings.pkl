@@ -1,0 +1,10 @@
+@Deprecated
+function foo() = 0
+
+function bar() = foo()
+
+shouldWarnForFirstCallToFooFromBar = bar()
+shouldNotWarnForRepeatedCallToFooFromBar1 = bar()
+shouldNotWarnForRepeatedCallToFooFromBar2 = bar()
+shouldWarnForDirectCallToFoo = foo()
+shouldWarnForRepeatedDirectCallToFoo = foo()

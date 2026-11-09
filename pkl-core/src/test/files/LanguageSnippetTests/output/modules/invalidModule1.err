@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `"`. Expected `identifier`.
+
+x | module "DoNotQuote"
+           ^
+at invalidModule1 (file:///$snippetsDir/input/modules/invalidModule1.pkl)

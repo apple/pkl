@@ -1,0 +1,363 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core
+
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
+import kotlin.reflect.KClass
+import org.junit.platform.engine.EngineDiscoveryRequest
+import org.junit.platform.engine.TestDescriptor
+import org.junit.platform.engine.UniqueId
+import org.junit.platform.engine.support.descriptor.EngineDescriptor
+import org.pkl.commons.test.Executables
+import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.InputOutputTestEngine
+import org.pkl.commons.test.MessagePackDebugRenderer
+import org.pkl.commons.test.PackageServer
+import org.pkl.core.http.HttpClient
+import org.pkl.core.project.Project
+import org.pkl.core.util.IoUtils
+
+// @TODO: this test fails on JDK 22+, because of an output mismatch
+private val excludedOnJvm22Plus = listOf(Regex(".*analyzeInvalidHttpModule.*"))
+
+private fun currentMajorJavaVersion(): Int =
+  System.getProperty("java.version").substringBefore('.').toInt()
+
+private fun exclusionsForThisJvm(): List<Regex> =
+  when {
+    currentMajorJavaVersion() >= 22 -> excludedOnJvm22Plus
+    else -> emptyList()
+  }
+
+abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
+  private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
+  private val locationLineNumberRegex = Regex("#L(\\d+)")
+  private val reflectedDeclarationLineNumberRegex = Regex("line = (\\d+)")
+  private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
+  private val msgpackExtensionRegex = Regex(".*[.]msgpack[.]yaml[.]pkl")
+
+  private val snippetsDir: Path =
+    rootProjectDir.resolve("pkl-core/src/test/files/LanguageSnippetTests")
+
+  protected val projectsDir: Path = snippetsDir.resolve("input/projects")
+
+  private val expectedOutputDir: Path = snippetsDir.resolve("output")
+
+  /**
+   * Convenience for development; this selects which snippet test(s) to run. There is a
+   * (non-language-snippet) test to make sure this is `""` before commit.
+   */
+  // language=regexp
+  internal val selection: String = ""
+
+  protected val packageServer: PackageServer = PackageServer()
+
+  override val includedTests: List<Regex> = listOf(Regex(".*$selection\\.pkl"))
+
+  override val excludedTests: List<Regex> = buildList {
+    add(Regex(".*/native/.*"))
+    if (IoUtils.isWindows()) {
+      addAll(windowsExcludedTests)
+    }
+
+    // on experimental JVM versions, exclude tests which are known to be incompatible
+    addAll(exclusionsForThisJvm())
+  }
+
+  override val inputDir: Path = snippetsDir.resolve("input")
+
+  override val isInputFile: (Path) -> Boolean = { it.isRegularFile() }
+
+  protected tailrec fun Path.getProjectDir(): Path? =
+    if (Files.exists(this.resolve("PklProject"))) this else parent?.getProjectDir()
+
+  override fun expectedOutputFileFor(inputFile: Path): Path {
+    val relativePath = IoUtils.relativize(inputFile, inputDir).toString()
+    val stdoutPath =
+      if (relativePath.matches(hiddenExtensionRegex)) relativePath.dropLast(4)
+      else relativePath.dropLast(3) + "pcf"
+    return expectedOutputDir.resolve(stdoutPath)
+  }
+
+  override fun beforeAll() {
+    // disable SHA verification for packages
+    IoUtils.setTestMode()
+  }
+
+  override fun afterAll() {
+    packageServer.close()
+  }
+
+  private val replacement by lazy {
+    if (snippetsDir.root.toString() != "/") "\$snippetsDir" else "/\$snippetsDir"
+  }
+
+  protected fun ByteArray.decodeOutput(inputFile: Path): String =
+    if (inputFile.toString().matches(msgpackExtensionRegex)) MessagePackDebugRenderer(this).output
+    else toString(StandardCharsets.UTF_8)
+
+  protected fun String.stripFilePaths(): String =
+    replace(IoUtils.toNormalizedPathString(snippetsDir), replacement)
+
+  protected fun String.stripLineNumbers(): String =
+    replace(lineNumberRegex) { result ->
+        // replace line number with equivalent number of 'x' characters to keep formatting intact
+        (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
+      }
+      .replace(locationLineNumberRegex) { result ->
+        "#L" + "X".repeat(result.groups[1]!!.value.length)
+      }
+      .replace(reflectedDeclarationLineNumberRegex) { result ->
+        "line = " + "X".repeat(result.groups[1]!!.value.length)
+      }
+
+  protected fun String.stripWebsite(): String =
+    replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
+
+  // can't think of a better solution right now
+  protected fun String.stripVersionCheckErrorMessage(): String =
+    replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
+
+  protected fun String.stripStdlibLocationSha(): String {
+    // Logic must be kept in-sync with `doc-package-info.pkl`.
+    val commitIsh =
+      if (Release.current().version().isNormal) Release.current().version()
+      else Release.current().commitId()
+    return replace(
+      "https://github.com/apple/pkl/blob/${commitIsh}/stdlib/",
+      "https://github.com/apple/pkl/blob/\$commitId/stdlib/",
+    )
+  }
+
+  protected fun String.withUnixLineEndings(): String {
+    return if (System.lineSeparator() == "\r\n") replace("\r\n", "\n") else this
+  }
+}
+
+class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
+  private fun evaluatorBuilder(): EvaluatorBuilder {
+    return EvaluatorBuilder.preconfigured()
+      .setLogger(Loggers.stdErr())
+      .setStackFrameTransformer(StackFrameTransformers.empty)
+      // used by some tests
+      .setEnvironmentVariables(
+        mapOf(
+          "NAME1" to "value1",
+          "NAME2" to "value2",
+          "/foo/bar" to "foobar",
+          "foo bar" to "foo bar",
+          "file:///foo/bar" to "file:///foo/bar",
+        )
+      )
+      .setExternalProperties(
+        mapOf("name1" to "value1", "name2" to "value2", "/foo/bar" to "foobar")
+      )
+      .setModuleCacheDir(null)
+      .setHttpClient(
+        HttpClient.builder()
+          .setTestPort(packageServer.port)
+          .addCertificates(FileTestUtils.selfSignedCertificatePem)
+          .buildLazily()
+      )
+      .setPowerAssertionsEnabled(true)
+  }
+
+  override val testClass: KClass<*> = LanguageSnippetTests::class
+
+  override fun generateOutputFor(inputFile: Path): kotlin.Pair<Boolean, String> {
+    val logWriter = StringWriter()
+
+    val (success, output) =
+      try {
+        val evaluator =
+          evaluatorBuilder()
+            .setLogger(Loggers.writer(PrintWriter(logWriter)))
+            .apply {
+              if (inputFile.startsWith(projectsDir)) {
+                val projectDir = inputFile.getProjectDir() ?: return@apply
+                val project =
+                  Project.loadFromPath(
+                    projectDir.resolve("PklProject"),
+                    SecurityManagers.defaultManager,
+                    null,
+                    StackFrameTransformers.empty,
+                    mapOf(),
+                    true, // enable power assertions for tests
+                  )
+                securityManager = null
+                applyFromProject(project)
+              }
+            }
+            .build()
+        evaluator.use { ev ->
+          true to
+            ev
+              .evaluateOutputBytes(ModuleSource.path(inputFile))
+              .decodeOutput(inputFile)
+              .stripLineNumbers()
+        }
+      } catch (e: PklBugException) {
+        false to e.stackTraceToString()
+      } catch (e: PklException) {
+        false to e.message!!.stripLineNumbers().stripVersionCheckErrorMessage()
+      }
+
+    val stderr = logWriter.toString().withUnixLineEndings()
+
+    // match native CLI: if an error happens, any WARN or TRACE gets emitted first, then the
+    // error message
+    val effectiveOutput = if (success) output + stderr else stderr + output
+    return (success && stderr.isBlank()) to
+      effectiveOutput.stripFilePaths().stripWebsite().stripStdlibLocationSha()
+  }
+}
+
+abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
+  abstract val pklExecutablePath: Path
+
+  override val excludedTests: List<Regex> =
+    listOf(
+      // exclude test that loads module from class path (there is no class path when using native
+      // executable)
+      // on the other hand, don't exclude /native/
+      Regex(".*/import1b\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl"),
+    ) + exclusionsForThisJvm()
+
+  /** Avoid running tests for native binaries when those native binaries have not been built. */
+  override fun discover(
+    discoveryRequest: EngineDiscoveryRequest,
+    uniqueId: UniqueId,
+  ): TestDescriptor {
+    if (!pklExecutablePath.exists()) {
+      // return empty descriptor w/o children
+      return EngineDescriptor(uniqueId, javaClass.simpleName)
+    }
+
+    return super.discover(discoveryRequest, uniqueId)
+  }
+
+  override fun generateOutputFor(inputFile: Path): kotlin.Pair<Boolean, String> {
+    val args = buildList {
+      add(pklExecutablePath.toString())
+      add("eval")
+      add("--no-cache")
+      if (inputFile.startsWith(projectsDir)) {
+        val projectDir = inputFile.getProjectDir()
+        if (projectDir != null) {
+          add("--project-dir")
+          add(projectDir.toString())
+        }
+      } else {
+        add("--no-project")
+        add("--property")
+        add("name1=value1")
+        add("--property")
+        add("name2=value2")
+        add("--property")
+        add("/foo/bar=foobar")
+        add("--env-var")
+        add("NAME1=value1")
+        add("--env-var")
+        add("NAME2=value2")
+        add("--env-var")
+        add("/foo/bar=foobar")
+        add("--env-var")
+        add("foo bar=foo bar")
+        add("--env-var")
+        add("file:///foo/bar=file:///foo/bar")
+      }
+      add("--settings")
+      add("pkl:settings")
+      add("--ca-certificates")
+      add(FileTestUtils.selfSignedCertificatePem.toString())
+      add("--test-mode")
+      add("--test-port")
+      add(packageServer.port.toString())
+      add(inputFile.toString())
+    }
+
+    val builder = ProcessBuilder().command(args)
+
+    val process = builder.start()
+    return try {
+      val out = process.inputStream.readAllBytes().decodeOutput(inputFile).withUnixLineEndings()
+      val err =
+        process.errorStream.readAllBytes().toString(StandardCharsets.UTF_8).withUnixLineEndings()
+      val success = process.waitFor() == 0 && err.isBlank()
+      success to
+        (out + err)
+          .stripFilePaths()
+          .stripLineNumbers()
+          .stripWebsite()
+          .stripVersionCheckErrorMessage()
+          .stripStdlibLocationSha()
+    } finally {
+      process.destroy()
+    }
+  }
+}
+
+class MacAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = Executables.pkl.macAarch64
+  override val testClass: KClass<*> = MacLanguageSnippetTests::class
+}
+
+class LinuxAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = Executables.pkl.linuxAmd64
+  override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
+}
+
+class LinuxAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = Executables.pkl.linuxAarch64
+  override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
+}
+
+class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = Executables.pkl.alpineAmd64
+  override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
+}
+
+private val windowsExcludedTests
+  get() =
+    listOf(
+      // error message contains different file path on Windows
+      Regex(".*missingProjectDeps/bug\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl"),
+    )
+
+private val windowsNativeExcludedTests
+  get() =
+    listOf(
+      // CLI args on Windows turn into `?` when in native image
+      // https://github.com/oracle/graal/issues/8593
+      Regex(".*日本語\\.pkl")
+    )
+
+class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = Executables.pkl.windowsAmd64
+  override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
+  override val excludedTests: List<Regex>
+    get() = super.excludedTests + windowsNativeExcludedTests + windowsExcludedTests
+}

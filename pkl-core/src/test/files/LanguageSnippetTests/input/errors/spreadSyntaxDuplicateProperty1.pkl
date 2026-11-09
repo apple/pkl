@@ -1,0 +1,8 @@
+local source {
+  foo = 1
+}
+
+res {
+  ...source
+  foo = 2
+}

@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Duplicate definition of member `foo`.
+
+x | foo = 2
+    ^^^
+at spreadSyntaxDuplicateProperty1#res (file:///$snippetsDir/input/errors/spreadSyntaxDuplicateProperty1.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

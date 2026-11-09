@@ -1,0 +1,333 @@
+/*
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.parser.syntax;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
+import org.pkl.parser.ParserVisitor;
+import org.pkl.parser.Span;
+
+@SuppressWarnings("unused")
+public abstract sealed class ObjectMember extends AbstractNode {
+
+  public ObjectMember(Span span, List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
+
+  public static final class ObjectElement extends ObjectMember {
+    public ObjectElement(Expr expr, Span span) {
+      super(span, List.of(expr));
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitObjectElement(this);
+    }
+
+    public Expr getExpr() {
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+  }
+
+  public static final class ObjectProperty extends ObjectMember {
+    private final int identifierOffset;
+
+    public ObjectProperty(List<@Nullable Node> nodes, int identifierOffset, Span span) {
+      super(span, nodes);
+      this.identifierOffset = identifierOffset;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitObjectProperty(this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Modifier> getModifiers() {
+      return (List<Modifier>) children.subList(0, identifierOffset);
+    }
+
+    public Identifier getIdentifier() {
+      var ret = (Identifier) children.get(identifierOffset);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable TypeAnnotation getTypeAnnotation() {
+      return (TypeAnnotation) children.get(identifierOffset + 1);
+    }
+
+    public @Nullable Expr getExpr() {
+      return (Expr) children.get(identifierOffset + 2);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<ObjectBody> getBodyList() {
+      return (List<ObjectBody>) children.subList(identifierOffset + 3, children.size());
+    }
+  }
+
+  public static final class ObjectMethod extends ObjectMember implements Method {
+    private final int identifierOffset;
+
+    public ObjectMethod(List<@Nullable Node> nodes, int identifierOffset, Span span) {
+      super(span, nodes);
+      this.identifierOffset = identifierOffset;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitObjectMethod(this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Modifier> getModifiers() {
+      return (List<Modifier>) children.subList(0, identifierOffset);
+    }
+
+    public Keyword getFunctionKeyword() {
+      var ret = (Keyword) children.get(identifierOffset);
+      assert ret != null;
+      return ret;
+    }
+
+    public Identifier getIdentifier() {
+      var ret = (Identifier) children.get(identifierOffset + 1);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable TypeParameterList getTypeParameterList() {
+      return (TypeParameterList) children.get(identifierOffset + 2);
+    }
+
+    public ParameterList getParamList() {
+      var ret = (ParameterList) children.get(identifierOffset + 3);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable TypeAnnotation getTypeAnnotation() {
+      return (TypeAnnotation) children.get(identifierOffset + 4);
+    }
+
+    public Expr getExpr() {
+      var ret = (Expr) children.get(identifierOffset + 5);
+      assert ret != null;
+      return ret;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    public Span headerSpan() {
+      Span start = null;
+      for (var child : children) {
+        if (child != null) {
+          start = child.span();
+          break;
+        }
+      }
+      Span end;
+      var typeAnnotation = children.get(identifierOffset + 4);
+      if (typeAnnotation == null) {
+        var stop = children.get(identifierOffset + 3);
+        assert stop != null;
+        end = stop.span();
+      } else {
+        end = typeAnnotation.span();
+      }
+      assert start != null;
+      return start.endWith(end);
+    }
+  }
+
+  public static final class MemberPredicate extends ObjectMember {
+    public MemberPredicate(List<@Nullable Node> nodes, Span span) {
+      super(span, nodes);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitMemberPredicate(this);
+    }
+
+    public Expr getPred() {
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable Expr getExpr() {
+      return (Expr) children.get(1);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<ObjectBody> getBodyList() {
+      return (List<ObjectBody>) children.subList(2, children.size());
+    }
+  }
+
+  public static final class ObjectEntry extends ObjectMember {
+    public ObjectEntry(List<@Nullable Node> nodes, Span span) {
+      super(span, nodes);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitObjectEntry(this);
+    }
+
+    public Expr getKey() {
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable Expr getValue() {
+      return (Expr) children.get(1);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<ObjectBody> getBodyList() {
+      return (List<ObjectBody>) children.subList(2, children.size());
+    }
+  }
+
+  public static final class ObjectSpread extends ObjectMember {
+    private final boolean isNullable;
+
+    public ObjectSpread(Expr expr, boolean isNullable, Span span) {
+      super(span, List.of(expr));
+      this.isNullable = isNullable;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitObjectSpread(this);
+    }
+
+    public Expr getExpr() {
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+
+    public boolean isNullable() {
+      return isNullable;
+    }
+
+    @Override
+    public String toString() {
+      return "ObjectSpread{"
+          + "isNullable="
+          + isNullable
+          + ", span="
+          + span
+          + ", children="
+          + children
+          + '}';
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      if (this == o) {
+        return true;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+      ObjectSpread that = (ObjectSpread) o;
+      return isNullable == that.isNullable;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), isNullable);
+    }
+  }
+
+  public static final class WhenGenerator extends ObjectMember {
+    public WhenGenerator(
+        Expr predicate, ObjectBody thenClause, @Nullable ObjectBody elseClause, Span span) {
+      super(span, Arrays.asList(predicate, thenClause, elseClause));
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitWhenGenerator(this);
+    }
+
+    public Expr getPredicate() {
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+
+    public ObjectBody getThenClause() {
+      var ret = (ObjectBody) children.get(1);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable ObjectBody getElseClause() {
+      return (ObjectBody) children.get(2);
+    }
+  }
+
+  public static final class ForGenerator extends ObjectMember {
+    public ForGenerator(
+        Parameter p1, @Nullable Parameter p2, Expr expr, ObjectBody body, Span span) {
+      super(span, Arrays.asList(p1, p2, expr, body));
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitForGenerator(this);
+    }
+
+    public Parameter getP1() {
+      var ret = (Parameter) children.get(0);
+      assert ret != null;
+      return ret;
+    }
+
+    public @Nullable Parameter getP2() {
+      return (Parameter) children.get(1);
+    }
+
+    public Expr getExpr() {
+      var ret = (Expr) children.get(2);
+      assert ret != null;
+      return ret;
+    }
+
+    public ObjectBody getBody() {
+      var ret = (ObjectBody) children.get(3);
+      assert ret != null;
+      return ret;
+    }
+
+    public Span forSpan() {
+      return new Span(span.charIndex(), 3);
+    }
+  }
+}

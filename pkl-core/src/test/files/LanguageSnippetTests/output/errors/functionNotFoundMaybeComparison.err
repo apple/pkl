@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Cannot find method `prop`.
+
+x | result = prop < foo > (1)
+             ^^^^^^^^^^^^^^^^
+at functionNotFoundMaybeComparison#Child.result (file:///$snippetsDir/input/errors/functionNotFoundMaybeComparison.pkl)
+
+This code is interpreted as a method call with type arguments.
+If you meant to write a comparison expression instead, wrap the left-hand side with parentheses:
+
+(prop) < ...
+
+x | result = new Child {}.result
+             ^^^^^^^^^^^^^^^^^^^
+at functionNotFoundMaybeComparison#result (file:///$snippetsDir/input/errors/functionNotFoundMaybeComparison.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

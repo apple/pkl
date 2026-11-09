@@ -1,0 +1,20 @@
+typealias A =
+    "aaaaaaaaaaaaaaa"
+    | "bbbbbbbbbbbbb"
+    | "ccccccccccccc"
+    | "ddddddddddddd"
+    | "eeeeeeeeeeeee"
+    | "fffffffffffff"
+    | "ggggggggggggg"
+    | "hhhhhhhhhhhhh"
+    | "iiiiiiiiiiiii"
+    | "jjjjjjjjjjjjj"
+    | "kkkkkkkkkkkkk"
+
+class X {
+  a: A
+}
+
+res1 = new X {
+  a = "other"
+}

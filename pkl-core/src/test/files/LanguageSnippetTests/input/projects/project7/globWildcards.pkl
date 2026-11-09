@@ -1,0 +1,3 @@
+import* "@birds/catalog/{Ostrich,Swallow}.pkl" as myCatalog
+
+res = myCatalog.keys

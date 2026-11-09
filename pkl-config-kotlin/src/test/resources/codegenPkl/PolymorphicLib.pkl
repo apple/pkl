@@ -1,0 +1,14 @@
+module com.example.PolymorphicLib
+
+open class Airplane {
+  name: String
+  numSeats: Int
+}
+
+class Jet extends Airplane {
+  isSuperSonic: Boolean
+}
+
+class Propeller extends Airplane {
+  isTurboprop: Boolean
+}

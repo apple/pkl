@@ -1,0 +1,246 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.runtime;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
+import org.pkl.core.util.AnsiTheme;
+import org.pkl.core.util.SyntaxHighlighter;
+
+public final class StackTraceRenderer {
+  private final Function<StackFrame, StackFrame> frameTransformer;
+
+  private static final int PREAMBLE_LENGTH = VmUtils.EXPRESSION_PREAMBLE.length();
+
+  public StackTraceRenderer(Function<StackFrame, StackFrame> frameTransformer) {
+    this.frameTransformer = frameTransformer;
+  }
+
+  public void render(
+      List<StackFrame> frames,
+      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      AnsiStringBuilder out,
+      boolean forExpressionInput) {
+    var compressed = compressFrames(frames);
+    doRender(compressed, hint, hintBuilder, out, "", true, forExpressionInput);
+  }
+
+  // non-private for testing
+  void doRender(
+      List<Object /*StackFrame|StackFrameLoop*/> frames,
+      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      AnsiStringBuilder out,
+      String leftMargin,
+      boolean isFirstElement,
+      boolean forExpressionInput) {
+    for (var frame : frames) {
+      if (frame instanceof StackFrameLoop loop) {
+        // ensure a cycle of length 1 doesn't get rendered as a loop
+        if (loop.count == 1) {
+          doRender(loop.frames, null, null, out, leftMargin, isFirstElement, forExpressionInput);
+        } else {
+          if (!isFirstElement) {
+            out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
+          }
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+              .append(AnsiTheme.STACK_TRACE_MARGIN, "┌─ ")
+              .append(AnsiTheme.STACK_TRACE_LOOP_COUNT, loop.count)
+              .append(" repetitions of:\n");
+          var newLeftMargin = leftMargin + "│ ";
+          doRender(loop.frames, null, null, out, newLeftMargin, isFirstElement, forExpressionInput);
+          if (isFirstElement) {
+            renderHint(hint, hintBuilder, out, newLeftMargin);
+            isFirstElement = false;
+          }
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
+        }
+      } else {
+        if (!isFirstElement) {
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
+        }
+        renderFrame((StackFrame) frame, out, leftMargin, forExpressionInput);
+      }
+
+      if (isFirstElement) {
+        renderHint(hint, hintBuilder, out, leftMargin);
+        isFirstElement = false;
+      }
+    }
+  }
+
+  private void renderFrame(
+      StackFrame frame, AnsiStringBuilder out, String leftMargin, boolean forExpressionInput) {
+    var transformed = frameTransformer.apply(frame);
+    renderSourceLine(transformed, out, leftMargin, forExpressionInput);
+    renderSourceLocation(transformed, out, leftMargin);
+  }
+
+  private void renderHint(
+      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      AnsiStringBuilder out,
+      String leftMargin) {
+    if (hint == null && hintBuilder == null) return;
+
+    out.append('\n').append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin);
+    if (hint != null) {
+      out.append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
+    } else {
+      out.append(
+          AnsiTheme.ERROR_MESSAGE_HINT,
+          () -> {
+            // nullaway needs this assertion
+            //noinspection ConstantValue
+            assert hintBuilder != null;
+            hintBuilder.accept(out, true);
+          });
+    }
+    out.append('\n');
+  }
+
+  private void renderSourceLine(
+      StackFrame frame, AnsiStringBuilder out, String leftMargin, boolean forExpressionInput) {
+    var originalSourceLine = frame.getSourceLines().get(0);
+    var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
+    var sourceLine = originalSourceLine.strip();
+    var hasPreamble = false;
+    if (forExpressionInput && sourceLine.startsWith(VmUtils.EXPRESSION_PREAMBLE)) {
+      sourceLine = sourceLine.substring(PREAMBLE_LENGTH);
+      hasPreamble = true;
+    }
+    var preambleOffset = hasPreamble ? PREAMBLE_LENGTH : 0;
+    var startColumn = frame.getStartColumn() - leadingWhitespace - preambleOffset;
+    var endColumn =
+        frame.getStartLine() == frame.getEndLine()
+            ? frame.getEndColumn() - leadingWhitespace - preambleOffset
+            : sourceLine.length();
+
+    var prefix = frame.getStartLine() + " | ";
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.STACK_TRACE_LINE_NUMBER, prefix);
+
+    SyntaxHighlighter.writeTo(out, sourceLine);
+
+    out.append('\n')
+        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(" ".repeat(prefix.length() + startColumn - 1))
+        .append(AnsiTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
+        .append('\n');
+  }
+
+  private void renderSourceLocation(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(
+            AnsiTheme.STACK_FRAME,
+            () ->
+                out.append("at ")
+                    .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
+                    .append(" (")
+                    .appendUntrusted(frame.getModuleUri())
+                    .append(")")
+                    .append('\n'));
+  }
+
+  /**
+   * `StackFrame` and `StackFrameLoop` don't currently have a common base interface because the
+   * former is public API and the latter isn't.
+   */
+  // non-private for testing
+  record StackFrameLoop(List<Object /*StackFrame|StackFrameLoop*/> frames, int count) {}
+
+  // non-private for testing
+  static List<Object /*StackFrame|StackFrameLoop*/> compressFrames(List<StackFrame> frames) {
+    return doCompressFrames(frames, new int[frames.size()], new ArrayList<>(), 0, frames.size());
+  }
+
+  private static List<Object /*StackFrame|StackFrameLoop*/> doCompressFrames(
+      List<StackFrame> frames, int[] lpps, List<Object> result, int beginning, int ending) {
+    // Algorithm was written with reversed `frames` in mind.
+    // Instead of reversing `frames`, we invert indices passed to `frames.get()`.
+    var framesLastIndex = frames.size() - 1;
+
+    var totalSize = ending - beginning;
+
+    var maxLength = -1;
+    var patternStart = -2;
+    var patternWidth = -2;
+    var matchEnd = -2;
+
+    loopSearch:
+    for (int i = beginning; i < ending; i++) {
+      var best = i;
+      var len = 0;
+      lpps[i] = 0;
+
+      var j = i + 1;
+      while (j < ending) {
+        var frame1 = frames.get(framesLastIndex - j);
+        var frame2 = frames.get(framesLastIndex - (len + i));
+        var match = frame1.equals(frame2);
+        if (!match && len != 0) {
+          len = lpps[len - 1];
+        } else {
+          len += match ? 1 : 0;
+          lpps[j] = len;
+          if (len > lpps[best]) {
+            best = j;
+          } else if (len > 0 && len == lpps[j - 1]) {
+            // Degenerative; e.g. ABAAB; we don't care for "prefixes that are suffixes" for a
+            // non-empty infix. In other words, we only look for regex `P+P` and not `P+IP`
+            continue loopSearch;
+          }
+          j++;
+        }
+      }
+
+      var length = best - i + 1;
+      if (length > 1 && maxLength < length) {
+        maxLength = length;
+        matchEnd = best;
+        patternStart = i;
+      }
+      if (maxLength > ending - i || maxLength * 2 > totalSize) {
+        // There are no better matches to be found.
+        break;
+      }
+    }
+
+    // Write to result in reverse order.
+    if (maxLength > 1) {
+      patternWidth = matchEnd - lpps[matchEnd] - patternStart + 1;
+      doCompressFrames(frames, lpps, result, matchEnd + 1, ending);
+      result.add(
+          new StackFrameLoop(
+              doCompressFrames(
+                  frames, lpps, new ArrayList<>(), patternStart, patternStart + patternWidth),
+              maxLength / patternWidth));
+      doCompressFrames(frames, lpps, result, beginning, patternStart);
+    } else {
+      // No patterns found in frames[beginning...ending].
+      for (int i = ending - 1; i >= beginning; i--) {
+        result.add(frames.get(framesLastIndex - i));
+      }
+    }
+    return result;
+  }
+}

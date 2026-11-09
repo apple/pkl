@@ -1,0 +1,8 @@
+import "pkl:syntax"
+
+mod =
+  new syntax.Parser {}.parseModule(
+    """
+    import "foo\nbar"
+    """,
+  )

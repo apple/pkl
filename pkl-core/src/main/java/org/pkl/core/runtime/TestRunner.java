@@ -1,0 +1,496 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.runtime;
+
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.BufferedLogger;
+import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.TestResults;
+import org.pkl.core.TestResults.Failure;
+import org.pkl.core.TestResults.TestResult;
+import org.pkl.core.TestResults.TestSectionName;
+import org.pkl.core.TestResults.TestSectionResults;
+import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.module.ModuleKeys;
+import org.pkl.core.stdlib.PklConverter;
+import org.pkl.core.stdlib.base.PcfRenderer;
+import org.pkl.core.util.AnsiStringBuilder;
+import org.pkl.core.util.AnsiTheme;
+import org.pkl.core.util.EconomicMaps;
+
+/** Runs test results examples and facts. */
+public final class TestRunner {
+  private static final PklConverter converter = PklConverter.NOOP;
+  private final BufferedLogger logger;
+  private final StackFrameTransformer stackFrameTransformer;
+  private final boolean overwrite;
+  private final boolean useColor;
+  private final VmValueTrackerFactory valueTrackerFactory;
+
+  public TestRunner(
+      BufferedLogger logger,
+      StackFrameTransformer stackFrameTransformer,
+      boolean overwrite,
+      boolean useColor) {
+    this.logger = logger;
+    this.stackFrameTransformer = stackFrameTransformer;
+    this.overwrite = overwrite;
+    this.useColor = useColor;
+    this.valueTrackerFactory = VmContext.get(null).getValueTrackerFactory();
+  }
+
+  public TestResults run(VmTyped testModule) {
+    var info = VmUtils.getModuleInfo(testModule);
+    var resultsBuilder = new TestResults.Builder(info.getModuleName(), getDisplayUri(info));
+
+    try {
+      VmUtils.checkAmends(testModule, TestModule.getModule().getVmClass());
+    } catch (VmException v) {
+      var error =
+          new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, useColor));
+      return resultsBuilder.setError(error).build();
+    }
+
+    resultsBuilder.setFactsSection(runFacts(testModule));
+    resultsBuilder.setExamplesSection(runExamples(testModule, info));
+
+    resultsBuilder.setStdErr(logger.getLogs());
+    return resultsBuilder.build();
+  }
+
+  private TestSectionResults runFacts(VmTyped testModule) {
+    var callNode = IndirectCallNode.getUncached();
+    var facts = VmUtils.readMember(testModule, Identifier.FACTS, callNode);
+    if (facts instanceof VmNull) return new TestSectionResults(TestSectionName.FACTS, List.of());
+
+    var testResults = new ArrayList<TestResult>();
+    var factsMapping = (VmMapping) facts;
+    for (var cursor = factsMapping.entries(); cursor.advance(); ) {
+      var groupKey = cursor.key();
+      var listing = (VmListing) cursor.value(callNode);
+      var name = String.valueOf(groupKey);
+      var resultBuilder = new TestResult.Builder(name);
+      for (var lCursor = listing.elements(); lCursor.advance(); ) {
+        var idx = lCursor.key();
+        var member = lCursor.member();
+        if (member.isLocalOrExternalOrHidden()) {
+          continue;
+        }
+        try {
+          var factValue = lCursor.value(callNode);
+          if (factValue == Boolean.FALSE) {
+            if (PowerAssertions.isEnabled() && member.getSourceSection().isAvailable()) {
+              try (var valueTracker = valueTrackerFactory.create()) {
+                listing.cachedValues.clear();
+                // Must use `readMember` here to force a re-eval of this fact.
+                VmUtils.readMember(listing, idx, callNode);
+                var failure =
+                    factFailure(
+                        member.getSourceSection(), getDisplayUri(member), valueTracker.values());
+                resultBuilder.addFailure(failure);
+              }
+            } else {
+              var failure = factFailure(member.getSourceSection(), getDisplayUri(member), null);
+              resultBuilder.addFailure(failure);
+            }
+          } else {
+            resultBuilder.addSuccess();
+          }
+        } catch (VmException err) {
+          var error =
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor));
+          resultBuilder.addError(error);
+        }
+      }
+      testResults.add(resultBuilder.build());
+    }
+    return new TestSectionResults(TestSectionName.FACTS, Collections.unmodifiableList(testResults));
+  }
+
+  private TestSectionResults runExamples(VmTyped testModule, ModuleInfo info) {
+    var examples = VmUtils.readMember(testModule, Identifier.EXAMPLES);
+    if (examples instanceof VmNull)
+      return new TestSectionResults(TestSectionName.EXAMPLES, List.of());
+
+    var moduleUri = info.getModuleKey().getUri();
+    if (!moduleUri.getScheme().equalsIgnoreCase("file")) {
+      throw new VmExceptionBuilder()
+          .evalError("cannotEvaluateNonFileBasedTestModule", moduleUri)
+          .build();
+    }
+
+    var examplesMapping = (VmMapping) examples;
+    var moduleFile = Path.of(moduleUri);
+    var expectedOutputFile = moduleFile.resolveSibling(moduleFile.getFileName() + "-expected.pcf");
+    var actualOutputFile = moduleFile.resolveSibling(moduleFile.getFileName() + "-actual.pcf");
+
+    try {
+      Files.deleteIfExists(actualOutputFile);
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorWritingTestOutputFile", actualOutputFile)
+          .withCause(e)
+          .build();
+    }
+    try {
+      if (overwrite) {
+        Files.deleteIfExists(expectedOutputFile);
+      }
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorWritingTestOutputFile", expectedOutputFile)
+          .withCause(e)
+          .build();
+    }
+
+    if (Files.exists(expectedOutputFile)) {
+      return doRunAndValidateExamples(examplesMapping, expectedOutputFile, actualOutputFile);
+    } else {
+      return doRunAndWriteExamples(examplesMapping, expectedOutputFile);
+    }
+  }
+
+  private TestSectionResults doRunAndValidateExamples(
+      VmMapping examples, Path expectedOutputFile, Path actualOutputFile) {
+    var expectedExampleOutputs = loadExampleOutputs(expectedOutputFile);
+    VmDynamic actualExampleOutputs = null;
+    var allGroupsSucceeded = true;
+    var errored = false;
+    var testResults = new ArrayList<TestResult>();
+    var callNode = IndirectCallNode.getUncached();
+
+    for (var groupCursor = examples.entries(); groupCursor.advance(); ) {
+      var groupKey = groupCursor.key();
+      var groupMember = groupCursor.member();
+      var testName = String.valueOf(groupKey);
+      var group = (VmListing) groupCursor.value(callNode);
+      var expectedGroup = (VmDynamic) VmUtils.readMemberOrNull(expectedExampleOutputs, groupKey);
+      var testResultBuilder = new TestResult.Builder(testName);
+
+      if (expectedGroup == null) {
+        testResultBuilder.addFailure(
+            examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, true));
+        testResults.add(testResultBuilder.build());
+        continue;
+      }
+
+      if (group.getLength() != expectedGroup.getLength()) {
+        testResultBuilder.addFailure(
+            exampleLengthMismatchFailure(
+                getDisplayUri(groupMember),
+                testName,
+                expectedGroup.getLength(),
+                group.getLength()));
+        testResults.add(testResultBuilder.build());
+        continue;
+      }
+
+      for (var exampleCursor = group.elements(); exampleCursor.advance(); ) {
+        var exampleIndex = exampleCursor.key();
+
+        Object exampleValue;
+        try {
+          exampleValue = exampleCursor.value(callNode);
+        } catch (VmException err) {
+          errored = true;
+          testResultBuilder.addError(
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
+          continue;
+        }
+        var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex, callNode);
+
+        var exampleValuePcf = renderAsPcf(exampleValue);
+        var expectedValuePcf = renderAsPcf(expectedValue);
+
+        if (!(exampleValuePcf.equals(expectedValuePcf))) {
+          if (actualExampleOutputs == null) {
+            // immediately write and load `<fileName>-actual.pcf`
+            // so that we can generate deep link with correct line number for each
+            // mismatch
+            writeExampleOutputs(actualOutputFile, examples);
+            actualExampleOutputs = loadExampleOutputs(actualOutputFile);
+          }
+
+          var expectedMember = VmUtils.findMember(expectedGroup, exampleIndex);
+          assert expectedMember != null;
+
+          var actualGroup = (VmObjectLike) VmUtils.readMemberOrNull(actualExampleOutputs, groupKey);
+          var actualMember =
+              actualGroup == null ? null : VmUtils.findMember(actualGroup, exampleIndex);
+          if (actualMember == null) {
+            // file was written earlier in this method;
+            // must have been tampered with by another process
+            throw new VmExceptionBuilder()
+                .evalError("invalidOutputFileStructure", actualOutputFile)
+                .build();
+          }
+
+          testResultBuilder.addFailure(
+              exampleFailure(
+                  getDisplayUri(exampleCursor.member()),
+                  getDisplayUri(expectedMember),
+                  expectedValuePcf,
+                  getDisplayUri(actualMember),
+                  exampleValuePcf,
+                  testResultBuilder.getCount()));
+        } else {
+          testResultBuilder.addSuccess();
+        }
+      }
+
+      testResults.add(testResultBuilder.build());
+    }
+
+    for (var groupCursor = expectedExampleOutputs.entries(); groupCursor.advance(); ) {
+      var groupKey = groupCursor.key();
+      if (examples.getCachedValue(groupKey) == null) {
+        var testName = String.valueOf(groupKey);
+        allGroupsSucceeded = false;
+        var result =
+            new TestResult.Builder(testName)
+                .addFailure(
+                    examplePropertyMismatchFailure(
+                        getDisplayUri(groupCursor.member()), testName, false))
+                .build();
+        testResults.add(result);
+      }
+    }
+
+    if (!allGroupsSucceeded && actualExampleOutputs == null && !errored) {
+      writeExampleOutputs(actualOutputFile, examples);
+    }
+    return new TestSectionResults(
+        TestSectionName.EXAMPLES, Collections.unmodifiableList(testResults));
+  }
+
+  private TestSectionResults doRunAndWriteExamples(VmMapping examples, Path outputFile) {
+    var testResults = new ArrayList<TestResult>();
+    var allSucceeded = true;
+    var callNode = IndirectCallNode.getUncached();
+    for (var cursor = examples.entries(); cursor.advance(); ) {
+      var testName = cursor.keyToString();
+      var groupMember = cursor.member();
+      var listing = (VmListing) cursor.value(callNode);
+      var testResultBuilder = new TestResult.Builder(testName);
+      var success = true;
+      for (var listingCursor = listing.elements(); listingCursor.advance(); ) {
+        try {
+          listingCursor.value(callNode);
+        } catch (VmException err) {
+          testResultBuilder.addError(
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
+          allSucceeded = false;
+          success = false;
+        }
+      }
+      if (success) {
+        testResultBuilder.setExampleWritten(true);
+        testResultBuilder.addFailure(
+            writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
+      }
+      testResults.add(testResultBuilder.build());
+    }
+    if (allSucceeded) {
+      writeExampleOutputs(outputFile, examples);
+    }
+    return new TestSectionResults(
+        TestSectionName.EXAMPLES, Collections.unmodifiableList(testResults));
+  }
+
+  private void writeExampleOutputs(Path outputFile, VmMapping examples) {
+    var outputFileContent =
+        new VmDynamic(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getDynamicClass().getPrototype(),
+            EconomicMaps.of(
+                Identifier.EXAMPLES,
+                VmUtils.createSyntheticObjectProperty(Identifier.EXAMPLES, "examples", examples)),
+            0);
+    var builder = new StringBuilder();
+    new PcfRenderer(builder, "  ", converter, false, true).renderDocument(outputFileContent);
+    try {
+      Files.writeString(outputFile, builder);
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorWritingTestOutputFile", outputFile)
+          .withCause(e)
+          .build();
+    }
+  }
+
+  private VmDynamic loadExampleOutputs(Path outputFile) {
+    // load file manually to prevent it from being cached (won't need it again)
+    String fileContent;
+    try {
+      fileContent = Files.readString(outputFile, StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorReadingTestOutputFile", outputFile)
+          .withCause(e)
+          .build();
+    }
+    var module =
+        VmLanguage.get(null).loadModule(ModuleKeys.synthetic(outputFile.toUri(), fileContent));
+    var examples = (VmDynamic) VmUtils.readMemberOrNull(module, Identifier.EXAMPLES);
+    if (examples == null) {
+      throw new VmExceptionBuilder().evalError("invalidOutputFileStructure", outputFile).build();
+    }
+    return examples;
+  }
+
+  private static String renderAsPcf(Object pklValue) {
+    var builder = new StringBuilder();
+    new PcfRenderer(builder, "  ", converter, false, false).renderValue(pklValue);
+    if (pklValue instanceof VmObject) {
+      builder.insert(0, "new ");
+    }
+    return builder.toString();
+  }
+
+  private static String getDisplayUri(ObjectMember member) {
+    return VmUtils.getDisplayUri(
+        member.getSourceSection(), VmContext.get(null).getFrameTransformer());
+  }
+
+  private static String getDisplayUri(ModuleInfo moduleInfo) {
+    return VmUtils.getDisplayUri(
+        moduleInfo.getModuleKey().getUri(), VmContext.get(null).getFrameTransformer());
+  }
+
+  private Failure factFailure(
+      SourceSection sourceSection,
+      String location,
+      @Nullable Map<Node, List<Object>> trackedValues) {
+    var sb = new AnsiStringBuilder(useColor);
+    if (trackedValues != null) {
+      PowerAssertions.render(
+          sb,
+          "",
+          sourceSection,
+          trackedValues,
+          (it) -> {
+            it.append(" ");
+            appendLocation(it, location);
+          });
+    } else {
+      sb.append(sourceSection.getCharacters());
+      sb.append(" ");
+      appendLocation(sb, location);
+    }
+    return new Failure("Fact Failure", sb.toString());
+  }
+
+  private Failure exampleLengthMismatchFailure(
+      String location, String property, int expectedLength, int actualLength) {
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    sb.append('\n')
+        .append(
+            AnsiTheme.TEST_FAILURE_MESSAGE,
+            () ->
+                sb.append("Output mismatch: Expected \"")
+                    .append(property)
+                    .append("\" to contain ")
+                    .append(expectedLength)
+                    .append(" examples, but found ")
+                    .append(actualLength));
+    return new Failure("Output Mismatch (Length)", sb.toString());
+  }
+
+  private Failure examplePropertyMismatchFailure(
+      String location, String property, boolean isMissingInExpected) {
+
+    String existsIn;
+    String missingIn;
+
+    if (isMissingInExpected) {
+      existsIn = "actual";
+      missingIn = "expected";
+    } else {
+      existsIn = "expected";
+      missingIn = "actual";
+    }
+
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    sb.append('\n')
+        .append(
+            AnsiTheme.TEST_FAILURE_MESSAGE,
+            () ->
+                sb.append("Output mismatch: \"")
+                    .append(property)
+                    .append("\" exists in ")
+                    .append(existsIn)
+                    .append(" but not in ")
+                    .append(missingIn)
+                    .append(" output"));
+    return new Failure("Output Mismatch", sb.toString());
+  }
+
+  private Failure exampleFailure(
+      String location,
+      String expectedLocation,
+      String expectedValue,
+      String actualLocation,
+      String actualValue,
+      int exampleNumber) {
+    var sb = new AnsiStringBuilder(useColor);
+    sb.append(AnsiTheme.TEST_NAME, "#" + exampleNumber + ": ");
+    sb.append(
+        AnsiTheme.TEST_FAILURE_MESSAGE,
+        () -> {
+          appendLocation(sb, location);
+          sb.append("\n  Expected: ");
+          appendLocation(sb, expectedLocation);
+          sb.append("\n  ");
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replace("\n", "\n  "));
+          sb.append("\n  Actual: ");
+          appendLocation(sb, actualLocation);
+          sb.append("\n  ");
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, actualValue.replace("\n", "\n  "));
+        });
+    return new Failure("Example Failure", sb.toString());
+  }
+
+  private void appendLocation(AnsiStringBuilder stringBuilder, String location) {
+    stringBuilder.append(
+        AnsiTheme.STACK_FRAME,
+        () -> stringBuilder.append("(").appendUntrusted(location).append(")"));
+  }
+
+  private Failure writtenExampleOutputFailure(String testName, String location) {
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+    sb.append(AnsiTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
+    return new Failure("Example Output Written", sb.toString());
+  }
+}

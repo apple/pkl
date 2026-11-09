@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://localhost:0/fruit@1": {
+      "type": "remote",
+      "uri": "projectpackage://localhost:0/fruit@1.0.5",
+      "checksums": {
+        "sha256": "$skipChecksumVerification"
+      }
+    },
+    "package://localhost:0/project4@1": {
+      "type": "local",
+      "uri": "projectpackage://localhost:0/project4@1.0.0",
+      "path": "../project4"
+    }
+  }
+}

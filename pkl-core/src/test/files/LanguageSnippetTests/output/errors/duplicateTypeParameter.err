@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate type parameter `Elem`.
+
+x | typealias MyType<Elem, Elem> = List<Elem>
+                           ^^^^
+at duplicateTypeParameter (file:///$snippetsDir/input/errors/duplicateTypeParameter.pkl)

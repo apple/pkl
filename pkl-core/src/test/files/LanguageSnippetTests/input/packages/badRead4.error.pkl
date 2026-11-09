@@ -1,0 +1,2 @@
+// fragment path must be absolute
+res = read("package://localhost:0/birds@0.5.0#catalog/Swallow.pkl")

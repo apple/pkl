@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Something went wrong
+
+x | bar = throw("Something went wrong")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at exceptions#foo.bar (file:///$snippetsDir/input/basic/exceptions.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

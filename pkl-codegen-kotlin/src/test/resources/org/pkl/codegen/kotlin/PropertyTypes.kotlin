@@ -1,0 +1,194 @@
+package my
+
+import java.util.Arrays
+import java.util.Objects
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.ByteArray
+import kotlin.Double
+import kotlin.Int
+import kotlin.Long
+import kotlin.Pair
+import kotlin.String
+import kotlin.collections.Collection
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
+import kotlin.text.Regex
+import org.pkl.core.DataSize
+import org.pkl.core.DataSizeUnit
+import org.pkl.core.Duration
+import org.pkl.core.DurationUnit
+
+object Mod {
+  open class PropertyTypes(
+    open val boolean: Boolean,
+    open val int: Long,
+    open val float: Double,
+    open val string: String,
+    open val duration: Duration,
+    open val durationUnit: DurationUnit,
+    open val dataSize: DataSize,
+    open val dataSizeUnit: DataSizeUnit,
+    open val nullable: String?,
+    open val nullable2: String?,
+    open val pair: Pair<Any?, Any?>,
+    open val pair2: Pair<String, Other>,
+    open val coll: Collection<Any?>,
+    open val coll2: Collection<Other>,
+    open val list: List<Any?>,
+    open val list2: List<Other>,
+    open val set: Set<Any?>,
+    open val set2: Set<Other>,
+    open val map: Map<Any?, Any?>,
+    open val map2: Map<String, Other>,
+    open val container: Map<Any?, Any?>,
+    open val container2: Map<String, Other>,
+    open val other: Other,
+    open val regex: Regex,
+    open val any: Any?,
+    open val nonNull: Any,
+    open val enum: Direction,
+    open val bytes: ByteArray
+  ) {
+    open fun copy(
+      boolean: Boolean = this.boolean,
+      int: Long = this.int,
+      float: Double = this.float,
+      string: String = this.string,
+      duration: Duration = this.duration,
+      durationUnit: DurationUnit = this.durationUnit,
+      dataSize: DataSize = this.dataSize,
+      dataSizeUnit: DataSizeUnit = this.dataSizeUnit,
+      nullable: String? = this.nullable,
+      nullable2: String? = this.nullable2,
+      pair: Pair<Any?, Any?> = this.pair,
+      pair2: Pair<String, Other> = this.pair2,
+      coll: Collection<Any?> = this.coll,
+      coll2: Collection<Other> = this.coll2,
+      list: List<Any?> = this.list,
+      list2: List<Other> = this.list2,
+      set: Set<Any?> = this.set,
+      set2: Set<Other> = this.set2,
+      map: Map<Any?, Any?> = this.map,
+      map2: Map<String, Other> = this.map2,
+      container: Map<Any?, Any?> = this.container,
+      container2: Map<String, Other> = this.container2,
+      other: Other = this.other,
+      regex: Regex = this.regex,
+      any: Any? = this.any,
+      nonNull: Any = this.nonNull,
+      enum: Direction = this.enum,
+      bytes: ByteArray = this.bytes
+    ): PropertyTypes = PropertyTypes(boolean, int, float, string, duration, durationUnit, dataSize,
+        dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map,
+        map2, container, container2, other, regex, any, nonNull, enum, bytes)
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (this.javaClass != other?.javaClass) return false
+      other as PropertyTypes
+      if (this.boolean != other.boolean) return false
+      if (this.int != other.int) return false
+      if (this.float != other.float) return false
+      if (this.string != other.string) return false
+      if (this.duration != other.duration) return false
+      if (this.durationUnit != other.durationUnit) return false
+      if (this.dataSize != other.dataSize) return false
+      if (this.dataSizeUnit != other.dataSizeUnit) return false
+      if (this.nullable != other.nullable) return false
+      if (this.nullable2 != other.nullable2) return false
+      if (this.pair != other.pair) return false
+      if (this.pair2 != other.pair2) return false
+      if (this.coll != other.coll) return false
+      if (this.coll2 != other.coll2) return false
+      if (this.list != other.list) return false
+      if (this.list2 != other.list2) return false
+      if (this.set != other.set) return false
+      if (this.set2 != other.set2) return false
+      if (this.map != other.map) return false
+      if (this.map2 != other.map2) return false
+      if (this.container != other.container) return false
+      if (this.container2 != other.container2) return false
+      if (this.other != other.other) return false
+      if (this.regex.pattern != other.regex.pattern) return false
+      if (this.any != other.any) return false
+      if (this.nonNull != other.nonNull) return false
+      if (this.enum != other.enum) return false
+      if (!this.bytes.contentEquals(other.bytes)) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = 1
+      result = 31 * result + Objects.hashCode(this.boolean)
+      result = 31 * result + Objects.hashCode(this.int)
+      result = 31 * result + Objects.hashCode(this.float)
+      result = 31 * result + Objects.hashCode(this.string)
+      result = 31 * result + Objects.hashCode(this.duration)
+      result = 31 * result + Objects.hashCode(this.durationUnit)
+      result = 31 * result + Objects.hashCode(this.dataSize)
+      result = 31 * result + Objects.hashCode(this.dataSizeUnit)
+      result = 31 * result + Objects.hashCode(this.nullable)
+      result = 31 * result + Objects.hashCode(this.nullable2)
+      result = 31 * result + Objects.hashCode(this.pair)
+      result = 31 * result + Objects.hashCode(this.pair2)
+      result = 31 * result + Objects.hashCode(this.coll)
+      result = 31 * result + Objects.hashCode(this.coll2)
+      result = 31 * result + Objects.hashCode(this.list)
+      result = 31 * result + Objects.hashCode(this.list2)
+      result = 31 * result + Objects.hashCode(this.set)
+      result = 31 * result + Objects.hashCode(this.set2)
+      result = 31 * result + Objects.hashCode(this.map)
+      result = 31 * result + Objects.hashCode(this.map2)
+      result = 31 * result + Objects.hashCode(this.container)
+      result = 31 * result + Objects.hashCode(this.container2)
+      result = 31 * result + Objects.hashCode(this.other)
+      result = 31 * result + Objects.hashCode(this.regex.pattern)
+      result = 31 * result + Objects.hashCode(this.any)
+      result = 31 * result + Objects.hashCode(this.nonNull)
+      result = 31 * result + Objects.hashCode(this.enum)
+      result = 31 * result + this.bytes.contentHashCode()
+      return result
+    }
+
+    override fun toString(): String =
+        """PropertyTypes(boolean=$boolean, int=$int, float=$float, string=$string, duration=$duration, durationUnit=$durationUnit, dataSize=$dataSize, dataSizeUnit=$dataSizeUnit, nullable=$nullable, nullable2=$nullable2, pair=$pair, pair2=$pair2, coll=$coll, coll2=$coll2, list=$list, list2=$list2, set=$set, set2=$set2, map=$map, map2=$map2, container=$container, container2=$container2, other=$other, regex=$regex, any=$any, nonNull=$nonNull, enum=$enum, bytes=${Arrays.toString(bytes)})"""
+  }
+
+  open class Other(
+    open val name: String
+  ) {
+    open fun copy(name: String = this.name): Other = Other(name)
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (this.javaClass != other?.javaClass) return false
+      other as Other
+      if (this.name != other.name) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = 1
+      result = 31 * result + Objects.hashCode(this.name)
+      return result
+    }
+
+    override fun toString(): String = """Other(name=$name)"""
+  }
+
+  enum class Direction(
+    val value: String
+  ) {
+    NORTH("north"),
+
+    EAST("east"),
+
+    SOUTH("south"),
+
+    WEST("west");
+
+    override fun toString() = value
+  }
+}

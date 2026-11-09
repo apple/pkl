@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Invalid line continuation escape sequence.
+
+Line continuations are only allowed in multi-line strings.
+
+x | foo = "hello \
+                 ^^
+at parser20 (file:///$snippetsDir/input/errors/parser20.pkl)

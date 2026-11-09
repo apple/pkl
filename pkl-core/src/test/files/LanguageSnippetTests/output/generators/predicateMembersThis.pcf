@@ -1,0 +1,6 @@
+res1 {
+  99
+  new {
+    name = "Barn Owl"
+  }
+}

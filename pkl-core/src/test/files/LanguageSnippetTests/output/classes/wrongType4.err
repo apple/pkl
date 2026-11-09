@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `DataSize`.
+Value: 4.gb
+
+x | street: String
+            ^^^^^^
+at wrongType4#Address.street (file:///$snippetsDir/input/classes/wrongType4.pkl)
+
+xx | street = 4.gb
+              ^^^^
+at wrongType4#person.address.street (file:///$snippetsDir/input/classes/wrongType4.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

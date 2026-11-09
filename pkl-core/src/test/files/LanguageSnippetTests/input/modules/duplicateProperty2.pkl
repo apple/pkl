@@ -1,0 +1,3 @@
+import "pkl:test"
+
+class test // duplicate

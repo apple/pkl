@@ -1,0 +1,190 @@
+[[allowed-modules]]
+.--allowed-modules
+[%collapsible]
+====
+Default: `pkl:,file:,modulepath:,https:,repl:,package:,projectpackage:` +
+Comma-separated list of URI patterns that determine which modules can be loaded and evaluated.
+Patterns are matched against the beginning of module URIs.
+(File paths have been converted to `file:` URLs at this stage.)
+At least one pattern needs to match for a module to be loadable.
+====
+
+[[allowed-resources]]
+.--allowed-resources
+[%collapsible]
+====
+Default: `env:,prop:,package:,projectpackage:` +
+Comma-separated list of URI patterns that determine which external resources can be read.
+Patterns are matched against the beginning of resource URIs.
+At least one pattern needs to match for a resource to be readable.
+====
+
+[[color]]
+.--color
+[%collapsible]
+====
+Default: `auto` +
+When to format messages with ANSI color codes.
+Possible values:
+
+- `"never"`: Never format
+- `"auto"`: Format if `stdin`, `stdout`, or `stderr` are connected to a console.
+- `"always"`: Always format
+====
+
+[[cache-dir]]
+.--cache-dir
+[%collapsible]
+====
+Example: `/path/to/module/cache/` +
+
+The cache directory for storing packages.
+
+If unset, defaults to the following locations:
+
+. `$XDG_CACHE_HOME/pkl`
+. `$LOCALAPPDATA/pkl/Cache` (on Windows only)
+. `~/.cache/pkl` (if `$XDG_CACHE_HOME` and `$LOCALAPPDATA` are both unset)
+====
+
+.--no-cache
+[%collapsible]
+====
+Disable caching of packages.
+====
+
+.-e, --env-var
+[%collapsible]
+====
+Default: OS environment variables for the current process +
+Example: `MY_VAR=myValue` +
+Sets an environment variable that can be read by Pkl code with `read("env:<envVarName>")`.
+Repeat this option to set multiple environment variables.
+====
+
+.-h, --help
+[%collapsible]
+====
+Display help information.
+====
+
+.--module-path
+[%collapsible]
+====
+Default: (empty) +
+Example: `dir1:zip1.zip:jar1.jar` +
+Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs.
+Paths are separated by the platform-specific path separator (`:` on *nix, `;` on Windows).
+Relative paths are resolved against the working directory.
+====
+
+.-p, --property
+[%collapsible]
+====
+Default: (none) +
+Example: `myProp=myValue` +
+Sets an external property that can be read by Pkl code with `read("prop:<propertyName>")`.
+Repeat this option to set multiple external properties.
+====
+
+.--root-dir
+[%collapsible]
+====
+Default: (none) +
+Example: `/some/path` +
+Root directory for `file:` modules and resources.
+If set, access to file-based modules and resources is restricted to those located under the specified root directory.
+Any symlinks are resolved before this check is performed.
+====
+
+.--settings
+[%collapsible]
+====
+Default: (none) +
+Example: `mySettings.pkl` +
+File path of the Pkl settings file to use.
+If not set, `~/.config/pkl/settings.pkl` on Unix or `%APPDATA%/pkl/settings.pkl` on Windows (or the legacy `~/.pkl/settings.pkl`), or defaults specified in the `pkl.settings` standard library module are used.
+====
+
+.-t, --timeout
+[%collapsible]
+====
+Default: (none) +
+Example: `30` +
+Duration, in seconds, after which evaluation of a source module will be timed out.
+Note that a timeout is treated the same as a program error in that any subsequent source modules will not be evaluated.
+====
+
+.-w, --working-dir
+[%collapsible]
+====
+Base path that relative module paths passed as command-line arguments are resolved against.
+Defaults to the current working directory.
+====
+
+.--ca-certificates
+[%collapsible]
+====
+Default: (none) +
+Example: `/some/path/certificates.pem` +
+Path to a file containing CA certificates to be used for TLS connections.
+
+Setting this option replaces the existing set of CA certificates bundled into the CLI.
+Certificates need to be X.509 certificates in PEM format.
+
+For other methods of configuring certificates, see xref:pkl-cli:index.adoc#ca-certs[CA Certificates].
+====
+
+.--http-proxy
+[%collapsible]
+====
+Default: (none) +
+Example: `\http://proxy.example.com:1234` +
+Configures HTTP connections to connect to the provided proxy address.
+The URI must have scheme `http`, and may not contain anything other than a host and port.
+====
+
+.--http-no-proxy
+[%collapsible]
+====
+Default: (none) +
+Example: `example.com,169.254.0.0/16` +
+Comma separated list of hosts to which all connections should bypass the proxy.
+Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
+====
+
+.--http-rewrite
+[%collapsible]
+====
+Default: (none) +
+Example: `\https://pkg.pkl-lang.org/=https://my.internal.mirror/` +
+Replace outbound HTTP(S) requests from one URL with another URL.
+The left-hand side describes the source prefix, and the right-hand describes the target prefix.
+This option is commonly used to enable package mirroring.
+The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
+====
+
+.--http-header
+[%collapsible]
+====
+Default: (none) +
+Example: `**=User-Agent: My User Agent` +
+
+Additional headers to add to outbound HTTP requests.
+
+The syntax is `<glob pattern>=<header name>:<header value>`, and any whitespace after the leading colon is trimmed.
+
+The glob pattern is used to match against the URLs of outbound HTTP calls, and the value is the header name and value to add.
+In the case of multiple matches, every header is added.
+
+To describe a prefix match, the `\\**` wildcard should be added to the pattern.
+For example, `https?://example.com/**` matches against every request to host `example.com`.
+====
+
+.--trace-mode
+[%collapsible]
+====
+Default: `compact` +
+Specifies how `trace()` output is formatted.
+Possible options are `compact` and `pretty`.
+====

@@ -1,0 +1,71 @@
+lexical {
+  res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  nested {
+    res1 {
+      new {
+        name = "x"
+      }
+    }
+    res2 {
+      name = "x"
+    }
+    res3 {
+      new {
+        name = "x"
+      }
+    }
+    res4 {
+      name = "x"
+    }
+    res5 = "Expected value of type `callWithTypeArguments#Person`, but got type `Int`. Value: 1"
+    nested {
+      res1 {
+        name = "x"
+      }
+      res2 {
+        name = "x"
+      }
+      res3 = "Expected value of type `callWithTypeArguments#Person`, but got type `Int`. Value: 1"
+    }
+  }
+  inEagerScope {
+    "Expected value of type `Int`, but got type `String`. Value: \"key\""
+    new {
+      ["key"] = "value"
+      ["keykey"] = "value"
+      ["keykeykey"] = "value"
+    }
+  }
+  reify {
+    res = "<ref>"
+  }
+}
+nested {
+  res1 {
+    new {
+      name = "x"
+    }
+  }
+  res2 {
+    name = "x"
+  }
+  res3 {
+    new {
+      name = "x"
+    }
+  }
+  res4 {
+    name = "x"
+  }
+  res5 = "Expected value of type `callWithTypeArguments#Person`, but got type `Int`. Value: 1"
+  nested {
+    res1 {
+      name = "x"
+    }
+    res2 {
+      name = "x"
+    }
+    res3 = "Expected value of type `callWithTypeArguments#Person`, but got type `Int`. Value: 1"
+  }
+}

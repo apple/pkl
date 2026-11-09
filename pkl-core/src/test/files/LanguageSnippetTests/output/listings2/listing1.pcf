@@ -1,0 +1,63 @@
+res1 {}
+res2 {
+  null
+  true
+  42
+  1.23
+  "foo"
+  Regex("bar")
+  5.gb
+  3.min
+  Pair(1, 2)
+  List(1, 2, 3)
+  Set(1, 2, 3)
+  Map("one", 1, "two", 2)
+  new {
+    name = "Pigeon"
+    age = 42
+  }
+  new {
+    name = "Pigeon"
+    age = 42
+  }
+  new {
+    1
+    2
+    3
+  }
+  new {
+    ["one"] = 1
+    ["two"] = 2
+  }
+}
+res3 {
+  null
+  true
+  42
+  1.23
+  "foo"
+  Regex("bar")
+  5.gb
+  3.min
+  Pair(1, 2)
+  List(1, 2, 3)
+  Set(1, 2, 3)
+  Map("one", 1, "two", 2)
+  new {
+    name = "Pigeon"
+    age = 42
+  }
+  new {
+    name = "Pigeon"
+    age = 42
+  }
+  new {
+    1
+    2
+    3
+  }
+  new {
+    ["one"] = 1
+    ["two"] = 2
+  }
+}

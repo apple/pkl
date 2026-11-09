@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `3`. Expected `,` or `)`.
+
+x | res1 = foo(1, 2 3)
+                    ^
+at missingMethodArgumentListSeparator (file:///$snippetsDir/input/errors/delimiters/missingMethodArgumentListSeparator.pkl)

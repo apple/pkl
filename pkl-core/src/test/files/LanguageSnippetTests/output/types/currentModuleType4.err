@@ -1,0 +1,13 @@
+qux = false
+corge {
+  grault {
+    garply = false
+  }
+}
+pkl: WARN: Cannot reference `module` type within an annotation body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type within a type alias body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const property `currentModuleType4#qux`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const property `currentModuleType4#corge`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const property `currentModuleType4#waldo`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const method `currentModuleType4#quux`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)

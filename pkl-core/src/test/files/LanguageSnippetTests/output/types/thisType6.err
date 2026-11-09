@@ -1,0 +1,6 @@
+–– Pkl Error ––
+`this` is not a valid supertype.
+
+x | class Foo extends this
+                      ^^^^
+at thisType6#Foo (file:///$snippetsDir/input/types/thisType6.pkl)

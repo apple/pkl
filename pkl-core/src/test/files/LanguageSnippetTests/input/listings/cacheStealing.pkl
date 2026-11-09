@@ -1,0 +1,7 @@
+foo1: Listing<String> = new { "hello" }
+foo2: Listing<String|Int> = foo1
+
+res1 = foo1.isDistinct
+// steals isDistinct from foo1's VmListing.cachedValues but must not
+// perform a String|Int type check because isDistinct is not an element
+res2 = foo2.isDistinct

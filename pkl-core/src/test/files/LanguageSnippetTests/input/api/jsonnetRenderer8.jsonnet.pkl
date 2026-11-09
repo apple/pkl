@@ -1,0 +1,26 @@
+import "pkl:jsonnet"
+
+import ".../input-helper/api/annotationConverter.pkl"
+
+@jsonnet.Property { name = "FOO" }
+foo: String = "a"
+
+@annotationConverter.LineComment { text = "bar" }
+bar: String = "b"
+
+baz: Nested
+
+class Nested {
+  @annotationConverter.LineComment { text = "qux" }
+  qux: String = "c"
+
+  quux: String = "c"
+}
+
+output {
+  renderer = new jsonnet.Renderer {
+    convertPropertyTransformers {
+      [annotationConverter.LineComment] { prefix = ", // " }
+    }
+  }
+}

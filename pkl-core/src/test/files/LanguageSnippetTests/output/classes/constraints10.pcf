@@ -1,0 +1,7 @@
+res1 {
+  a = "one.two"
+}
+res2 {
+  a = "five.six"
+}
+res3 = "Type constraint `length >= 5` violated. Value: \"n.o\""

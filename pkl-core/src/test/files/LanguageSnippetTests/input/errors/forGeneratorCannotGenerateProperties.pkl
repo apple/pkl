@@ -1,0 +1,3 @@
+res {
+  for (n in List(1, 2, 3)) { foo = n }
+}

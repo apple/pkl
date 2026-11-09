@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Expected `output` of module `file:///$snippetsDir/input/errors/invalidOutput2.pkl` to be of type `ModuleOutput`, but got type `invalidOutput2#Test`.
+
+x | output: Test = new {}
+                   ^^^^^^
+at output (file:///$snippetsDir/input/errors/invalidOutput2.pkl)

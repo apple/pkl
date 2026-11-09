@@ -1,0 +1,2 @@
+// Name `fruits` is visible in this project but it should not be visible within package `@birds`.
+res = import("@badImportsWithinPackage/unknownDependency.pkl")

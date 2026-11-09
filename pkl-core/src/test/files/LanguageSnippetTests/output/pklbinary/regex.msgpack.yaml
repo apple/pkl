@@ -1,0 +1,22 @@
+- 1
+- 'regex.msgpack.yaml'
+- 'file:///$snippetsDir/input/pklbinary/regex.msgpack.yaml.pkl'
+- 
+  - 
+    - 16
+    - 'res1'
+    - 
+      - 11
+      - 'abc'
+  - 
+    - 16
+    - 'res2'
+    - 
+      - 11
+      - ''
+  - 
+    - 16
+    - 'res3'
+    - 
+      - 11
+      - '(?m)^abc$'

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <order>
+    <item>
+      <name>banana</name>
+      <quantity>42</quantity>
+    </item>
+    <item>
+      <name>orange</name>
+      <quantity>21</quantity>
+    </item>
+  </order>
+</root>

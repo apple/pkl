@@ -1,0 +1,124 @@
+examples {
+  ["pcf"] {
+    """
+    property (value)
+    elements {
+      (element1)
+      (element2)
+    }
+    entries {
+      [(key1)] (value1)
+      [(key2)] (value2)
+    }
+    
+    """
+  }
+  ["json"] {
+    """
+    {
+      "property": (value),
+      "elements": [
+        (element1),
+        (element2)
+      ],
+      "entries": {
+        (key1): (value1),
+        (key2): (value2)
+      }
+    }
+    
+    """
+  }
+  ["jsonnet"] {
+    """
+    {
+      property: (value),
+      elements: [
+        (element1),
+        (element2),
+      ],
+      entries: {
+        (key1): (value1),
+        (key2): (value2),
+      },
+    }
+    
+    """
+  }
+  ["plist"] {
+    """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>property</key>
+      (value)
+      <key>elements</key>
+      <array>
+        (element1)
+        (element2)
+      </array>
+      <key>entries</key>
+      <dict>
+        <key>(key1)</key>
+        (value1)
+        <key>(key2)</key>
+        (value2)
+      </dict>
+    </dict>
+    </plist>
+    
+    """
+  }
+  ["properties"] {
+    """
+    property = (value)
+    elements = element1,element2
+    entries.(key1) = (value1)
+    entries.(key2) = (value2)
+    
+    """
+  }
+  ["textproto"] {
+    """
+    property: (value)
+    elements: (element1)
+    elements: (element2)
+    entries: {
+      key: (key1)
+      value: (value1)
+    }
+    entries: {
+      key: (key2)
+      value: (value2)
+    }
+    
+    """
+  }
+  ["xml"] {
+    """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <root>
+      <property>(value)</property>
+      <elements>(element1)(element2)</elements>
+      <entries>
+        <(key1)>(value1)</(key1)>
+        <(key2)>(value2)</(key2)>
+      </entries>
+    </root>
+    
+    """
+  }
+  ["yaml"] {
+    """
+    property:(value)
+    elements:
+    -(element1)
+    -(element2)
+    entries:
+      (key1):(value1)
+      (key2):(value2)
+    
+    """
+  }
+}

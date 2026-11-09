@@ -1,0 +1,24 @@
+–– Pkl Error ––
+Type constraint `!isEmpty` violated.
+Value: ""
+
+    !isEmpty
+    ││
+    │true
+    false
+
+x | res1: String(!isEmpty) = ""
+                 ^^^^^^^^
+at typedModuleProperties3#res1 (file:///$snippetsDir/input/modules/typedModuleProperties3.pkl)
+
+x | res1: String(!isEmpty) = ""
+                             ^^
+at typedModuleProperties3#res1 (file:///$snippetsDir/input/modules/typedModuleProperties3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

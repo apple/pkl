@@ -1,0 +1,14 @@
+amends "baseModule.pkl"
+
+local class Person {
+  name: String
+  type: String
+}
+
+local function pigeon(): Person = new { name = "Pigeon"; type = getClass().simpleName }
+
+local function barnOwl() = new { name = "Barn Owl"; type = getClass().simpleName }
+
+local function parrot(): unknown = new { name = "Parrot"; type = getClass().simpleName }
+
+foo = List(pigeon(), barnOwl(), parrot())

@@ -1,0 +1,7 @@
+class X {
+  a: Boolean|List<Int>
+}
+
+res1 = new X {
+  a = 42
+}

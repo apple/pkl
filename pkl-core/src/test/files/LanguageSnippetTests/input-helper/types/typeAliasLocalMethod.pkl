@@ -1,0 +1,3 @@
+local const function isValid(s: String): Boolean = s.startsWith("Bob")
+
+typealias ValidString3 = String(isValid(this))

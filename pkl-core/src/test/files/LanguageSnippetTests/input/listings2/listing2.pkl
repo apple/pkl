@@ -1,0 +1,92 @@
+import "pkl:test"
+
+function id(x) = x
+
+local x = new Listing {
+  when (false) { 0 }
+  "one"
+  "two"
+  "three"
+}
+
+res1 = (x) {
+  when (false) { 0 }
+  [1] = "updated two"
+}
+
+res1a = (x) {
+  when (false) { 0 }
+  [id(1)] = id("updated two")
+}
+
+res2 = (x) {
+  when (false) { 0 }
+  [0] = "updated one"
+  [1] = "updated two"
+  [2] = "updated three"
+}
+
+res2a = (x) {
+  when (false) { 0 }
+  [id(0)] = id("updated one")
+  [1] = id("updated two")
+  [id(2)] = "updated three"
+}
+
+res3 = (x) {
+  when (false) { 0 }
+  [2] = "updated three"
+  [0] = "updated one"
+  [1] = "updated two"
+}
+
+res3a = (x) {
+  when (false) { 0 }
+  [id(2)] = id("updated three")
+  [0] = id("updated one")
+  [id(1)] = "updated two"
+}
+
+res4 = (x) {
+  when (false) { 0 }
+  [0] = "updated one"
+  "four"
+  [1] = "updated two"
+  "five"
+  [2] = "updated three"
+  "six"
+}
+
+res4a = (x) {
+  when (false) { 0 }
+  [id(0)] = id("updated one")
+  id("four")
+  [1] = id("updated two")
+  "five"
+  [id(2)] = "updated three"
+  id("six")
+}
+
+res5 = test.catch(() -> (x) { when (false) { 0 }; [3] = "four" })
+res5a = test.catch(() -> (x) { when (false) { 0 }; [3] = id("four") })
+res5b = test.catch(() -> (x) { when (false) { 0 }; [id(3)] = "four" })
+res5c = test.catch(() -> (x) { when (false) { 0 }; [id(3)] = id("four") })
+
+res6 = test.catch(() -> (x) { when (false) { 0 }; "four"; [3] = "updated four" })
+res6a = test.catch(() -> (x) { when (false) { 0 }; id("four"); [id(3)] = id("updated four") })
+
+res7 = test.catch(() -> (x) { when (false) { 0 }; [-1] = "value" })
+res7a = test.catch(() -> (x) { when (false) { 0 }; [id(-1)] = id("value") })
+
+res8 = test.catch(() -> (x) { when (false) { 0 }; ["wrong type"] = "value" })
+res8a = test.catch(() -> (x) { when (false) { 0 }; [id("wrong type")] = id("value") })
+
+res9 = test.catch(() -> new Listing { when (false) { 0 }; foo = "bar" })
+res10 = test.catch(() -> (x) { when (false) { 0 }; foo = "foo" })
+res11 = test.catch(() -> new Listing { when (false) { 0 }; "one"; foo = "foo" })
+res12 = test.catch(() -> (x) { when (false) { 0 }; "four"; foo = "foo" })
+res12a = test.catch(() -> (x) { when (false) { 0 }; id("four"); foo = "foo" })
+res13 = test.catch(() -> (x) { when (false) { 0 }; [1] = "updated two"; foo = "foo" })
+res13a = test.catch(() -> (x) { when (false) { 0 }; [id(1)] = id("updated two"); foo = "foo" })
+res14 = test.catch(() -> (x) { when (false) { 0 }; "four"; [1] = "updated two"; foo = "foo" })
+res14a = test.catch(() -> (x) { when (false) { 0 }; id("four"); [id(1)] = id("updated two"); foo = "foo" })

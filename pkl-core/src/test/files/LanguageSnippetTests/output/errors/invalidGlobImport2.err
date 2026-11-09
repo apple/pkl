@@ -1,0 +1,20 @@
+–– Pkl Error ––
+Invalid glob pattern `\foo.pkl`.
+
+x | import* "\\foo.pkl" as invalidGlob
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobImport2#invalidGlob (file:///$snippetsDir/input/errors/invalidGlobImport2.pkl)
+
+Invalid escape character `\f`.
+
+x | res = invalidGlob
+          ^^^^^^^^^^^
+at invalidGlobImport2#res (file:///$snippetsDir/input/errors/invalidGlobImport2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Cannot iterate over value of type `forGeneratorCannotIterateOverTyped#Person`.
+Value: new forGeneratorCannotIterateOverTyped#Person {}
+
+x | for (_ in new Person {}) { 42 }
+              ^^^^^^^^^^^^^
+at forGeneratorCannotIterateOverTyped#foo (file:///$snippetsDir/input/errors/forGeneratorCannotIterateOverTyped.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

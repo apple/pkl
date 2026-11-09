@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `[`. Expected a type or `{`.
+
+x | res1 = new [ 42 }
+               ^
+at parser10 (file:///$snippetsDir/input/errors/parser10.pkl)

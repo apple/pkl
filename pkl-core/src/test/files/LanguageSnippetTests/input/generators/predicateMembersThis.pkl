@@ -1,0 +1,10 @@
+hidden pigeon = new { name = "Pigeon" }
+hidden barnOwl = new { name = "Barn Owl" }
+hidden people = new {
+  pigeon
+  barnOwl
+}
+
+res1 = (people) {
+  [[this == pigeon && (() -> this).apply() == pigeon && (let (x = this) x) == pigeon]] = 99
+}

@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Method needs a `local` modifier.
+
+x | function foo() = "parrot"
+    ^^^^^^^^^^^^^^
+at invalidAmend4 (file:///$snippetsDir/input/modules/invalidAmend4.pkl)
+
+To define a non-local method, extend rather than amend the parent module (which must be `open` for extension).

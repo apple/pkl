@@ -1,0 +1,19 @@
+foo {
+  res1 = 42
+  res2 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  res3 = 42
+  res4 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  bar {
+    res5 = 42
+    res6 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  }
+  c {
+    foo {
+      res8 = "Cannot reference property `y` from here because it is not `const`."
+      bar {
+        res9 = 42
+        res10 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      }
+    }
+  }
+}

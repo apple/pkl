@@ -1,0 +1,24 @@
+–– Pkl Error ––
+Type constraint `!isEmpty` violated.
+Value: List()
+
+    !isEmpty
+    ││
+    │true
+    false
+
+x | names: List<String>(!isEmpty)
+                        ^^^^^^^^
+at wrongType6#Person.names (file:///$snippetsDir/input/classes/wrongType6.pkl)
+
+x | names: List<String>(!isEmpty)
+    ^^^^^
+at wrongType6#Person.names (file:///$snippetsDir/input/classes/wrongType6.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

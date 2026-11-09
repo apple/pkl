@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Element index `1` is out of range `2`..`3`.
+Collection: List(1, 2, 3)
+
+x | res1 = List(1, 2, 3).sublist(2, 1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at outOfRange3#res1 (file:///$snippetsDir/input/errors/outOfRange3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

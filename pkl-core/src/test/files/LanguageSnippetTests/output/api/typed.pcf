@@ -1,0 +1,49 @@
+examples {
+  ["getProperty()"] {
+    "Pigeon"
+    "Pigeon"
+    5
+    "Cannot find property `other` in object of type `typed#Animal`."
+  }
+  ["getPropertyOrNull()"] {
+    "Pigeon"
+    "Pigeon"
+    5
+    null
+  }
+  ["hasProperty()"] {
+    true
+    true
+    true
+    false
+    true
+    true
+    false
+  }
+  ["toDynamic()"] {
+    new {
+      species = "Pigeon"
+      age = 5
+      numberOfFeet = 2
+    }
+    "Dynamic"
+    new {
+      species = "Pigeon"
+      age = "age"
+      numberOfFeet = 2
+      ["isExtinct"] = false
+    }
+    new {
+      species = "Pigeon"
+      age = 6
+      numberOfFeet = 2
+    }
+  }
+  ["toMap()"] {
+    Map("species", "Pigeon", "age", 5, "numberOfFeet", 2)
+    "Map"
+    Map()
+    Map("species", "Pigeon", "age", 5, "numberOfFeet", 2)
+    Map("species", "Pigeon", "age", 6)
+  }
+}

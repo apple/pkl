@@ -1,0 +1,4 @@
+amends "library.pkl"
+
+// wrong type
+name = 42

@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `Boolean|List<Int>`, but got type `Int`.
+Value: 42
+
+x | a: Boolean|List<Int>
+       ^^^^^^^^^^^^^^^^^
+at unionTypesErrorSimple#X.a (file:///$snippetsDir/input/classes/unionTypesErrorSimple.pkl)
+
+x | a = 42
+        ^^
+at unionTypesErrorSimple#res1.a (file:///$snippetsDir/input/classes/unionTypesErrorSimple.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

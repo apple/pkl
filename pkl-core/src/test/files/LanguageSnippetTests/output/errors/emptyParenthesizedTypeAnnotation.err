@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `)`. Expected a type.
+
+x | foo: Int|()|String = "foo"
+              ^
+at emptyParenthesizedTypeAnnotation (file:///$snippetsDir/input/errors/emptyParenthesizedTypeAnnotation.pkl)

@@ -1,0 +1,74 @@
+examples {
+  ["construction"] {
+    IntSeq(-3, 2)
+    IntSeq(5, 5)
+    IntSeq(5, 0)
+    IntSeq(0, 0)
+    IntSeq(0, 10)
+    IntSeq(-10, 0)
+  }
+  ["construction with step"] {
+    IntSeq(-3, 2).step(2)
+    IntSeq(2, -3).step(-2)
+    IntSeq(2, -3).step(-5)
+    IntSeq(2, -3).step(-7)
+    IntSeq(0, 1).step(-9223372036854775808)
+    IntSeq(9223372036854775807, -9223372036854775808).step(-9223372036854775808)
+    IntSeq(-9223372036854775808, 9223372036854775807).step(9223372036854775807)
+    "Type constraint `isNonZero` violated. Value: 0"
+  }
+  ["start"] {
+    -3
+    2
+  }
+  ["end"] {
+    2
+    -3
+  }
+  ["step"] {
+    1
+    2
+    1
+    -2
+  }
+  ["fold"] {
+    List(-3, -2, -1, 0, 1, 2)
+    List(5)
+    List()
+    List(0)
+    List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    List(-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0)
+    List(-3, -1, 1)
+    List(2, 0, -2)
+    List(2, -3)
+    List(2)
+  }
+  ["map"] {
+    List(-3, -2, -1, 0, 1, 2)
+    List(5)
+    List()
+    List(0)
+    List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    List(-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0)
+    List(-3, -1, 1)
+    List(2, 0, -2)
+    List(2, -3)
+    List(2)
+    List()
+    List(9223372036854775807, -1)
+    List(-9223372036854775808, -1, 9223372036854775806)
+  }
+  ["cannot instantiate"] {
+    "Cannot instantiate, or amend an instance of, external class `IntSeq`."
+  }
+  ["toList"] {
+    true
+    true
+    true
+  }
+  ["toListing"] {
+    true
+    true
+    true
+  }
+}

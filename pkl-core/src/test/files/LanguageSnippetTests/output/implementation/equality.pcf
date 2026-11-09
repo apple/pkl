@@ -1,0 +1,18 @@
+facts {
+  ["mix EqualsNode specializations (VmValue first)"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}

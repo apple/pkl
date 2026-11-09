@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Cannot find a dependency named `doesnotexist`, because it is not declared in the current project.
+
+To fix this, add it to the `dependencies` section of your `PklProject` file, and resolve your dependencies.
+
+x | import "@doesnotexist/bar/baz.pkl"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badImport1.error (file:///$snippetsDir/input/projects/project1/badImport1.error.pkl)

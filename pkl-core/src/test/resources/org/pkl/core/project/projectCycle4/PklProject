@@ -1,0 +1,7 @@
+amends "pkl:Project"
+
+import "PklProject"
+
+dependencies {
+  ["projectCycle1"] = import("../projectCycle1/PklProject")
+}

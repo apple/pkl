@@ -1,0 +1,8 @@
+open module moduleInParentMemberBase
+
+hidden check = (it: module) -> it
+
+hidden readLocal {
+  local `local`: module = outer
+  res = `local`
+}

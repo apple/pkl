@@ -1,0 +1,9 @@
+–– Pkl Error ––
+Properties with type annotations cannot have object bodies.
+
+To define both a type annotation and an object body, try using assignment instead.
+For example: `obj: Bird = new { ... }`.
+
+x | bird: Listing<String> {
+                          ^
+at typeAnnotationInAmends (file:///$snippetsDir/input/parser/typeAnnotationInAmends.pkl)

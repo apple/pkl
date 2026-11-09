@@ -1,0 +1,6 @@
+examples {
+  ["minPklVersion check"] {
+    Class1 {}
+    Class2 {}
+  }
+}

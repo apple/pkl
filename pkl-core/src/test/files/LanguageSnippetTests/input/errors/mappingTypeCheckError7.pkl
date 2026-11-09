@@ -1,0 +1,3 @@
+res = new Mapping<Listing<String(length == 5)>, String> {
+  [new Listing { "hi" }] = "hi"
+}

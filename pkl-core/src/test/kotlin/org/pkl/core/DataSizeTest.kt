@@ -1,0 +1,144 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.pkl.core.DataSizeUnit.*
+
+class DataSizeTest {
+  private val size1 = DataSize(0.3, KILOBYTES)
+  private val size2 = DataSize(300.0, BYTES)
+  private val size3 = DataSize(300.1, BYTES)
+  private val size4 = DataSize(0.0, PEBIBYTES)
+
+  @Test
+  fun `of()`() {
+    assertThat(DataSize.ofBytes(33.0)).isEqualTo(DataSize(33.0, BYTES))
+    assertThat(DataSize.ofKilobytes(33.0)).isEqualTo(DataSize(33.0, KILOBYTES))
+    assertThat(DataSize.ofKibibytes(33.0)).isEqualTo(DataSize(33.0, KIBIBYTES))
+    assertThat(DataSize.ofMegabytes(33.0)).isEqualTo(DataSize(33.0, MEGABYTES))
+    assertThat(DataSize.ofMebibytes(33.0)).isEqualTo(DataSize(33.0, MEBIBYTES))
+    assertThat(DataSize.ofGigabytes(33.0)).isEqualTo(DataSize(33.0, GIGABYTES))
+    assertThat(DataSize.ofGibibytes(33.0)).isEqualTo(DataSize(33.0, GIBIBYTES))
+    assertThat(DataSize.ofTerabytes(33.0)).isEqualTo(DataSize(33.0, TERABYTES))
+    assertThat(DataSize.ofTebibytes(33.0)).isEqualTo(DataSize(33.0, TEBIBYTES))
+    assertThat(DataSize.ofPetabytes(33.0)).isEqualTo(DataSize(33.0, PETABYTES))
+    assertThat(DataSize.ofPebibytes(33.0)).isEqualTo(DataSize(33.0, PEBIBYTES))
+  }
+
+  @Test
+  fun `in()`() {
+    assertThat(size1.inBytes()).isEqualTo(300.0)
+    assertThat(size1.inKilobytes()).isEqualTo(0.3)
+    assertThat(size1.inMegabytes()).isEqualTo(0.0003)
+    assertThat(size1.inGigabytes()).isEqualTo(0.0000003)
+    assertThat(size1.inTerabytes()).isEqualTo(0.0000000003)
+    assertThat(size1.inPetabytes()).isEqualTo(0.0000000000003)
+
+    assertThat(DataSize.ofBytes(1024.0).inKibibytes()).isEqualTo(1.0)
+    assertThat(DataSize.ofKibibytes(1024.0).inMebibytes()).isEqualTo(1.0)
+    assertThat(DataSize.ofMebibytes(1024.0).inGibibytes()).isEqualTo(1.0)
+    assertThat(DataSize.ofGibibytes(1024.0).inTebibytes()).isEqualTo(1.0)
+    assertThat(DataSize.ofTebibytes(1024.0).inPebibytes()).isEqualTo(1.0)
+  }
+
+  @Test
+  fun `inWhole()`() {
+    assertThat(DataSize.ofBytes(123.4).inWholeBytes()).isEqualTo(123)
+    assertThat(DataSize.ofBytes(1000.0).inWholeKilobytes()).isEqualTo(1)
+    assertThat(DataSize.ofKilobytes(999.0).inWholeMegabytes()).isEqualTo(1)
+    assertThat(DataSize.ofMegabytes(1001.0).inWholeGigabytes()).isEqualTo(1)
+    assertThat(DataSize.ofGigabytes(2000.0).inWholeTerabytes()).isEqualTo(2)
+    assertThat(DataSize.ofTerabytes(1600.0).inWholePetabytes()).isEqualTo(2)
+
+    assertThat(DataSize.ofBytes(1023.0).inWholeKibibytes()).isEqualTo(1)
+    assertThat(DataSize.ofKibibytes(1024.0).inWholeMebibytes()).isEqualTo(1)
+    assertThat(DataSize.ofMebibytes(1025.0).inWholeGibibytes()).isEqualTo(1)
+    assertThat(DataSize.ofGibibytes(2000.0).inWholeTebibytes()).isEqualTo(2)
+    assertThat(DataSize.ofTebibytes(1600.0).inWholePebibytes()).isEqualTo(2)
+  }
+
+  @Test
+  fun `destructure()`() {
+    assertThat(size1.value).isEqualTo(0.3)
+    assertThat(size1.unit).isEqualTo(KILOBYTES)
+
+    assertThat(size2.value).isEqualTo(300.0)
+    assertThat(size2.unit).isEqualTo(BYTES)
+
+    assertThat(size3.value).isEqualTo(300.1)
+    assertThat(size3.unit).isEqualTo(BYTES)
+
+    assertThat(size4.value).isEqualTo(0.0)
+    assertThat(size4.unit).isEqualTo(PEBIBYTES)
+  }
+
+  @Test
+  fun `convertTo()`() {
+    assertThat(size1.convertTo(KILOBYTES)).isEqualTo(size1)
+    assertThat(size1.convertTo(BYTES)).isEqualTo(size2)
+    assertThat(size2.convertTo(KILOBYTES)).isEqualTo(size1)
+    assertThat(size4.convertTo(PETABYTES)).isEqualTo(DataSize(0.0, KIBIBYTES))
+  }
+
+  @Test
+  fun `convertValueTo()`() {
+    assertThat(size1.convertValueTo(KILOBYTES)).isEqualTo(size1.value)
+    assertThat(size1.convertValueTo(BYTES)).isEqualTo(size2.value)
+    assertThat(size2.convertValueTo(KILOBYTES)).isEqualTo(size1.value)
+    assertThat(size4.convertValueTo(PETABYTES)).isEqualTo(0.0)
+  }
+
+  @Test
+  fun `equals()`() {
+    assertThat(size1).isEqualTo(size1)
+    assertThat(size1).isEqualTo(size2)
+    assertThat(size2).isEqualTo(size1)
+
+    assertThat(size3).isNotEqualTo(size1)
+    assertThat(size2).isNotEqualTo(size3)
+  }
+
+  @Test
+  fun `hashCode()`() {
+    assertThat(size1.hashCode()).isEqualTo(size1.hashCode())
+    assertThat(size2.hashCode()).isEqualTo(size1.hashCode())
+    assertThat(size1.hashCode()).isEqualTo(size2.hashCode())
+
+    assertThat(size3.hashCode()).isNotEqualTo(size1.hashCode())
+    assertThat(size2.hashCode()).isNotEqualTo(size3.hashCode())
+
+    // -0.0 == 0.0, so equal sizes must have equal hash codes
+    assertThat(DataSize(0.0, BYTES)).isEqualTo(DataSize(-0.0, BYTES))
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, BYTES).hashCode())
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, PEBIBYTES).hashCode())
+  }
+
+  @Test
+  fun `toString()`() {
+    assertThat(DataSize(3.0, BYTES).toString()).isEqualTo("3.b")
+    assertThat(DataSize(1.5, BYTES).toString()).isEqualTo("1.5.b")
+    assertThat(DataSize(1e18, BYTES).toString()).isEqualTo("1000000000000000000.b")
+    // -2^63 still fits into a `long`
+    assertThat(DataSize(-9.223372036854776E18, BYTES).toString())
+      .isEqualTo("-9223372036854775808.b")
+    // values too large to fit into a `long` are printed in their `double` form,
+    // instead of saturating to 9223372036854775807
+    assertThat(DataSize(9.223372036854776E18, BYTES).toString()).isEqualTo("9.223372036854776E18.b")
+    assertThat(DataSize(1e300, PETABYTES).toString()).isEqualTo("1.0E300.pb")
+  }
+}

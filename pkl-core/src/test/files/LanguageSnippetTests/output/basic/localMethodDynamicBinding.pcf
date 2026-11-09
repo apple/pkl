@@ -1,0 +1,40 @@
+res1 {
+  x = 1
+  y = 1
+}
+res2 {
+  x = 2
+  y = 2
+}
+res3 {
+  x = 1
+  nested {
+    y = 1
+  }
+}
+res4 {
+  x = 2
+  nested {
+    y = 2
+  }
+}
+res5 {
+  x = 1
+  y = 1
+}
+res6 {
+  x = 2
+  y = 2
+}
+res7 {
+  x = 1
+  nested {
+    y = 1
+  }
+}
+res8 {
+  x = 2
+  nested {
+    y = 2
+  }
+}

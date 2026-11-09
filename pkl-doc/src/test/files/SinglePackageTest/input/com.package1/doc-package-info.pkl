@@ -1,0 +1,22 @@
+/// Minimal package fixture for single-package site tests.
+amends "pkl:DocPackageInfo"
+
+name = "com.package1"
+version = "1.2.3"
+importUri = "https://example.com/"
+authors {
+  "package1-publisher@example.com"
+}
+sourceCode = "https://example.com/package1/"
+sourceCodeUrlScheme = "https://example.com/package1%{path}#L%{line}-L%{endLine}"
+issueTracker = "https://issues.example.com/package1/"
+dependencies {
+  new {
+    name = "pkl"
+    // use fixed version to avoid churn in expected test outputs
+    version = "0.24.0"
+    sourceCode = "https://github.com/apple/pkl/blob/dev/stdlib/"
+    sourceCodeUrlScheme = "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
+    documentation = "https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/"
+  }
+}

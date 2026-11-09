@@ -1,0 +1,8 @@
+amends "../../input-helper/listings/cacheStealingTypeCheck.pkl"
+
+// this test covers a regression where the wrong receiver 
+// and owner was used to typecheck a stolen value
+foo {
+  "abcdx"
+  "ax"
+}

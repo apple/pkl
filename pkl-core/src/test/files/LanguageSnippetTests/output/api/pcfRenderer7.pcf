@@ -1,0 +1,82 @@
+rawString {
+  res1 = #"\r\n\t\\"#
+  res2 = "$foo"
+  res3 = #"\(3 * 4)"#
+  res4 = #"\r\n\t\\"#
+  res5 = "$foo"
+  res6 = #"\(3 * 4)"#
+  res7 = #"""
+    \r\n\t\\
+    $foo
+    \(3 * 4)
+    """#
+  res9 = "leading and trailing newline trimmed"
+  res10 = """
+    
+    leading newline not trimmed
+    """
+  res11 = """
+    
+    
+    
+    leading newlines not trimmed
+    """
+  res13 = """
+    trailing newline not trimmed
+    
+    """
+  res14 = """
+    trailing newlines not trimmed
+    
+    
+    
+    """
+  res16 = """
+    leading
+    whitespace
+    trimmed
+    """
+  res17 = """
+      leading
+      whitespace
+      partially
+      trimmed
+    """
+  res18 = """
+    leading
+      whitespace
+        partially
+          trimmed
+    """
+  res19 = #""AS IS""#
+  res20 = #""\#"AS IS"""#
+  res21 = #""\#""""AS IS""""""#
+  res22 = #""AS IS""#
+  res23 = #""\#"AS IS"""#
+  res24 = #""\#""""AS IS""""""#
+  res25 = ##"# ## ### " "" """ \ \#"##
+  res26 = ###"# ## ### #### " "" """ """" \ \# \##"###
+  res27 = #####"# ## ### #### ##### ###### " "" """ """" """"" \ \# \## \### \####"#####
+  res28 = "onetwothreetwoonetwo"
+  res29 = "\t \t\t \t\t\t \t\t \t \t\t"
+  res30 = "a 🤠 ǝ"
+  res31 = "a 🤠 ǝ"
+  res32 = ##"# ## ### " "" """ \ \#"##
+  res33 = ###"# ## ### #### " "" """ """" \ \# \##"###
+  res34 = #####"# ## ### #### ##### ###### " "" """ """" """"" \ \# \## \### \####"#####
+  res35 = "onetwothreetwoonetwo"
+  res36 = "\t \t\t \t\t\t \t\t \t \t\t"
+  res37 = "a 🤠 ǝ"
+  res38 = "a 🤠 ǝ"
+}
+res39 = ######"""
+  """#####
+  
+  delimiters for multiline string
+  """######
+res40 = """
+  "#####
+  
+  no delimiters for multiline string
+  """
+res41 = ##"\#"##

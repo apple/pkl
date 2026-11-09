@@ -1,0 +1,435 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.stdlib.base;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmBytes;
+import org.pkl.core.runtime.VmCollection;
+import org.pkl.core.runtime.VmDataSize;
+import org.pkl.core.runtime.VmDuration;
+import org.pkl.core.runtime.VmDynamic;
+import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.runtime.VmIntSeq;
+import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmListing;
+import org.pkl.core.runtime.VmMap;
+import org.pkl.core.runtime.VmMapping;
+import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmPair;
+import org.pkl.core.runtime.VmRegex;
+import org.pkl.core.runtime.VmSet;
+import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.stdlib.AbstractStringRenderer;
+import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.stdlib.PklConverter;
+import org.pkl.core.util.yaml.YamlEmitter;
+
+public final class YamlRendererNodes {
+  private YamlRendererNodes() {}
+
+  public abstract static class renderDocument extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
+      var builder = new StringBuilder();
+      createRenderer(self, builder, callNode).renderDocument(value);
+      return builder.toString();
+    }
+  }
+
+  public abstract static class renderValue extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
+      var builder = new StringBuilder();
+      createRenderer(self, builder, callNode).renderValue(value);
+      return builder.toString();
+    }
+  }
+
+  private static YamlRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
+    var mode = ((String) VmUtils.readMember(self, Identifier.MODE, callNode));
+    var indentWidth =
+        ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH, callNode)).intValue();
+    var omitNullProperties =
+        (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES, callNode);
+    var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM, callNode);
+    return new YamlRenderer(
+        builder,
+        " ".repeat(indentWidth),
+        PklConverter.fromRenderer(self, callNode),
+        omitNullProperties,
+        mode,
+        isStream,
+        callNode);
+  }
+
+  private static final class YamlRenderer extends AbstractStringRenderer {
+    private final boolean isStream;
+    private final IndirectCallNode callNode;
+    private final YamlEmitter emitter;
+    private final String elementIndent;
+
+    private YamlRenderer(
+        StringBuilder builder,
+        String indent,
+        PklConverter converter,
+        boolean omitNullProperties,
+        String mode,
+        boolean isStream,
+        IndirectCallNode callNode) {
+      super("YAML", builder, indent, converter, omitNullProperties, omitNullProperties);
+
+      this.isStream = isStream;
+      this.callNode = callNode;
+      this.emitter = YamlEmitter.create(builder, mode, indent);
+      elementIndent = indent.substring(1);
+    }
+
+    @Override
+    public void visitDocument(Object value) {
+      if (isStream) {
+        visitStream(value);
+      } else {
+        visit(value);
+      }
+      startNewLine();
+    }
+
+    private void visitStream(Object value) {
+      if (value instanceof VmListing listing) {
+        var cursor = listing.elements(CursorOption.ALL_VALUES);
+        if (!cursor.advance()) return;
+        visit(cursor.value(callNode));
+        while (cursor.advance()) {
+          startNewLine();
+          builder.append("---");
+          visit(cursor.value(callNode));
+        }
+        return;
+      }
+
+      if (value instanceof VmCollection collection) {
+        var first = true;
+        for (var element : collection) {
+          if (first) {
+            first = false;
+          } else {
+            startNewLine();
+            builder.append("---");
+          }
+          visit(element);
+        }
+        return;
+      }
+
+      throw new VmExceptionBuilder()
+          .evalError("invalidYamlStreamTopLevelValue", VmUtils.getClass(value))
+          .withProgramValue("Value", value)
+          .build();
+    }
+
+    @Override
+    public void visitTopLevelValue(Object value) {
+      visit(value);
+    }
+
+    @Override
+    public void visitString(String value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value, currIndent, false);
+    }
+
+    @Override
+    public void visitInt(Long value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value);
+    }
+
+    @Override
+    public void visitFloat(Double value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value);
+    }
+
+    @Override
+    public void visitBoolean(Boolean value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value);
+    }
+
+    @Override
+    public void visitDuration(VmDuration value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitDataSize(VmDataSize value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitBytes(VmBytes value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value.getBytes(), currIndent, false);
+    }
+
+    @Override
+    public void visitRegex(VmRegex value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitIntSeq(VmIntSeq value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitPair(VmPair value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitRenderDirective(VmTyped value) {
+      // append verbatim
+      builder.append(VmUtils.readTextProperty(value));
+    }
+
+    @Override
+    public void visitNull(VmNull value) {
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emitNull();
+    }
+
+    @Override
+    protected void startDynamic(VmDynamic value) {
+      if (value.hasElements()) {
+        startYamlSequence();
+      } else {
+        startYamlMapping();
+      }
+    }
+
+    @Override
+    protected void startTyped(VmTyped value) {
+      startYamlMapping();
+    }
+
+    @Override
+    protected void startListing(VmListing value) {
+      startYamlSequence();
+    }
+
+    @Override
+    protected void startMapping(VmMapping value) {
+      startYamlMapping();
+    }
+
+    @Override
+    protected void startList(VmList value) {
+      startYamlSequence();
+    }
+
+    @Override
+    protected void startSet(VmSet value) {
+      startYamlSequence();
+    }
+
+    @Override
+    protected void startMap(VmMap value) {
+      startYamlMapping();
+    }
+
+    private void startYamlMapping() {
+      if (enclosingValue != null) {
+        increaseIndent();
+      }
+      if (hasEnclosingSequence()) {
+        builder.append(elementIndent);
+      } else {
+        startNewLine();
+      }
+    }
+
+    private void startYamlSequence() {
+      if (hasEnclosingSequence()) {
+        increaseIndent();
+        builder.append(elementIndent);
+      } else {
+        startNewLine();
+      }
+    }
+
+    @Override
+    protected void visitElement(long index, Object value, boolean isFirst) {
+      if (!isFirst) {
+        startNewLine();
+      }
+      builder.append('-');
+      visit(value);
+    }
+
+    @Override
+    protected void visitEntryKey(Object key, boolean isFirst) {
+      if (!isFirst) {
+        startNewLine();
+      }
+
+      if (key instanceof String stringKey) {
+        emitter.emit(stringKey, currIndent, true);
+        builder.append(':');
+        return;
+      } else if (key instanceof Long longKey) {
+        emitter.emit(longKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof Double doubleKey) {
+        emitter.emit(doubleKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof Boolean booleanKey) {
+        emitter.emit(booleanKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof VmNull) {
+        emitter.emitNull();
+        builder.append(':');
+        return;
+      }
+
+      if (isRenderDirective(key)) {
+        visitRenderDirective((VmTyped) key);
+        builder.append(':');
+        return;
+      }
+
+      cannotRenderNonScalarKey(key);
+    }
+
+    @Override
+    protected void visitEntryValue(Object value) {
+      visit(value);
+    }
+
+    @Override
+    protected void visitProperty(Identifier name, Object value, boolean isFirst) {
+      if (!isFirst) {
+        startNewLine();
+      }
+      emitter.emit(name.toString(), currIndent, true);
+      builder.append(':');
+      visit(value);
+    }
+
+    @Override
+    protected void endDynamic(VmDynamic value, boolean isEmpty) {
+      if (value.hasElements()) {
+        endYamlSequence(isEmpty);
+      } else {
+        endYamlMapping(isEmpty);
+      }
+    }
+
+    @Override
+    protected void endTyped(VmTyped value, boolean isEmpty) {
+      endYamlMapping(isEmpty);
+    }
+
+    @Override
+    protected void endListing(VmListing value, boolean isEmpty) {
+      endYamlSequence(isEmpty);
+    }
+
+    @Override
+    protected void endMapping(VmMapping value, boolean isEmpty) {
+      endYamlMapping(isEmpty);
+    }
+
+    @Override
+    protected void endList(VmList value) {
+      endYamlSequence(value.isEmpty());
+    }
+
+    @Override
+    protected void endSet(VmSet value) {
+      endYamlSequence(value.isEmpty());
+    }
+
+    @Override
+    protected void endMap(VmMap value) {
+      endYamlMapping(value.isEmpty());
+    }
+
+    private void endYamlSequence(boolean isEmpty) {
+      var hasEnclosingSequence = hasEnclosingSequence();
+      if (isEmpty) {
+        if (hasEnclosingSequence) {
+          builder.append("[]");
+        } else {
+          undoStartNewLine();
+          builder.append(" []");
+        }
+      }
+      if (hasEnclosingSequence) {
+        decreaseIndent();
+      }
+    }
+
+    private void endYamlMapping(boolean isEmpty) {
+      if (isEmpty) {
+        if (hasEnclosingSequence()) {
+          builder.append("{}");
+        } else {
+          undoStartNewLine();
+          builder.append(" {}");
+        }
+      }
+      if (enclosingValue != null) {
+        decreaseIndent();
+      }
+    }
+
+    private boolean hasEnclosingSequence() {
+      return enclosingValue != null && enclosingValue.isSequence();
+    }
+
+    private void startNewLine() {
+      var length = builder.length();
+      if (length == 0) return;
+
+      if (builder.charAt(length - 1) != '\n') {
+        builder.append('\n');
+      }
+      builder.append(currIndent);
+    }
+
+    private void undoStartNewLine() {
+      var length = builder.length();
+      if (length == 0) return;
+
+      builder.setLength(length - currIndent.length() - 1);
+    }
+  }
+}

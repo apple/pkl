@@ -1,0 +1,4 @@
+amends "library.pkl"
+
+// non-existing property
+other = "parrot"

@@ -1,0 +1,3 @@
+module module1
+
+res = 1

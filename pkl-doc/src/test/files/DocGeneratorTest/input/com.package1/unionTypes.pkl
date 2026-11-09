@@ -1,0 +1,13 @@
+module com.package1.unionTypes
+
+res1: Boolean|Number
+
+res2: "foo"|"bar"|"baz"
+
+res3: Boolean|List<String>
+
+res4: Boolean|List<String>?
+
+res5: (Boolean|List<String>)?
+
+res6: (Boolean|List<String>)?|Number

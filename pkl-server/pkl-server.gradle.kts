@@ -1,0 +1,99 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklNativeLifecycle")
+}
+
+val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
+
+dependencies {
+  implementation(projects.pklCore)
+  implementation(libs.msgpack)
+  implementation(libs.truffleApi)
+
+  testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.wiremock)
+
+  externalReaderFixtureConfiguration(project(":pkl-core", "externalReaderFixture"))
+}
+
+tasks.test {
+  configureTest()
+  exclude("**/NativeServerTest.*")
+}
+
+private fun Test.configureTest() {
+  dependsOn(externalReaderFixtureConfiguration)
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
+}
+
+private fun Test.configureNativeTest() {
+  configureTest()
+  testClassesDirs = files(tasks.test.get().testClassesDirs)
+  classpath = tasks.test.get().classpath
+  include("**/NativeServerTest.*")
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
+}
+
+val testMacExecutableAarch64 =
+  tasks.register<Test>("testMacExecutableAarch64") {
+    dependsOn(":pkl-cli:macExecutableAarch64")
+    configureNativeTest()
+  }
+
+val testLinuxExecutableAmd64 =
+  tasks.register<Test>("testLinuxExecutableAmd64") {
+    dependsOn(":pkl-cli:linuxExecutableAmd64")
+    configureNativeTest()
+  }
+
+val testLinuxExecutableAarch64 =
+  tasks.register<Test>("testLinuxExecutableAarch64") {
+    dependsOn(":pkl-cli:linuxExecutableAarch64")
+    configureNativeTest()
+  }
+
+val testAlpineExecutableAmd64 =
+  tasks.register<Test>("testAlpineExecutableAmd64") {
+    dependsOn(":pkl-cli:alpineExecutableAmd64")
+    configureNativeTest()
+  }
+
+val testWindowsExecutableAmd64 =
+  tasks.register<Test>("testWindowsExecutableAmd64") {
+    dependsOn(":pkl-cli:windowsExecutableAmd64")
+    configureNativeTest()
+  }
+
+tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
+
+tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
+
+tasks.testNativeLinuxAmd64 { dependsOn(testLinuxExecutableAmd64) }
+
+tasks.testNativeAlpineLinuxAmd64 { dependsOn(testAlpineExecutableAmd64) }
+
+tasks.testNativeWindowsAmd64 { dependsOn(testWindowsExecutableAmd64) }

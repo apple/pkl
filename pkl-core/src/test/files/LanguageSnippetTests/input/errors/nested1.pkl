@@ -1,0 +1,7 @@
+a {
+  b {
+    c {
+      x = outer.outer // nested syntax error
+    }
+  }
+}

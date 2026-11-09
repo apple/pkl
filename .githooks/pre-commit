@@ -1,0 +1,8 @@
+#!/bin/sh
+
+files=`git diff --cached --name-status`
+
+if [[ $files =~ .github/* ]]; then
+  pkl eval --project-dir .github/ -m .github .github/index.pkl
+  git add .github/workflows/
+fi

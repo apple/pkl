@@ -1,0 +1,5 @@
+local listing1: Listing<Int> = new { 1 }
+local listing2: Listing<String> = listing1
+local listing3 = (listing2) { "2" }
+
+first = listing3[0]

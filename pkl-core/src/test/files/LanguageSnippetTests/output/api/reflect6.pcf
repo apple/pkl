@@ -1,0 +1,4 @@
+res = Map("reflect", "pkl:reflect")
+globbedKeys {
+  "../../input-helper/globtest/child/moduleC.pkl"
+}

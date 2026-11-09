@@ -1,0 +1,28 @@
+// cover custom this contexts in a final module
+
+local foo: Listing(any((it) -> it is this)) = new { bar }
+local bar: Listing = new { foo }
+res1 = foo.length
+
+local baz: Listing = new {
+  new Listing { "hello" }
+  new Mapping { ["hello"] = "world" }
+}
+
+res2 = (baz) {
+  when (module is this) {
+    123
+  }
+  module is this
+}
+
+local res3: Listing<Listing<String>> = new {
+  new { "one" }
+  new { "two" }
+}
+
+res4 = (res3) {
+  [[this is this]] {
+    "three"
+  }
+}

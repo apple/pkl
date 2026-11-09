@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `i`.
+
+x | for (i, i in a) {
+            ^
+at forGeneratorDuplicateParams1#foo (file:///$snippetsDir/input/errors/forGeneratorDuplicateParams1.pkl)

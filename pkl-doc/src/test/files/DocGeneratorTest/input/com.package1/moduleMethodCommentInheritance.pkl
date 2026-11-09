@@ -1,0 +1,5 @@
+module com.package1.moduleMethodCommentInheritance
+
+extends "moduleMethodComments.pkl"
+
+function method3(arg: String): Boolean = Undefined()

@@ -1,0 +1,27 @@
+import "pkl:json"
+
+import ".../input-helper/api/annotationConverter.pkl"
+
+@json.Property { name = "FOO" }
+foo: String = "a"
+
+@annotationConverter.LineComment { text = "bar" }
+bar: String = "b"
+
+baz: Nested
+
+class Nested {
+  @annotationConverter.LineComment { text = "qux" }
+  qux: String = "c"
+
+  quux: String = "c"
+}
+
+output {
+  renderer = new JsonRenderer {
+    convertPropertyTransformers {
+      // NB: this renders https://json5.org format which is a superset of JSON that supports commas. 
+      [annotationConverter.LineComment] { prefix = ", // " }
+    }
+  }
+}

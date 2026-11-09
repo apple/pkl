@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `foo`.
+
+x | function foo(arg) = "other" // duplicate
+    ^^^^^^^^^^^^^^^^^
+at duplicateFunction (file:///$snippetsDir/input/modules/duplicateFunction.pkl)

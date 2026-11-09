@@ -1,0 +1,3 @@
+amends "baseModule.pkl"
+
+local x: Int

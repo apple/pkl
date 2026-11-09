@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Tried to read property `delta` but its value is undefined.
+
+xx | delta: Int
+     ^^^^^
+at undefinedProperty5#Charlie.delta (file:///$snippetsDir/input/errors/undefinedProperty5.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

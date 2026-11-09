@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `hidden` is redundant here; just use `local`.
+
+x | local hidden name: String
+          ^^^^^^
+at localHiddenMember (file:///$snippetsDir/input/errors/localHiddenMember.pkl)

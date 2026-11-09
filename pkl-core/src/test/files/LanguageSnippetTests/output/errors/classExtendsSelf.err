@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Class `classExtendsSelf#Recurring` cannot extend itself.
+
+x | open class Recurring extends Recurring {
+                                 ^^^^^^^^^
+at classExtendsSelf#Recurring (file:///$snippetsDir/input/errors/classExtendsSelf.pkl)
+
+x | f: Recurring = new {}
+       ^^^^^^^^^
+at classExtendsSelf (file:///$snippetsDir/input/errors/classExtendsSelf.pkl)

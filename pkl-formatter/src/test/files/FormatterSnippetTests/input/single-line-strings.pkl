@@ -1,0 +1,7 @@
+foo1 = "some string"
+
+foo2 = "some string with \( new { x = 1; y = 2 }) interpolation"
+
+foo3 = "some reeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaally long string with \( new { x = 1; y = 2 } ) interpolation"
+
+foo4 = "some reeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaally long string with \( foo.bar.baz() ) qualified access"

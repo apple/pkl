@@ -1,0 +1,9 @@
+foo = new Mapping {
+  default { key ->
+    for (idx, char in key.split("")) {
+      ["\(char)_\(idx)"] = "hi"
+    }
+  }
+  ["zzz"] {}
+}
+

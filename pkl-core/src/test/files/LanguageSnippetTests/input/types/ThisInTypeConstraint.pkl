@@ -1,0 +1,22 @@
+res1: List<String(this == "one")>(this is List) = List("one")
+
+res2: Mapping<String(this == "one"), String(this == "one")>(this is Mapping) = new Mapping { ["one"] = "one" }
+
+res3: List<Set<String(this == "one")>(this is Set)>(this is List) = List(Set("one"), Set("one"))
+
+res4: List<String(this == "one", (() -> this).apply() == "one", (let (x = this) x) == "one")> = List("one")
+
+res5 = new Clazz {}
+
+res6 = fun(res3)
+
+class Clazz {
+  res1: List<String(this == "one")>(this is List) = List("one")
+
+  res2: Mapping<String(this == "one"), String(this == "one")>(this is Mapping) = new Mapping { ["one"] = "one" }
+
+  res3: List<List<String(this == "one")>(this is List)>(this is List) = List(List("one"), List("one"))
+}
+
+function fun(x: List<Set<String(this == "one")>(this is Set)>(this is List)) = x
+

@@ -1,0 +1,6 @@
+num = 1
+
+// EntriesLiteralNode
+res: Mapping<String, String> = new {
+  [num] = "foo"
+}

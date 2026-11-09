@@ -1,0 +1,647 @@
+amends "../snippetTest.pkl"
+
+local str1 = "abcdefg"
+local str2 = "cde"
+local str3 = "abxabyabz"
+local quickBrownFox = "The quick brown fox jumps over the lazy dog"
+
+facts {
+  ["isEmpty"] {
+    "".isEmpty
+    !str1.isEmpty
+  }
+
+  ["isNotEmpty"] {
+    !"".isNotEmpty
+    str1.isNotEmpty
+  }
+
+  ["isBlank"] {
+    "".isBlank
+    "   ".isBlank
+    "\t\n\r".isBlank
+    !str1.isBlank
+  }
+
+  ["isNotBlank"] {
+    !"".isNotBlank
+    !"   ".isNotBlank
+    !"\t\n\r".isNotBlank
+    str1.isNotBlank
+  }
+
+  ["isBase64"] {
+    "".isBase64
+    "AQIDBA==".isBase64
+    !"hello there".isBase64
+  }
+
+  ["isValidUrl"] {
+    "mailto:user@example.com".isValidUrl
+    "urn:isbn:0451450523".isValidUrl
+    "file:///a/b".isValidUrl
+    "foo:".isValidUrl
+    "http://[fe80::1%25eth0]:8080/a?q#f".isValidUrl
+    "http://user:pw@EXAMPLE.com/!$&'()*+,;=:@?!$&'()*+,;=:@/?#!$&'()*+,;=:@/?".isValidUrl
+
+    // only absolute URLs are valid
+    !"./foo".isValidUrl
+    !"/a/b?q#f".isValidUrl
+    !"//example.com/a".isValidUrl
+    !"".isValidUrl
+    !"not a url".isValidUrl
+
+    // nothing is encoded
+    !"http://example.com/some path".isValidUrl
+    !"https://example.com/münchen?q=café".isValidUrl
+    "https://example.com/m%C3%BCnchen?q=caf%C3%A9".isValidUrl
+
+    // whatever the parser of `pkl:net` rejects is rejected here too
+    !"https://example.com:port/".isValidUrl
+  }
+
+  ["lastIndex"] {
+    for (s in List(str1, str2, str3)) {
+      s.length == s.lastIndex + 1
+    }
+  }
+
+  ["base64Decoded"] {
+    "".base64.base64Decoded == ""
+    quickBrownFox.base64.base64Decoded == quickBrownFox
+  }
+  
+  ["base64DecodedBytes"] {
+    "AQIDBA==".base64DecodedBytes == Bytes(1, 2, 3, 4)
+  }
+
+  ["contains()"] {
+    str1.contains(str2)
+    str1.contains(str1)
+    str1.contains(Regex("\\w"))
+    !str2.contains(str1)
+    !str1.contains(Regex("\\d"))
+  }
+
+  ["matches()"] {
+    str1.matches(Regex("\\w+"))
+    !str1.matches(Regex("\\d*"))
+    !str1.matches(Regex("abc"))
+  }
+
+  ["startsWith()"] {
+    str1.startsWith("")
+    str1.startsWith("abc")
+    str1.startsWith(Regex(#"\w"#))
+    !str1.startsWith("abx")
+    !str1.startsWith(Regex(#"\d"#))
+  }
+
+  ["endsWith()"] {
+    str1.endsWith("")
+    str1.endsWith("efg")
+    str1.endsWith(Regex(#"\w"#))
+    "aaa".endsWith(Regex("aa"))
+    !str1.endsWith("efx")
+    !str1.endsWith(Regex(#"\d"#))
+    !str1.endsWith(Regex(#"\bfg"#))
+    !str1.endsWith(Regex("^fg"))
+  }
+
+  ["isRegex"] {
+    str1.isRegex
+    #"\w*[0-9]"#.isRegex
+    !"(abc".isRegex
+  }
+
+  ["isGlobPattern"] {
+    "**".isGlobPattern
+    "hello".isGlobPattern
+    !"{{}}".isGlobPattern
+  }
+
+  ["toBoolean()"] {
+    "true".toBoolean()
+    "tRuE".toBoolean()
+    "TRUE".toBoolean()
+    !"false".toBoolean()
+    !"fAlSe".toBoolean()
+    !"FALSE".toBoolean()
+    module.catch(() -> "other".toBoolean()) != null
+    module.catch(() -> "OTHER".toBoolean()) != null
+    module.catch(() -> "".toBoolean()) != null
+  }
+
+  ["capitalize()"] {
+    "pigeon".capitalize() == "Pigeon"
+    "Pigeon".capitalize() == "Pigeon"
+    "pigeon bird".capitalize() == "Pigeon bird"
+    "".capitalize() == ""
+  }
+
+  ["decapitalize()"] {
+    "pigeon".decapitalize() == "pigeon"
+    "Pigeon".decapitalize() == "pigeon"
+    "Pigeon Bird".decapitalize() == "pigeon Bird"
+    "".capitalize() == ""
+  }
+}
+
+examples {
+  ["length"] {
+    str1.length
+  }
+
+  ["indexOf()"] {
+    str1.indexOf("cde")
+    str1.indexOf("")
+    module.catch(() -> str1.indexOf("cdx"))
+    str1.indexOf(Regex(#"\w"#))
+    module.catch(() -> str1.indexOf(Regex(#"\d"#)))
+  }
+
+  ["indexOfOrNull()"] {
+    str1.indexOfOrNull("cde")
+    str1.indexOfOrNull("")
+    str1.indexOfOrNull("cdx")
+    str1.indexOfOrNull(Regex(#"\w"#))
+    str1.indexOfOrNull(Regex(#"\d"#))
+  }
+
+  ["reverse()"] {
+    str1.reverse()
+  }
+
+  ["lastIndexOf()"] {
+    str3.lastIndexOf("ab")
+    str3.lastIndexOf("")
+    module.catch(() -> str3.lastIndexOf("cdx"))
+    str3.lastIndexOf(Regex("ab"))
+    str3.lastIndexOf(Regex(""))
+    module.catch(() -> str3.lastIndexOf(Regex("b*c")))
+    str3.lastIndexOf(Regex("ab(?=y)"))
+  }
+
+  ["lastIndexOfOrNull()"] {
+    str3.lastIndexOfOrNull("ab")
+    str3.lastIndexOfOrNull("")
+    str3.lastIndexOfOrNull("cdx")
+  }
+
+  local str4 = "aabbccaabbcc"
+  local str6 = "aabb..aabbcc"
+
+  ["split()"] {
+    str4.split(Regex("b+c"))
+    str4.split("cc")
+  }
+
+  local str7 = "aabbccaabbccaabbccaabbcc"
+
+  ["splitLimit()"] {
+    str7.splitLimit(Regex("b+c"), 1)
+    str7.splitLimit(Regex("b+c"), 2)
+    str7.splitLimit(Regex("b+c"), 4)
+    str7.splitLimit("cc", 1)
+    str7.splitLimit("cc", 2)
+    str7.splitLimit("cc", 4)
+    module.catch(() -> str7.splitLimit(Regex("b+c"), 0))
+    module.catch(() -> str7.splitLimit(Regex("b+c"), -1))
+  }
+
+  ["replaceAll()"] {
+    str4.replaceAll("aa", "xx")
+    str4.replaceAll(Regex("(b+)c"), "($0|$1)")
+    str6.replaceAll(".", "x")
+    str6.replaceAll(Regex("."), "x")
+    module.catch(() -> str4.replaceAll(Regex("cc"), "$4; no such group"))
+  }
+
+  ["replaceFirst()"] {
+    str4.replaceFirst("aa", "xx")
+    str4.replaceFirst(Regex("(b+)c"), "($0|$1)")
+    str6.replaceFirst(".", "x")
+    str6.replaceFirst(Regex("."), "x")
+    module.catch(() -> str4.replaceFirst(Regex("cc"), "$4; no such group"))
+  }
+
+  ["replaceLast()"] {
+    str4.replaceLast("aa", "xx")
+    str4.replaceLast(Regex("(b+)c"), "($0|$1)")
+    str6.replaceLast(".", "x")
+    str6.replaceLast(Regex("."), "x")
+    module.catch(() -> str4.replaceLast(Regex("cc"), "$4; no such group"))
+    str3.replaceLast(Regex("(?<=x)ab"), "-")
+  }
+
+  ["replaceAllMapped()"] {
+    str4.replaceAllMapped("aa", (it) -> ">>\(it)<<")
+    str4.replaceAllMapped(Regex("(b+)c"), (it) -> ">>\(it)<<")
+    str6.replaceAllMapped(".", (it) -> ">>\(it)<<")
+    str6.replaceAllMapped(Regex("."), (it) -> ">>\(it)<<")
+  }
+
+  ["replaceFirstMapped()"] {
+    str4.replaceFirstMapped("aa", (it) -> ">>\(it)<<")
+    str4.replaceFirstMapped(Regex("(b+)c"), (it) -> ">>\(it)<<")
+    str6.replaceFirstMapped(".", (it) -> ">>\(it)<<")
+    str6.replaceFirstMapped(Regex("."), (it) -> ">>\(it)<<")
+  }
+
+  ["replaceLastMapped()"] {
+    str4.replaceLastMapped("aa", (it) -> ">>\(it)<<")
+    str4.replaceLastMapped(Regex("(b+)c"), (it) -> ">>\(it)<<")
+    str6.replaceLastMapped(".", (it) -> ">>\(it)<<")
+    str6.replaceLastMapped(Regex("."), (it) -> ">>\(it)<<")
+  }
+
+  ["replaceRange()"] {
+    str4.replaceRange(5, 10, "XXX")
+    str4.replaceRange(10, 12, "extend beyond string end")
+    module.catch(() -> str4.replaceRange(0, 100, "_"))
+    module.catch(() -> str4.replaceRange(-10, 5, "_"))
+  }
+
+  ["toUpperCase()"] {
+    "abcABCabc".toUpperCase()
+  }
+
+  ["toLowerCase()"] {
+    "abcABCabc".toLowerCase()
+  }
+
+  local str5 = " \t abcdefg \t \n"
+
+  ["trim"] {
+    str5.trim()
+  }
+
+  ["trimStart()"] {
+    str5.trimStart()
+  }
+
+  ["trimEnd()"] {
+    str5.trimEnd()
+  }
+
+  ["chars"] {
+    "".chars
+    str1.chars
+  }
+
+  ["codePoints"] {
+    "".codePoints
+    str1.codePoints
+  }
+
+  ["toInt() decimal"] {
+    "123".toInt()
+    "-123".toInt()
+    "- 123".toInt()
+    "+123".toInt()
+    "+ 123".toInt()
+    "1_2__3___".toInt()
+    "-1_2__3___".toInt()
+    "+1_2__3___".toInt()
+    "0".toInt()
+    "-0".toInt()
+    "+0".toInt()
+    "-9223372036854775808".toInt() // math.minInt
+    "9223372036854775807".toInt() // math.maxInt
+  }
+  
+  ["toInt() hex"] {
+    "0x123".toInt()
+    "0X123".toInt()
+    "-0x123".toInt()
+    "- 0x123".toInt()
+    "+0x123".toInt()
+    "+ 0x123".toInt()
+    "0x1_2__3___".toInt()
+    "-0x1_2__3___".toInt()
+    "+0x1_2__3___".toInt()
+    "0x0".toInt()
+    "-0x0".toInt()
+    "+0x0".toInt()
+    "0x1E_2".toInt() // test underscore removal after 'E' succeeds for toInt (fails for toFloat)
+  }
+
+  ["toInt() binary"] {
+    "0b101".toInt()
+    "0B101".toInt()
+    "-0b101".toInt()
+    "- 0b101".toInt()
+    "+0b101".toInt()
+    "+ 0b101".toInt()
+    "0b1_0__1___".toInt()
+    "-0b1_0__1___".toInt()
+    "+0b1_0__1___".toInt()
+    "0b0".toInt()
+    "-0b0".toInt()
+    "+0b0".toInt()
+  }
+
+  ["toInt() octal"] {
+    "0o123".toInt()
+    "0O123".toInt()
+    "-0o123".toInt()
+    "- 0o123".toInt()
+    "+0o123".toInt()
+    "+ 0o123".toInt()
+    "0o1_2__3___".toInt()
+    "-0o1_2__3___".toInt()
+    "+0o1_2__3___".toInt()
+    "0o0".toInt()
+    "-0o0".toInt()
+    "+0o0".toInt()
+  }
+   
+  ["toInt() error cases"] {
+    module.catch(() -> "1.2".toInt())
+    module.catch(() -> "9223372036854775808".toInt())
+    module.catch(() -> "-9223372036854775809".toInt())
+    module.catch(() -> "abc".toInt())
+    module.catch(() -> "_1_000".toInt())
+    module.catch(() -> "0p0".toInt())
+    module.catch(() -> "0x-0".toInt())
+    module.catch(() -> "0x+0".toInt())
+    module.catch(() -> "0x0 + 0x1".toInt())
+    module.catch(() -> "".toInt())
+    module.catch(() -> "0o123e4".toInt())
+  }
+
+  ["toIntOrNull()"] {
+    "123".toIntOrNull()
+    "-123".toIntOrNull()
+    "1_2__3___".toIntOrNull()
+    "-1_2__3___".toIntOrNull()
+    "0".toIntOrNull()
+    "-0".toIntOrNull()
+    "1.2".toIntOrNull()
+    "9223372036854775808".toIntOrNull()
+    "-9223372036854775809".toIntOrNull()
+    "abc".toIntOrNull()
+    "_1_2__3___".toIntOrNull()
+    "0p0".toIntOrNull()
+    "0x-0".toIntOrNull()
+    "0x+0".toIntOrNull()
+    "0x0 + 0x1".toIntOrNull()
+    "".toIntOrNull()
+  }
+
+  ["toFloat()"] {
+    "0".toFloat()
+    "-0".toFloat()
+    ".0".toFloat()
+    "-.0".toFloat()
+    "0.00".toFloat()
+    "-0.00".toFloat()
+    "123".toFloat()
+    "-123".toFloat()
+    "0.45".toFloat()
+    "-0.45".toFloat()
+    ".45".toFloat()
+    "-.45".toFloat()
+    "123.45".toFloat()
+    "-123.45".toFloat()
+    "123e9".toFloat()
+    "123E9".toFloat()
+    "-123e9".toFloat()
+    "123.45e9".toFloat()
+    "-123.45e9".toFloat()
+    ".45e9".toFloat()
+    "-.45e9".toFloat()
+    "123.45e+9".toFloat()
+    "-123.45e+9".toFloat()
+    "-123.45E+9".toFloat()
+    "-.45e+9".toFloat()
+    ".45e+9".toFloat()
+    "123.45e-9".toFloat()
+    "-123.45e-9".toFloat()
+    "-123.45E-9".toFloat()
+    ".45e-9".toFloat()
+    "-.45e-9".toFloat()
+    "9e1024".toFloat()
+    "-9e1024".toFloat()
+    "-1_2__3___.2_e+1_".toFloat()
+    module.catch(() -> "abc".toFloat())
+    module.catch(() -> "123._34".toFloat())
+    module.catch(() -> "123e_34".toFloat())
+  }
+
+  ["toFloatOrNull()"] {
+    "0".toFloatOrNull()
+    "-0".toFloatOrNull()
+    "abc".toFloatOrNull()
+    "_123_.1_".toFloatOrNull()
+  }
+
+  ["take()"] {
+    "".take(0)
+    "".take(42)
+    str1.take(0)
+    str1.take(3)
+    str1.take(42)
+    module.catch(() -> str1.take(-1))
+  }
+
+  ["takeWhile()"] {
+    "".takeWhile((ch) -> true)
+    "".takeWhile((ch) -> false)
+    str1.takeWhile((ch) -> true)
+    str1.takeWhile((ch) -> false)
+    str1.takeWhile((ch) -> ch <= "c")
+    module.catch(() -> str1.takeWhile((_) -> 42))
+  }
+
+  ["takeLast()"] {
+    "".takeLast(0)
+    "".takeLast(42)
+    str1.takeLast(0)
+    str1.takeLast(3)
+    str1.takeLast(42)
+    module.catch(() -> str1.takeLast(-1))
+  }
+
+  ["takeLastWhile()"] {
+    "".takeLastWhile((ch) -> true)
+    "".takeLastWhile((ch) -> false)
+    str1.takeLastWhile((ch) -> true)
+    str1.takeLastWhile((ch) -> false)
+    str1.takeLastWhile((ch) -> ch > "c")
+    module.catch(() -> str1.takeLastWhile((_) -> 42))
+  }
+
+  ["drop()"] {
+    "".drop(0)
+    "".drop(42)
+    str1.drop(0)
+    str1.drop(3)
+    str1.drop(42)
+    module.catch(() -> str1.drop(-1))
+  }
+
+  ["dropWhile()"] {
+    "".dropWhile((ch) -> true)
+    "".dropWhile((ch) -> false)
+    str1.dropWhile((ch) -> true)
+    str1.dropWhile((ch) -> false)
+    str1.dropWhile((ch) -> ch <= "c")
+    module.catch(() -> str1.dropWhile((_) -> 42))
+  }
+
+  ["dropLast()"] {
+    "".dropLast(0)
+    "".dropLast(42)
+    str1.dropLast(0)
+    str1.dropLast(3)
+    str1.dropLast(42)
+    module.catch(() -> str1.dropLast(-1))
+  }
+
+  ["dropLastWhile()"] {
+    "".dropLastWhile((ch) -> true)
+    "".dropLastWhile((ch) -> false)
+    str1.dropLastWhile((ch) -> true)
+    str1.dropLastWhile((ch) -> false)
+    str1.dropLastWhile((ch) -> ch > "c")
+    module.catch(() -> str1.dropLastWhile((_) -> 42))
+  }
+
+  ["substring()"] {
+    str1.substring(2, 2)
+    str1.substring(2, 3)
+    str1.substring(2, 4)
+    str1.substring(0, 7)
+    "\u{D800}hello".substring(0, 2)
+    module.catch(() -> str1.substring(-1, 4))
+    module.catch(() -> str1.substring(1, 8))
+    module.catch(() -> str1.substring(3, 2))
+  }
+
+  ["substringOrNull()"] {
+    str1.substringOrNull(2, 2)
+    str1.substringOrNull(2, 3)
+    str1.substringOrNull(2, 4)
+    str1.substringOrNull(0, 7)
+    str1.substringOrNull(-1, 4)
+    str1.substringOrNull(1, 8)
+    str1.substringOrNull(3, 2)
+  }
+
+  ["getOrNull()"] {
+    str1.getOrNull(-1)
+    str1.getOrNull(0)
+    str1.getOrNull(3)
+    str1.getOrNull(6)
+    str1.getOrNull(7)
+    "🏀".getOrNull(0)
+    "🏀".getOrNull(1)
+    "\u{D800}".getOrNull(0)
+    "\u{D800}".getOrNull(1)
+    "\u{D800}h".getOrNull(0)
+    "\u{D800}h".getOrNull(1)
+    "\u{D800}h".getOrNull(2)
+    "h\u{D800}".getOrNull(0)
+    "h\u{D800}".getOrNull(1)
+  }
+
+  ["toCodePoints()"] {
+    str1.codePoints
+    "".codePoints
+  }
+
+  ["padStart()"] {
+    "".padStart(0, "x")
+    "".padStart(1, "x")
+    "".padStart(3, "x")
+    str1.padStart(1, " ")
+    str1.padStart(7, " ")
+    str1.padStart(10, " ")
+    module.catch(() -> str1.padStart(10, ""))
+    module.catch(() -> str1.padStart(10, "aa"))
+    "🙃".padStart(5, "h")
+    "🙃".padStart(5, "🏀")
+    "hi".padStart(5, "🏀")
+  }
+
+  ["padEnd()"] {
+    "".padEnd(0, "x")
+    "".padEnd(1, "x")
+    "".padEnd(3, "x")
+    str1.padEnd(1, " ")
+    str1.padEnd(7, " ")
+    str1.padEnd(10, " ")
+    module.catch(() -> str1.padEnd(10, ""))
+    module.catch(() -> str1.padEnd(10, "aa"))
+    "🙃".padEnd(5, "h")
+    "🙃".padEnd(5, "🏀")
+    "hi".padEnd(5, "🏀")
+  }
+
+  ["toBooleanOrNull()"] {
+    "true".toBooleanOrNull()
+    "tRuE".toBooleanOrNull()
+    "TRUE".toBooleanOrNull()
+    "false".toBooleanOrNull()
+    "fAlSe".toBooleanOrNull()
+    "FALSE".toBooleanOrNull()
+    "other".toBooleanOrNull()
+    "OTHER".toBooleanOrNull()
+    "".toBooleanOrNull()
+  }
+
+  ["repeat()"] {
+    str1.repeat(0)
+    str1.repeat(1)
+    str1.repeat(5)
+    "".repeat(0)
+    "".repeat(1)
+    "".repeat(5)
+    module.catch(() -> str1.repeat(-1))
+  }
+
+  ["sha1"] {
+    "".sha1
+    quickBrownFox.sha1
+  }
+
+  ["sha256"] {
+    "".sha256
+    quickBrownFox.sha256
+  }
+
+  ["sha256Int"] {
+    "".sha256Int
+    quickBrownFox.sha256Int
+  }
+
+  ["md5"] {
+    "".md5
+    quickBrownFox.md5
+  }
+
+  ["base64"] {
+    "".base64
+    quickBrownFox.base64
+  }
+
+  ["base64Decoded"] {
+    module.catch(() -> "~~~".base64Decoded)
+  }
+  
+  ["base64DecodedBytes"] {
+    module.catch(() -> "~~~".base64DecodedBytes)
+    "AQIDBA==".base64DecodedBytes
+  }
+  
+  ["encodeToBytes()"] {
+    "~~~".encodeToBytes("UTF-8")
+    "🏀".encodeToBytes("UTF-8")
+    "~~~".encodeToBytes("UTF-16")
+    "🏀".encodeToBytes("UTF-16")
+    "~~~".encodeToBytes("ISO-8859-1")
+    "🏀".encodeToBytes("ISO-8859-1")
+    "Parrot".encodeToBytes("UTF-8")
+  }
+}

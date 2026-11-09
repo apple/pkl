@@ -1,0 +1,54 @@
+examples {
+  ["trace different values"] {
+    1
+    true
+    "Barn Owl"
+    """
+    Bird
+    Barn Owl
+    """
+    List(1, 2, 3)
+    Set(1, 2, 3)
+    Map(1, "one", 2, "two")
+    new {
+      name = "Barn Owl"
+      age = 42
+    }
+    new {
+      "Parrot"
+      "Barn Owl"
+      "Pigeon"
+    }
+    new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 42
+      }
+    }
+  }
+}
+pkl: TRACE: 1 = 1 (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: true = true (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: "Barn Owl" = "Barn Owl" (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: """
+      Bird
+      Barn Owl
+      """ = "Bird\nBarn Owl" (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: List(1, 2, 3) = List(1, 2, 3) (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: Set(1, 2, 3) = Set(1, 2, 3) (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: Map(1, "one", 2, "two") = Map(1, "one", 2, "two") (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: new {
+      name = "Barn Owl"
+      age = 42
+    } = new Dynamic { name = "Barn Owl"; age = 42 } (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: new {
+      "Parrot"
+      "Barn Owl"
+      "Pigeon"
+    } = new Dynamic { "Parrot"; "Barn Owl"; "Pigeon" } (file:///$snippetsDir/input/basic/trace.pkl)
+pkl: TRACE: new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 42
+      }
+    } = new Dynamic { ["Parrot"] { name = "Parrot"; age = 42 } } (file:///$snippetsDir/input/basic/trace.pkl)

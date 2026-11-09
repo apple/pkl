@@ -1,0 +1,12 @@
+res1 {
+  name = "Pigeon"
+  subjects = List("Rocks", "Stone Age")
+}
+res2 {
+  name = "Parrot"
+  subjects = List("Rocks", "Stone Age")
+}
+res3 {
+  name = "Parrot"
+  subjects = List("Fire Making")
+}

@@ -1,0 +1,5 @@
+import "../../input-helper/types/typeAliasLocalMethod.pkl"
+
+local const function isValid(s: String): Boolean = s.startsWith("Alice")
+
+myProp: typeAliasLocalMethod.ValidString3 = "Alice Jenkins"

@@ -1,0 +1,88 @@
+import "pkl:test"
+
+hidden people = new Dynamic {
+  ["Pigeon"] { name = "Pigeon"; age = 42 }
+  ["Barn Owl"] { name = "Barn Owl"; age = 21 }
+  ["Parrot"] { name = "Parrot"; age = 33 }
+}
+
+res1 = (people) {
+  [[name == "Barn Owl"]] {
+    age = 99
+  }
+}
+
+res2 = (people) {
+  [[name.contains("w") || name.contains("e")]] {
+    age = 99
+  }
+}
+
+res3 = (people) {
+  [[true]] {
+    age = 99
+  }
+}
+
+res4 = (people) {
+  [[false]] {
+    age = 99
+  }
+}
+
+res5 = new {
+  barnOwl = "Barn Owl"
+  new {
+    result = (people) {
+      [[name == barnOwl]] {
+        age = 99
+      }
+    }
+  }
+}
+
+// nested predicate
+res6 = (people) {
+  [[(people) { [[name == "Barn Owl"]] { age = 99 } }.toMap().values.find((it) -> it.age == 99).name == name]] {
+    age = 55
+  }
+}
+
+// member defined in same block is not affected
+res7 = (people) {
+  ["Albatross"] = new { name = "Albatross"; age = 4 }
+  [[name == "Albatross"]] { age = 9 }
+}
+
+res8 = (people) {
+  [[name == "Albatross"]] { age = 9 }
+  ["Albatross"] = new { name = "Albatross"; age = 4 }
+}
+
+// conflicting override
+res9 = test.catch(() -> (people) {
+  ["Pigeon"] { age = 4 }
+  [[name == "Pigeon"]] { age = 9 }
+})
+
+res10 = test.catch(() -> (people) {
+  [[name.startsWith("P")]] { age = 4 }
+  [[name == "Pigeon"]] { age = 9 }
+})
+
+// combined with for
+res11 = (people) {
+  for (_name in List("Pigeon", "Parrot")) {
+    [[name == _name]] { age = 99 }
+  }
+}
+
+// combined with when
+res12 = (people) {
+  when (10.isOdd) {
+    [[name == "Pigeon"]] { age = 99 }
+  }
+  when (10.isEven) {
+    [[name == "Pigeon"]] { age = 122 }
+  }
+}

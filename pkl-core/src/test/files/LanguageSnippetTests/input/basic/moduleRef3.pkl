@@ -1,0 +1,27 @@
+extends "moduleRefLibrary.pkl"
+
+const a = 44
+
+m1 = module.a
+
+const b = 43
+
+m2 = module.b
+
+foo {
+  m3 = module.a
+  m4 = module.b
+  local c = () -> module.a
+  m5 = c.apply()
+}
+
+m6 = f()
+
+m7 = new Person {}
+
+function f() = module.a
+
+class Person {
+  age = module.a
+}
+

@@ -1,0 +1,18 @@
+import "pkl:reflect"
+
+class Ann extends Annotation {
+  foo: Int
+}
+
+top = 5
+
+local aLocal = top
+
+function f1() = aLocal
+
+@Ann { foo = f1() }
+class Foo {}
+
+local fooClass = reflect.Class(Foo)
+
+ann = fooClass.annotations[0]

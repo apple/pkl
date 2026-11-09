@@ -1,0 +1,119 @@
+.indent: Property<String>
+[%collapsible]
+====
+Default: `"  "` (two spaces) +
+Example: `indent = "\t"` (one tab) +
+The characters to use for indenting generated source code.
+====
+
+.outputDir: DirectoryProperty
+[%collapsible]
+====
+Default: `layout.buildDirectory.dir("generated/pkl/<generator_name>")` +
+Example: `outputDir = layout.projectDirectory.dir("src/main/pkl")` +
+The directory where generated classes are placed.
+
+The default places generated sources within the build directory of the project, to avoid sources from being committed into the repository on accident.
+====
+
+.sourceSet: Property<SourceSet>
+[%collapsible]
+====
+Default: `sourceSets.main` (if it exists; no default otherwise) +
+Example: `sourceSet = sourceSets.test` +
+The Gradle source set that generated code is compiled together with.
+
+For the codegen tasks, the `modulePath` property defaults to the compilation classpath of this source set, as well as all of the source directories of the `resource` source directory set of this source set. This setup makes it possible to rely on modules defined in classpath dependencies of your project or in the resources of your project.
+
+For projects which apply the `idea` plugin and are opened in IntelliJ IDEA, this option determines whether generated sources are marked as test sources (if the source set's name contains the word "test") or regular sources (otherwise).
+====
+
+.generateSpringBootConfig: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `generateSpringBootConfig = true` +
+Whether to generate config classes for use with Spring Boot.
+====
+
+.springBootConfigurationProperties: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `springBootConfigurationProperties = ["my.mod": "", "my.mod#Server": "server"]` +
+Explicitly configures which generated classes receive the Spring Boot `@ConfigurationProperties` annotation, and with what prefix.
+Only applies if `generateSpringBootConfig` is `true`.
+
+The key is the Pkl class name (for example, `my.mod` for a module class, or `my.mod#Server` for a class within a module), and the value is the annotation's prefix.
+An empty value generates a bare `@ConfigurationProperties` annotation.
+
+If this property is empty, the annotations are inferred from the structure of the input modules.
+If this property is set, no annotations are inferred, and only the specified classes are annotated.
+====
+
+.implementSerializable: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `implementSerializable = true` +
+Whether to generate classes that implement `java.io.Serializable`.
+====
+
+.addGeneratedAnnotation: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `addGeneratedAnnotation = true` +
+Whether to add the `org.pkl.config.java.Generated` annotation to generated types.
+====
+
+.renames: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `renames = ["foo.": "com.example.foo.", "bar.Config": "com.example.bar.Config"]` +
+Allows to change default class and package names (derived from Pkl module names) in the generated code.
+
+When you need the generated class or package names to be different from the default names derived from the Pkl module names, you can define a rename mapping, where the key is the original Pkl module name prefix, and the value is its replacement.
+When you do, the generated code's `package` declarations, class names, as well as file locations, will be modified according to this mapping.
+
+The prefixes are replaced literally, which means that dots at the end are important.
+If you want to rename packages only, in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
+
+----
+// Assuming the following mapping configuration:
+renames = [
+  "com.foo.": "x",  // Dot on the left only
+  "org.bar": "y.",  // Dot on the right only
+  "net.baz": "z"    // No dots
+]
+
+// The following renames will be made:
+"com.foo.bar" -> "xbar"       // Target prefix merged into the suffix
+"org.bar.baz" -> "y..baz"     // Double dot, invalid name
+"net.baz.qux" -> "z.qux"      // Looks okay, but...
+"net.bazqux"  -> "zqux"       // ...may cut the name in the middle.
+----
+
+When computing the appropriate target name, the longest matching prefix is used:
+
+----
+// Assuming the following mapping configuration:
+renames = [
+  "com.foo.Main": "w.Main",
+  "com.foo.": "x.",
+  "com.": "y.",
+  "": "z."
+]
+
+// The following renames will be made:
+com.foo.Main -> w.Main
+com.foo.bar  -> x.bar
+com.baz.qux  -> y.baz.qux
+org.foo.bar  -> z.org.foo.bar
+----
+
+Keys in this mapping can be arbitrary strings, including an empty string.
+Values must be valid dot-separated fully qualifed class name prefixes, possibly terminated by a dot.
+====
+

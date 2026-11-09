@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `isValid(this)` violated.
+Value: "Alice Jenkins"
+
+    isValid(this)
+    │       │
+    false   "Alice Jenkins"
+
+x | typealias ValidString2 = String(isValid(this))
+                                    ^^^^^^^^^^^^^
+at typeAliasConstraint6#myProp (file:///$snippetsDir/input-helper/types/typeAliasClosedModule.pkl)
+
+x | myProp: typeAliasClosedModule.ValidString2 = "Alice Jenkins"
+                                                 ^^^^^^^^^^^^^^^
+at typeAliasConstraint6#myProp (file:///$snippetsDir/input/types/typeAliasConstraint6.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,0 +1,10 @@
+res1 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res2 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res3 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res4 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res5 = "Type constraint `!isEmpty` violated. Value: \"\""
+res6 = "Type constraint `!isEmpty` violated. Value: \"\""
+res7 = true
+res8 = true
+res9 = true
+res10 = true

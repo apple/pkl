@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Invalid line continuation escape sequence.
+
+Whitespace between the continuation escape and following newline is not allowed.
+
+x | hello \
+          ^^^^^
+at parser21 (file:///$snippetsDir/input/errors/parser21.pkl)

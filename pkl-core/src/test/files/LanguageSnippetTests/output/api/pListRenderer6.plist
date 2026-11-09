@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>noegip</string>
+  <key>age</key>
+  <integer>42</integer>
+  <key>friends</key>
+  <array>
+    <string>barn owlx</string>
+    <string>parrotx</string>
+  </array>
+  <key>hobbies</key>
+  <dict>
+    <key>surfing</key>
+    <string>low</string>
+    <key>firemaking</key>
+    <string>high</string>
+  </dict>
+  <key>address</key>
+  <dict>
+    <key>street</key>
+    <string>Other St.</string>
+    <key>zip</key>
+    <string>changed</string>
+  </dict>
+</dict>
+</plist>

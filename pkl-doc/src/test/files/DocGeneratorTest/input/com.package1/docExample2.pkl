@@ -1,0 +1,6 @@
+@DocExample { subjects { "com.package1.docExampleSubject1" } }
+module com.package1.docExample2
+
+amends "docExampleSubject1.pkl"
+
+x = 42

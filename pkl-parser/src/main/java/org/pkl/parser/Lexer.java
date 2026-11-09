@@ -1,0 +1,931 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.parser;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import org.pkl.parser.syntax.generic.FullSpan;
+import org.pkl.parser.util.ErrorMessages;
+
+public final class Lexer {
+
+  private final char[] source;
+  private final int size;
+  private int cursor = 0;
+  private int sCursor = 0;
+  private int line = 1;
+  private int sLine = 1;
+  private int col = 1;
+  private int sCol = 1;
+  private int lookahead;
+  private State state = State.DEFAULT;
+  private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
+  private boolean stringEnded = false;
+  private boolean isEscape = false;
+  // how many newlines exist between two subsequent tokens
+  private int newLinesBetween = 0;
+
+  private static final int EOF = -1;
+
+  public Lexer(String input) {
+    source = input.toCharArray();
+    size = source.length;
+    if (size > 0) {
+      lookahead = source[cursor];
+    } else {
+      lookahead = EOF;
+    }
+  }
+
+  // The span of the last lexed token
+  public Span span() {
+    return new Span(sCursor, cursor - sCursor);
+  }
+
+  // The full span of the last lexed token
+  public FullSpan fullSpan() {
+    return new FullSpan(sCursor, cursor - sCursor, sLine, sCol, line, col);
+  }
+
+  // The text of the last lexed token
+  public String text() {
+    return new String(source, sCursor, cursor - sCursor);
+  }
+
+  public int getStartCursor() {
+    return sCursor;
+  }
+
+  public int getCursor() {
+    return cursor;
+  }
+
+  public int getNewLinesBetween() {
+    return newLinesBetween;
+  }
+
+  public char[] getSource() {
+    return source;
+  }
+
+  public String textFor(int offset, int size) {
+    return new String(source, offset, size);
+  }
+
+  /** Captures the lexer's current state so that it can later be rewound via {@link #restore}. */
+  public Snapshot snapshot() {
+    var scopes = new ArrayDeque<InterpolationScope>();
+    // `ArrayDeque.push` adds to the front, so iterate in reverse to preserve order.
+    var it = interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      scopes.push(it.next().copy());
+    }
+    return new Snapshot(
+        cursor,
+        sCursor,
+        line,
+        sLine,
+        col,
+        sCol,
+        lookahead,
+        state,
+        scopes,
+        stringEnded,
+        isEscape,
+        newLinesBetween);
+  }
+
+  public void restore(Snapshot snapshot) {
+    cursor = snapshot.cursor;
+    sCursor = snapshot.sCursor;
+    line = snapshot.line;
+    sLine = snapshot.sLine;
+    col = snapshot.col;
+    sCol = snapshot.sCol;
+    lookahead = snapshot.lookahead;
+    state = snapshot.state;
+    interpolationStack.clear();
+    // copy again so that the snapshot can be restored more than once
+    var it = snapshot.interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      interpolationStack.push(it.next().copy());
+    }
+    stringEnded = snapshot.stringEnded;
+    isEscape = snapshot.isEscape;
+    newLinesBetween = snapshot.newLinesBetween;
+  }
+
+  public Token next() {
+    sCursor = cursor;
+    sLine = line;
+    sCol = col;
+    newLinesBetween = 0;
+    return switch (state) {
+      case DEFAULT -> nextDefault();
+      case STRING -> nextString();
+    };
+  }
+
+  private Token nextDefault() {
+    var ch = nextChar();
+    // ignore spaces
+    while (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r') {
+      sCursor = cursor;
+      if (ch == '\n') {
+        newLinesBetween++;
+        sLine = line;
+      }
+      sCol = col;
+      ch = nextChar();
+    }
+    return switch (ch) {
+      case EOF -> {
+        // when EOF is reached we overshot the span
+        cursor--;
+        yield Token.EOF;
+      }
+      case ';' -> Token.SEMICOLON;
+      case '(' -> {
+        var scope = interpolationStack.peek();
+        if (scope != null) {
+          scope.parens++;
+        }
+        yield Token.LPAREN;
+      }
+      case ')' -> {
+        var scope = interpolationStack.peek();
+        if (scope != null) {
+          scope.parens--;
+          if (scope.parens <= 0) {
+            // interpolation is over. Back to string
+            state = State.STRING;
+          }
+        }
+        yield Token.RPAREN;
+      }
+      case '{' -> Token.LBRACE;
+      case '}' -> Token.RBRACE;
+      case ',' -> Token.COMMA;
+      case '@' -> Token.AT;
+      case ':' -> Token.COLON;
+      case '+' -> Token.PLUS;
+      case '%' -> Token.MOD;
+      case '[' -> {
+        if (lookahead == '[') {
+          nextChar();
+          yield Token.LPRED;
+        } else yield Token.LBRACK;
+      }
+      case ']' -> Token.RBRACK;
+      case '=' -> {
+        if (lookahead == '=') {
+          nextChar();
+          yield Token.EQUAL;
+        } else yield Token.ASSIGN;
+      }
+      case '>' -> {
+        if (lookahead == '=') {
+          nextChar();
+          yield Token.GTE;
+        } else yield Token.GT;
+      }
+      case '<' -> {
+        if (lookahead == '=') {
+          nextChar();
+          yield Token.LTE;
+        } else yield Token.LT;
+      }
+      case '-' -> {
+        if (lookahead == '>') {
+          nextChar();
+          yield Token.ARROW;
+        } else yield Token.MINUS;
+      }
+      case '!' -> {
+        if (lookahead == '!') {
+          nextChar();
+          yield Token.NON_NULL;
+        } else if (lookahead == '=') {
+          nextChar();
+          yield Token.NOT_EQUAL;
+        } else yield Token.NOT;
+      }
+      case '?' -> {
+        if (lookahead == '.') {
+          nextChar();
+          yield Token.QDOT;
+        } else if (lookahead == '?') {
+          nextChar();
+          yield Token.COALESCE;
+        } else yield Token.QUESTION;
+      }
+      case '&' -> {
+        if (lookahead == '&') {
+          nextChar();
+          yield Token.AND;
+        } else {
+          throw unexpectedChar(ch, "&&");
+        }
+      }
+      case '|' -> {
+        if (lookahead == '>') {
+          nextChar();
+          yield Token.PIPE;
+        } else if (lookahead == '|') {
+          nextChar();
+          yield Token.OR;
+        } else {
+          yield Token.UNION;
+        }
+      }
+      case '*' -> {
+        if (lookahead == '*') {
+          nextChar();
+          yield Token.POW;
+        } else yield Token.STAR;
+      }
+      case '~' -> {
+        if (lookahead == '/') {
+          nextChar();
+          yield Token.INT_DIV;
+        } else {
+          throw unexpectedChar(ch, "~/");
+        }
+      }
+      case '.' -> {
+        if (lookahead == '.') {
+          nextChar();
+          if (lookahead == '.') {
+            nextChar();
+            if (lookahead == '?') {
+              nextChar();
+              yield Token.QSPREAD;
+            } else {
+              yield Token.SPREAD;
+            }
+          } else {
+            throw unexpectedChar("..", ".", "...", "...?");
+          }
+        } else if (lookahead >= '0' && lookahead <= '9') {
+          yield lexNumber(ch);
+        } else {
+          yield Token.DOT;
+        }
+      }
+      case '`' -> {
+        lexQuotedIdentifier();
+        yield Token.IDENTIFIER;
+      }
+      case '/' -> lexSlash();
+      case '"' -> lexStringStart(0);
+      case '#' -> {
+        if (lookahead == '!') {
+          yield lexShebang();
+        } else {
+          yield lexStringStartPounds();
+        }
+      }
+      default -> {
+        if (Character.isDigit(ch)) {
+          yield lexNumber(ch);
+        } else if (isIdentifierStart(ch)) {
+          yield lexIdentifier();
+        } else throw lexError(ErrorMessages.create("invalidCharacter", (char) ch), cursor - 1, 1);
+      }
+    };
+  }
+
+  private Token nextString() {
+    var scope = interpolationStack.getFirst();
+    if (stringEnded) {
+      lexStringEnd(scope);
+      stringEnded = false;
+      interpolationStack.pop();
+      state = State.DEFAULT;
+      return Token.STRING_END;
+    }
+    if (lookahead == EOF) return Token.EOF;
+    if (isEscape) {
+      isEscape = false;
+      // consume the `\#*`
+      for (var i = 0; i < scope.pounds + 1; i++) {
+        nextChar();
+      }
+      return lexEscape();
+    }
+    if (scope.quotes == 1) {
+      lexString(scope.pounds);
+    } else {
+      if (lookahead == '\r') {
+        nextChar();
+        if (lookahead == '\n') {
+          nextChar();
+        }
+        return Token.STRING_NEWLINE;
+      }
+      if (lookahead == '\n') {
+        nextChar();
+        return Token.STRING_NEWLINE;
+      }
+      lexMultiString(scope.pounds);
+    }
+    return Token.STRING_PART;
+  }
+
+  private Token lexStringStartPounds() {
+    int pounds = 1;
+    while (lookahead == '#') {
+      nextChar();
+      pounds++;
+    }
+    if (lookahead == EOF) {
+      throw lexError(ErrorMessages.create("unexpectedEndOfFile"), span());
+    }
+    if (lookahead != '"') {
+      throw unexpectedChar(lookahead, "\"");
+    }
+    nextChar();
+    return lexStringStart(pounds);
+  }
+
+  private Token lexStringStart(int pounds) {
+    var quotes = 1;
+    if (lookahead == '"') {
+      nextChar();
+      if (lookahead == '"') {
+        nextChar();
+        quotes = 3;
+      } else {
+        backup();
+      }
+    }
+    state = State.STRING;
+    interpolationStack.push(new InterpolationScope(quotes, pounds));
+    stringEnded = false;
+    if (quotes == 1) return Token.STRING_START;
+    return Token.STRING_MULTI_START;
+  }
+
+  private void lexStringEnd(InterpolationScope scope) {
+    // don't actually need to check it here
+    for (var i = 0; i < scope.quotes + scope.pounds; i++) {
+      nextChar();
+    }
+  }
+
+  private void lexString(int pounds) {
+    var poundsInARow = 0;
+    var foundQuote = false;
+    var foundBackslash = false;
+    while (lookahead != EOF) {
+      var ch = nextChar();
+      switch (ch) {
+        case '\n', '\r' ->
+            throw lexError(
+                ErrorMessages.create("missingDelimiter", "\"" + "#".repeat(pounds)), cursor - 1, 1);
+        case '"' -> {
+          if (pounds == 0) {
+            backup();
+            stringEnded = true;
+            return;
+          }
+          foundQuote = true;
+          foundBackslash = false;
+          poundsInARow = 0;
+        }
+        case '\\' -> {
+          foundQuote = false;
+          foundBackslash = true;
+          poundsInARow = 0;
+          if (pounds == poundsInARow) {
+            backup(pounds + 1);
+            isEscape = true;
+            return;
+          }
+        }
+        case '#' -> {
+          poundsInARow++;
+          if (foundQuote && (pounds == poundsInARow)) {
+            backup(pounds + 1);
+            stringEnded = true;
+            return;
+          }
+          if (foundBackslash && pounds == poundsInARow) {
+            backup(pounds + 1);
+            isEscape = true;
+            return;
+          }
+        }
+        default -> {
+          foundQuote = false;
+          foundBackslash = false;
+          poundsInARow = 0;
+        }
+      }
+    }
+  }
+
+  private void lexMultiString(int pounds) {
+    var poundsInARow = 0;
+    var quotesInARow = 0;
+    var foundBackslash = false;
+    while (lookahead != EOF && lookahead != '\n' && lookahead != '\r') {
+      var ch = nextChar();
+      switch (ch) {
+        case '"' -> {
+          quotesInARow++;
+          if (quotesInARow == 3 && pounds == 0) {
+            backup(3);
+            stringEnded = true;
+            return;
+          }
+          poundsInARow = 0;
+          foundBackslash = false;
+        }
+        case '\\' -> {
+          quotesInARow = 0;
+          poundsInARow = 0;
+          foundBackslash = true;
+          if (pounds == poundsInARow) {
+            backup(pounds + 1);
+            isEscape = true;
+            return;
+          }
+        }
+        case '#' -> {
+          poundsInARow++;
+          if (quotesInARow == 3 && pounds == poundsInARow) {
+            backup(pounds + 3);
+            stringEnded = true;
+            return;
+          }
+          if (foundBackslash && pounds == poundsInARow) {
+            backup(pounds + 1);
+            isEscape = true;
+            return;
+          }
+        }
+        default -> {
+          quotesInARow = 0;
+          poundsInARow = 0;
+          foundBackslash = false;
+        }
+      }
+    }
+  }
+
+  private Token lexEscape() {
+    if (lookahead == EOF) throw unexpectedEndOfFile();
+    var ch = nextChar();
+    return switch (ch) {
+      case 'n' -> Token.STRING_ESCAPE_NEWLINE;
+      case '"' -> Token.STRING_ESCAPE_QUOTE;
+      case '\\' -> Token.STRING_ESCAPE_BACKSLASH;
+      case 't' -> Token.STRING_ESCAPE_TAB;
+      case 'r' -> Token.STRING_ESCAPE_RETURN;
+      case '(' -> {
+        var scope = interpolationStack.getFirst();
+        scope.parens++;
+        state = State.DEFAULT;
+        yield Token.INTERPOLATION_START;
+      }
+      case 'u' -> lexUnicodeEscape();
+      case '\n' -> Token.STRING_ESCAPE_CONTINUATION;
+      case '\r' -> {
+        if (lookahead == '\n') {
+          nextChar();
+        }
+        yield Token.STRING_ESCAPE_CONTINUATION;
+      }
+      case ' ', '\t' -> {
+        var c = cursor;
+        var next = nextChar();
+        while (next == ' ' || next == '\t') next = nextChar();
+        if (next == '\n' || next == '\r')
+          throw lexError(
+              ErrorMessages.create("invalidLineContinuationEscapeSequenceWhitespace"),
+              c - 2,
+              cursor - c + 2);
+
+        throw lexError(
+            ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + (char) ch, "\\"),
+            c - 2,
+            2);
+      }
+      default ->
+          throw lexError(
+              ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + (char) ch, "\\"),
+              cursor - 2,
+              2);
+    };
+  }
+
+  private Token lexUnicodeEscape() {
+    if (lookahead != '{') {
+      throw unexpectedChar(lookahead, "{");
+    }
+    do {
+      nextChar();
+    } while (lookahead != '}' && lookahead != EOF && Character.isLetterOrDigit(lookahead));
+    if (lookahead == '}') {
+      // consume the close bracket
+      nextChar();
+    } else {
+      throw lexError(ErrorMessages.create("unterminatedUnicodeEscapeSequence", text()), span());
+    }
+    return Token.STRING_ESCAPE_UNICODE;
+  }
+
+  private Token lexIdentifier() {
+    while (isIdentifierPart(lookahead)) {
+      nextChar();
+    }
+
+    var identifierStr = text();
+    var identifier = getKeywordOrIdentifier(identifierStr);
+    return switch (identifier) {
+      case IMPORT -> {
+        if (lookahead == '*') {
+          nextChar();
+          yield Token.IMPORT_STAR;
+        } else yield Token.IMPORT;
+      }
+      case READ ->
+          switch (lookahead) {
+            case '*' -> {
+              nextChar();
+              yield Token.READ_STAR;
+            }
+            case '?' -> {
+              nextChar();
+              yield Token.READ_QUESTION;
+            }
+            default -> Token.READ;
+          };
+      default -> identifier;
+    };
+  }
+
+  private void lexQuotedIdentifier() {
+    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
+      nextChar();
+    }
+    if (lookahead == '`') {
+      nextChar();
+    } else {
+      throw unexpectedChar(lookahead, "backquote");
+    }
+  }
+
+  private Token lexNumber(int start) {
+    if (start == '0') {
+      if (lookahead == 'x' || lookahead == 'X') {
+        nextChar();
+        lexHexNumber();
+        return Token.HEX;
+      }
+      if (lookahead == 'b' || lookahead == 'B') {
+        nextChar();
+        lexBinNumber();
+        return Token.BIN;
+      }
+      if (lookahead == 'o' || lookahead == 'O') {
+        nextChar();
+        lexOctNumber();
+        return Token.OCT;
+      }
+      if (lookahead == 'e' || lookahead == 'E') {
+        nextChar();
+        lexExponent();
+        return Token.FLOAT;
+      }
+    } else if (start == '.') {
+      lexDotNumber();
+      return Token.FLOAT;
+    }
+
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
+      nextChar();
+    }
+
+    if (lookahead == 'e' || lookahead == 'E') {
+      nextChar();
+      lexExponent();
+      return Token.FLOAT;
+    } else if (lookahead == '.') {
+      nextChar();
+      if (lookahead == '_') {
+        throw lexError("invalidSeparatorPosition");
+      }
+      if (lookahead < '0' || lookahead > '9') {
+        backup();
+        return Token.INT;
+      }
+      lexDotNumber();
+      return Token.FLOAT;
+    }
+    return Token.INT;
+  }
+
+  private Token lexSlash() {
+    switch (lookahead) {
+      case '/':
+        {
+          nextChar();
+          var token = lookahead == '/' ? Token.DOC_COMMENT : Token.LINE_COMMENT;
+          while (lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
+            nextChar();
+          }
+          return token;
+        }
+      case '*':
+        {
+          nextChar();
+          lexBlockComment();
+          return Token.BLOCK_COMMENT;
+        }
+      default:
+        return Token.DIV;
+    }
+  }
+
+  private void lexBlockComment() {
+    if (lookahead == EOF) throw unexpectedEndOfFile();
+    var prev = nextChar();
+    while (lookahead != EOF) {
+      if (prev == '*' && lookahead == '/') {
+        nextChar();
+        return;
+      }
+      prev = nextChar();
+    }
+    throw unexpectedEndOfFile();
+  }
+
+  private void lexHexNumber() {
+    if (lookahead == '_') {
+      throw lexError("invalidSeparatorPosition");
+    }
+    if (!isHex(lookahead)) {
+      throw unexpectedChar(lookahead, "hexadecimal number");
+    }
+    while (isHex(lookahead) || lookahead == '_') {
+      nextChar();
+    }
+  }
+
+  private void lexBinNumber() {
+    if (lookahead == '_') {
+      throw lexError("invalidSeparatorPosition");
+    }
+    if (!(lookahead == '0' || lookahead == '1')) {
+      throw unexpectedChar(lookahead, "binary number");
+    }
+    while (lookahead == '0' || lookahead == '1' || lookahead == '_') {
+      nextChar();
+    }
+  }
+
+  private void lexOctNumber() {
+    if (lookahead == '_') {
+      throw lexError("invalidSeparatorPosition");
+    }
+    var ch = lookahead;
+    if (!(ch >= '0' && ch <= '7')) {
+      throw unexpectedChar(ch, "octal number");
+    }
+    while ((ch >= '0' && ch <= '7') || ch == '_') {
+      nextChar();
+      ch = lookahead;
+    }
+  }
+
+  private void lexExponent() {
+    if (lookahead == '+' || lookahead == '-') {
+      nextChar();
+    }
+    if (lookahead == '_') {
+      throw lexError("invalidSeparatorPosition");
+    }
+    if (lookahead < '0' || lookahead > '9') {
+      throw unexpectedChar(lookahead, "number");
+    }
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
+      nextChar();
+    }
+  }
+
+  private void lexDotNumber() {
+    if (lookahead == '_') {
+      throw lexError("invalidSeparatorPosition");
+    }
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
+      nextChar();
+    }
+    if (lookahead == 'e' || lookahead == 'E') {
+      nextChar();
+      lexExponent();
+    }
+  }
+
+  private Token lexShebang() {
+    do {
+      nextChar();
+    } while (lookahead != '\n' && lookahead != '\r' && lookahead != EOF);
+    return Token.SHEBANG;
+  }
+
+  private boolean isHex(int code) {
+    return (code >= '0' && code <= '9')
+        || (code >= 'a' && code <= 'f')
+        || (code >= 'A' && code <= 'F');
+  }
+
+  private static boolean isIdentifierStart(int c) {
+    return c == '_' || c == '$' || Character.isUnicodeIdentifierStart(c);
+  }
+
+  private static boolean isIdentifierPart(int c) {
+    return c != EOF && (c == '$' || Character.isUnicodeIdentifierPart(c));
+  }
+
+  private int nextChar() {
+    var tmp = lookahead;
+    cursor++;
+    if (cursor >= size) {
+      lookahead = EOF;
+    } else {
+      lookahead = source[cursor];
+    }
+    if (tmp == '\n') {
+      line++;
+      col = 1;
+    } else {
+      col++;
+    }
+    return tmp;
+  }
+
+  private void backup() {
+    lookahead = source[--cursor];
+    col--;
+  }
+
+  private void backup(int amount) {
+    cursor -= amount;
+    col -= amount;
+    lookahead = source[cursor];
+  }
+
+  private ParserError lexError(String msg, Object... args) {
+    var length = lookahead == EOF ? 0 : 1;
+    var index = lookahead == EOF ? cursor - 1 : cursor;
+    return new ParserError(ErrorMessages.create(msg, args), new Span(index, length));
+  }
+
+  private ParserError lexError(String msg, int charIndex, int length) {
+    return new ParserError(msg, new Span(charIndex, length));
+  }
+
+  private ParserError lexError(String msg, Span span) {
+    return new ParserError(msg, span);
+  }
+
+  private ParserError unexpectedChar(int got, String didYouMean) {
+    if (got == EOF) {
+      return unexpectedChar("EOF", didYouMean);
+    }
+    return lexError("unexpectedCharacter", (char) got, didYouMean);
+  }
+
+  private ParserError unexpectedChar(String got, String didYouMean) {
+    return lexError("unexpectedCharacter", got, didYouMean);
+  }
+
+  private ParserError unexpectedChar(String got, String option1, String option2, String option3) {
+    return lexError("unexpectedCharacter3", got, option1, option2, option3);
+  }
+
+  private ParserError unexpectedEndOfFile() {
+    return lexError(ErrorMessages.create("unexpectedEndOfFile"), cursor, 0);
+  }
+
+  public static boolean isRegularIdentifier(String identifier) {
+    if (identifier.isEmpty()) return false;
+
+    if (isKeyword(identifier)) return false;
+
+    var firstCp = identifier.codePointAt(0);
+    return (firstCp == '$' || firstCp == '_' || Character.isUnicodeIdentifierStart(firstCp))
+        && identifier
+            .codePoints()
+            .skip(1)
+            .allMatch(cp -> cp == '$' || Character.isUnicodeIdentifierPart(cp));
+  }
+
+  public static String maybeQuoteIdentifier(String identifier) {
+    return isRegularIdentifier(identifier) ? identifier : "`" + identifier + "`";
+  }
+
+  private static boolean isKeyword(String text) {
+    return getKeywordOrIdentifier(text) != Token.IDENTIFIER;
+  }
+
+  private static Token getKeywordOrIdentifier(String keyword) {
+    return switch (keyword) {
+      case "_" -> Token.UNDERSCORE;
+      case "abstract" -> Token.ABSTRACT;
+      case "amends" -> Token.AMENDS;
+      case "as" -> Token.AS;
+      case "case" -> Token.CASE;
+      case "class" -> Token.CLASS;
+      case "const" -> Token.CONST;
+      case "delete" -> Token.DELETE;
+      case "else" -> Token.ELSE;
+      case "extends" -> Token.EXTENDS;
+      case "external" -> Token.EXTERNAL;
+      case "false" -> Token.FALSE;
+      case "fixed" -> Token.FIXED;
+      case "for" -> Token.FOR;
+      case "function" -> Token.FUNCTION;
+      case "hidden" -> Token.HIDDEN;
+      case "if" -> Token.IF;
+      case "import" -> Token.IMPORT;
+      case "in" -> Token.IN;
+      case "is" -> Token.IS;
+      case "let" -> Token.LET;
+      case "local" -> Token.LOCAL;
+      case "module" -> Token.MODULE;
+      case "new" -> Token.NEW;
+      case "nothing" -> Token.NOTHING;
+      case "null" -> Token.NULL;
+      case "open" -> Token.OPEN;
+      case "out" -> Token.OUT;
+      case "outer" -> Token.OUTER;
+      case "override" -> Token.OVERRIDE;
+      case "protected" -> Token.PROTECTED;
+      case "read" -> Token.READ;
+      case "record" -> Token.RECORD;
+      case "super" -> Token.SUPER;
+      case "switch" -> Token.SWITCH;
+      case "this" -> Token.THIS;
+      case "throw" -> Token.THROW;
+      case "trace" -> Token.TRACE;
+      case "true" -> Token.TRUE;
+      case "typealias" -> Token.TYPE_ALIAS;
+      case "unknown" -> Token.UNKNOWN;
+      case "vararg" -> Token.VARARG;
+      case "when" -> Token.WHEN;
+      default -> Token.IDENTIFIER;
+    };
+  }
+
+  private static class InterpolationScope {
+    final int quotes;
+    final int pounds;
+    int parens = 0;
+
+    protected InterpolationScope(int quotes, int pounds) {
+      this.quotes = quotes;
+      this.pounds = pounds;
+    }
+
+    InterpolationScope copy() {
+      var res = new InterpolationScope(quotes, pounds);
+      res.parens = parens;
+      return res;
+    }
+  }
+
+  public record Snapshot(
+      int cursor,
+      int sCursor,
+      int line,
+      int sLine,
+      int col,
+      int sCol,
+      int lookahead,
+      State state,
+      Deque<InterpolationScope> interpolationStack,
+      boolean stringEnded,
+      boolean isEscape,
+      int newLinesBetween) {}
+
+  private enum State {
+    DEFAULT,
+    STRING
+  }
+}

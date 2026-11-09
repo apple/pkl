@@ -1,0 +1,3 @@
+function foo(arg1 arg2) = arg1 + arg2
+
+res1 = foo(1, 2)

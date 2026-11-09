@@ -1,0 +1,10 @@
+foo {
+  new {
+    prop = 1
+  }
+}
+res {
+  new {
+    prop = 2
+  }
+}

@@ -1,0 +1,17 @@
+m2 {
+  ["a"] = 1
+  ["b"] = 2
+  ["any"] = true
+  ["containsValue"] = true
+}
+m3 {
+  ["a"] = 1
+  ["b"] = 2
+  ["isEmpty"] = false
+}
+l2 {
+  1
+  2
+  true
+  true
+}

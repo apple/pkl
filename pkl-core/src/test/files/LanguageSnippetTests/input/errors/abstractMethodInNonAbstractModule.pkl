@@ -1,0 +1,1 @@
+abstract function foo(): Int

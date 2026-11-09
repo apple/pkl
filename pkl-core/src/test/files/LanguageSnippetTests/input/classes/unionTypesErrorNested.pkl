@@ -1,0 +1,12 @@
+class X {
+  a: Boolean|Map<Int|List<Int>, String|Set<String>>
+}
+
+res1 = new X {
+  a = Map(
+    1, "foo",
+    2, Set("foo", "bar"),
+    List(1, 2, 3), "foo",
+    List(1, 2, 3), Set("bar", 4)
+  )
+}

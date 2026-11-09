@@ -1,0 +1,19 @@
+import "pkl:xml"
+import "pkl:test"
+
+local pigeon = new {
+  name = "Pigeon"
+  age = 42
+}
+
+res1 = (xml.Element("pigeon2")) { xml.Inline(pigeon) }
+
+res2 = test.catch(() -> output.renderer.renderValue(
+  new Dynamic { x = xml.Inline((xml.Element("pigeon2")) { pigeon }) }))
+
+res3 = test.catch(() -> output.renderer.renderValue(
+  new Dynamic { x = xml.Inline(xml.Inline(pigeon)) }))
+
+output {
+  renderer = new xml.Renderer {}
+}

@@ -1,0 +1,8 @@
+local l = 1
+
+foo {
+  local l = 2
+  bar {
+    baz = l
+  }
+}

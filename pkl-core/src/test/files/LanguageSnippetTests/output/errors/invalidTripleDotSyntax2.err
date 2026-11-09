@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Module URI `...abc` has invalid syntax.
+
+x | import "...abc"
+           ^^^^^^^^
+at invalidTripleDotSyntax2 (file:///$snippetsDir/input/errors/invalidTripleDotSyntax2.pkl)
+
+expected `...` or `.../path/to/my_module.pkl`

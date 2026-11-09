@@ -1,0 +1,27 @@
+facts {
+  ["version"] {
+    true
+    true
+    true
+  }
+  ["versionInfo"] {
+    true
+  }
+  ["commitId"] {
+    true
+  }
+  ["sourceCode"] {
+    true
+    true
+  }
+  ["documentation"] {
+    true
+    true
+  }
+  ["standardLibrary"] {
+    true
+    true
+    true
+    true
+  }
+}

@@ -1,0 +1,28 @@
+examples {
+  ["http headers"] {
+    new {
+      headers {
+        ["**"] {
+          ["X-Foo"] = "Foo"
+        }
+        ["https://example.com/**"] {
+          ["X-Bar"] {
+            "bar"
+            "baz"
+          }
+        }
+      }
+    }
+  }
+  ["http headers -- invalid glob pattern"] {
+    "Type constraint `isGlobPattern` violated. Value: \"{{}}\""
+  }
+  ["http headers -- invalid header name"] {
+    "Type constraint `isNotReservedHeaderName` violated. Value: \"Connection\""
+    "Type constraint `doesNotStartWithReservedPrefix` violated. Value: \"Sec-Foo-Bar\""
+    "Type constraint `hasValidHeaderNameSyntax` violated. Value: \"Foo:Bar\""
+  }
+  ["http headers -- invalid header value"] {
+    "Expected value of type `*Listing<HttpHeaderValue> | HttpHeaderValue`, but got a different `String`. Value: \"🙃\""
+  }
+}

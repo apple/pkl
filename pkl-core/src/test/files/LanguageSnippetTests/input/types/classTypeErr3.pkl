@@ -1,0 +1,6 @@
+extends "classType.pkl"
+
+import ".../input-helper/types/classTypeA.pkl"
+import ".../input-helper/types/classTypeB.pkl"
+
+res7 = classTypeA.Foo as Class<classTypeB.Foo>

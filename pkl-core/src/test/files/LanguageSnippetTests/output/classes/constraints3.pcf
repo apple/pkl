@@ -1,0 +1,6 @@
+res1 {
+  address {
+    street = "Hampton St."
+  }
+}
+res2 = "Type constraint `street.endsWith(\"St.\")` violated. Value: new constraints3#Address { street = \"Garlic Blvd.\" }"

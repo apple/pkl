@@ -1,0 +1,15 @@
+import "library.pkl"
+
+res1: String = "str"
+res2: String(!isEmpty) = "str"
+res3: library.Person = new library.Person {
+  name = "Pigeon"
+}
+res4: library.Person = new Teacher {
+  name = "Parrot"
+  subjects = List("Fire making, Stone age")
+}
+
+class Teacher extends library.Person {
+  subjects: List<String(!isEmpty)>
+}

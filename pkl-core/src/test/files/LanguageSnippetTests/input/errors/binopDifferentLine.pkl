@@ -1,0 +1,5 @@
+binop_result: Int = 1 
+
+/*comment*/- 
+  
+/*comment*/ 1

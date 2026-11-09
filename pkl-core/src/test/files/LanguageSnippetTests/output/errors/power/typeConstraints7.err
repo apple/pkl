@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `isBetween(0, 255)` violated.
+Value: -5
+
+    isBetween(0, 255)
+    │
+    false
+
+xxxx | typealias UInt8 = Int(isBetween(0, 255))
+                             ^^^^^^^^^^^^^^^^^
+at typeConstraints7#foo (pkl:base)
+
+x | foo: UInt8 = -5
+                 ^^
+at typeConstraints7#foo (file:///$snippetsDir/input/errors/power/typeConstraints7.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

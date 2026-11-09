@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `]`. Expected `{` or `=`.
+
+x | [name == "Pigeon"]] { age = 42 }
+                      ^
+at unbalancedEntryBrackets2 (file:///$snippetsDir/input/errors/delimiters/unbalancedEntryBrackets2.pkl)

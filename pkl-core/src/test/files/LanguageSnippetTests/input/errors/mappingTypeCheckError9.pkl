@@ -1,0 +1,5 @@
+local mapping1: Mapping<String, Int> = new { ["foo"] = 1 }
+local mapping2: Mapping<String, String> = mapping1
+local mapping3 = (mapping2) { ["bar"] =  "2" }
+
+first = mapping3["foo"]

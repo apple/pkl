@@ -1,0 +1,87 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.http;
+
+import com.google.errorprone.annotations.ThreadSafe;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
+import java.io.IOException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
+import java.util.Optional;
+import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.SecurityManagerException;
+
+/**
+ * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
+ * send.
+ */
+@ThreadSafe
+final class LazyHttpClient implements HttpClient {
+  private final Supplier<HttpClient> supplier;
+  private final Object lock = new Object();
+
+  @GuardedBy("lock")
+  private @Nullable HttpClient client;
+
+  @GuardedBy("lock")
+  private @Nullable RuntimeException exception;
+
+  LazyHttpClient(Supplier<HttpClient> supplier) {
+    this.supplier = supplier;
+  }
+
+  @Override
+  public <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException {
+    return getOrCreateClient().send(request, responseBodyHandler, httpRequestChecker);
+  }
+
+  @Override
+  public void close() {
+    getClient().ifPresent(HttpClient::close);
+  }
+
+  // visible for testing
+  public HttpClient getOrCreateClient() {
+    synchronized (lock) {
+      // only try to create client once
+      if (exception != null) {
+        throw exception;
+      }
+
+      if (client == null) {
+        try {
+          client = supplier.get();
+        } catch (RuntimeException t) {
+          exception = t;
+          throw t;
+        }
+      }
+      return client;
+    }
+  }
+
+  private Optional<HttpClient> getClient() {
+    synchronized (lock) {
+      return Optional.ofNullable(client);
+    }
+  }
+}

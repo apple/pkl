@@ -1,0 +1,10 @@
+a = 1
+
+class X {
+  a = 2
+  function compute() = a
+}
+
+res1 = new X {}.compute()
+
+res2 = new X { a = 3 }.compute()

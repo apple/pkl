@@ -1,0 +1,26 @@
+local x = new Listing {
+  when (false) { 0 }
+  "one"
+  "two"
+}
+
+res1 = x != x
+res2 = x != new Listing {
+  when (false) { 0 }
+  "one"
+  "two"
+}
+res3 = x != new Listing {
+  when (false) { 0 }
+  "two"
+}
+res4 = x != new Listing {
+  when (false) { 0 }
+  "two"
+  "one"
+}
+res5 = x != (x) {}
+res6 = x != (x) { when (false) { 0 }; "one" }
+res8 = x != (x) { when (false) { 0 }; default = 9 }
+res9 = (x) { when (false) { 0 }; default = 9 } != (x) { when (false) { 0 }; default = 10 }
+res10 = new Listing { when (false) { 0 }; "one" } != new Listing { when (false) { 0 }; "one"; default = 9 }

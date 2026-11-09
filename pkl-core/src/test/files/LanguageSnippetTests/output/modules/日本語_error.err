@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Error reporting should also handle unicode filenames!
+
+x | 日本語 = throw("Error reporting should also handle unicode filenames!")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at 日本語_error#日本語 (file:///$snippetsDir/input/modules/%E6%97%A5%E6%9C%AC%E8%AA%9E_error.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

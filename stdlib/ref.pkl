@@ -1,0 +1,223 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Type-safe deferred references to values not known at evaluation time.
+///
+/// References are an advanced API design tool that enables library authors to express
+/// domain-specific references to values that may not be known during evaluation.
+///
+/// They are particularly suited for configuring execution systems where tasks have well-typed
+/// inputs and output. These include:
+///
+///   * CI pipelines
+///   * Build graphs
+///   * Workflow tools
+@ModuleInfo { minPklVersion = "0.34.0" }
+@Since { version = "0.32.0" }
+module pkl.ref
+
+/// Creates a deferred [Reference] to a value of type [Type] in the given [domain] and [data].
+///
+/// Example:
+/// ```
+/// myReference: Reference<MyDomain, Listing<String>> = Reference<MyDomain, Listing<String>>(domain, data)
+/// ```
+external const function Reference<Domain, Type>(
+  domain: Domain(this is AbstractDomain),
+  data: Any,
+): Reference<Domain, Type>
+
+/// References are an advanced API design tool that enables library authors to express
+/// domain-specific values, whose actual underlying values are not known to Pkl during evaluation.
+///
+/// References provide two features.
+///
+/// First, they allow users to convey expressions in the target format using plain expressions in
+/// Pkl itself.
+///
+/// Second, they provide type safety:
+///
+///   1. Pkl will typecheck a reference's _domain_ and _referent type_.
+///   2. Dot access and subscript access is checked.
+///
+/// Instances are either created through the [Reference()] constructor method,
+/// or synthetically through member access.
+///
+/// References consist of four parts:
+///
+///   1. [domain][getDomain()]: determines which references are compatible and how references are
+///      rendered as strings.
+///   2. [data][getData()]: an arbitrary value that may contain domain-specific information about
+///      the referenced value.
+///   3. [path][getPath()]: a `List<Access>` of values indicating how the reference was accessed
+///      (by property or subscript).
+///   4. Referent type: the type of the value that the reference refers to.
+///      This type is internally held, and not exposed as an in-language value.
+///
+/// ## Member access
+///
+/// A reference contains synthetic members.
+/// These synthetic members may be accessed using the dot and subscript operators, and are
+/// generated when the member access itself is executed.
+///
+/// ```
+/// myRef.name
+/// myRef["bar"]
+/// ```
+///
+/// Members are synthesized based on the referent type:
+/// Given the following declaration:
+///
+/// ```
+/// class Bird { name: String }
+/// ```
+///
+/// A `Reference<MyDomain, Bird>` will contain synthetic property
+/// `name: Reference<MyDomain, String>`.
+///
+/// The synthesized reference contains the same [domain][getDomain()] and [data][getData()] as the
+/// original reference.
+/// This reference's path extends the original reference's with an [Access] instance describing
+/// the accessed property name or subscript key.
+///
+/// **Limitations**
+///
+/// 1. Properties with the `external` modifier may not be accessed.
+/// 2. Properties defined inside external classes may not be accessed.
+/// 3. The [Listing.default], [Mapping.default], and [Dynamic.default] properties may not be
+///    accessed.
+/// 4. Constrained types cannot be referent types.
+///     - Declaring `Reference<MyDomain, String(length.isOdd)>` will throw an error.
+///     - Member access will return a new reference whose referent type has its constraints erased.
+///
+/// ## Domain
+///
+/// The domain identifies the system that this reference exists inside.
+/// Additionally, it defines how references should be rendered when Pkl produces textual output.
+///
+/// Example:
+/// ```
+/// import "pkl:ref"
+///
+/// class MyDomain extends ref.AbstractDomain {
+///   // Define how this domain renders references to strings:
+///   function renderReference(reference: ref.Reference<MyDomain, Any>): String =
+///     reference.getData().toString()
+///     + "/"
+///     + reference.getPath().map((it) -> it.property ?? it.key.toString()).join("/")
+/// }
+/// ```
+///
+/// A typealias can be used to improve ergonomics:
+///
+/// ```
+/// typealias MyReference<T> = ref.Reference<MyDomain, T>
+/// ```
+///
+/// ## Example
+///
+/// ```
+/// import "pkl:ref"
+///
+/// class Foo extends ref.AbstractDomain {
+///   function renderReference(reference: ref.Reference<Foo, Any>) =
+///     "{{ "
+///     + reference.getData().toString()
+///     + reference
+///         .getPath()
+///         .map((it) -> if (it.isProperty) "/\(it.property)" else "[\(it.key)]")
+///         .join("")
+///     + " }}"
+/// }
+///
+/// typealias FooReference<T> = ref.Reference<Foo, T>
+///
+/// class Outputs {
+///   file: String
+///
+///   properties: Mapping<String, String>
+/// }
+///
+/// local outputs: FooReference<Outputs> = ref.Reference<Foo, Outputs>(new Foo {}, "outputs")
+///
+/// // Dot access; gives a `Reference<Foo, String>`
+/// myFile = outputs.file
+///
+/// // Subscript access; gives a `Reference<Foo, String>`
+/// myProperty = outputs.properties["myProperty"]
+///
+/// output {
+///   renderer {
+///     converters {
+///       [ref.Reference] = (it) -> it.toString()
+///     }
+///   }
+/// }
+/// ```
+///
+/// Output:
+/// ```
+/// myFile = "{{ outputs/file }}"
+/// myProperty = "{{ outputs/properties[myProperty] }}"
+/// ```
+external class Reference<out Domain, out Type> {
+  /// Returns the domain this reference belongs to.
+  external function getDomain(): Domain
+
+  /// Returns arbitrary data attached to the reference during creation.
+  ///
+  /// Used for domain-specific purposes such as controlling how the reference is rendered.
+  external function getData(): Any
+
+  /// Returns the path of property and subscript accesses applied to this reference.
+  external function getPath(): List<Access>
+
+  /// Returns a string representation of this reference using its domain's
+  /// [AbstractDomain.renderReference()] method.
+  function toString(): String = getDomain().renderReference(this)
+}
+
+/// A configuration domain that a [Reference] may exist within.
+///
+/// Only references with the same [AbstractDomain] are compatible with each other.
+///
+/// A domain also determines how [Reference] values are transformed into strings; see
+/// [renderReference()].
+abstract class AbstractDomain {
+  /// Determines how [Reference] instances are transformed to strings by [Reference.toString()] and
+  /// string interpolation.
+  abstract function renderReference(reference: Reference<this, Any>): String
+}
+
+/// A property or subscript access as part of a [Reference]'s path.
+class Access {
+  /// Tells if this represents a property access.
+  fixed isProperty: Boolean = property != null
+
+  /// Tells if this represents a subscript access.
+  fixed isSubscript: Boolean = property == null
+
+  /// The property that was accessed.
+  ///
+  /// If non-null, this is a property access. If `null` this is a subscript access.
+  property: String(key == null)?
+
+  /// The subscript key that was accessed.
+  ///
+  /// May be null even when [property] is null, which represents a subscript access with key `null`
+  /// (e.g. `foo[null]`).
+  key: Any
+}

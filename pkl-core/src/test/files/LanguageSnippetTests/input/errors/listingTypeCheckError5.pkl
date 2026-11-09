@@ -1,0 +1,4 @@
+local l = new Listing { 1; 2; 3 } as Listing<String>
+
+res = l[0]
+

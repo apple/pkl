@@ -1,0 +1,18 @@
+extends "GradleJob.pkl"
+
+name: String = command
+
+command: String
+
+os = "linux"
+
+steps {
+  new {
+    name = module.name
+    shell = "bash"
+    run =
+      """
+      ./gradlew \(module.gradleArgs) \(module.command)
+      """
+  }
+}

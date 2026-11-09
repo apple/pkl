@@ -1,0 +1,5 @@
+amends "pkl:Project"
+
+evaluatorSettings {
+  traceMode = "compact"
+}

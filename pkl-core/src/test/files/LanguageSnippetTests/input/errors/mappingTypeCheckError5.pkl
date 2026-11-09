@@ -1,0 +1,7 @@
+// GeneratorObjectLiteralNode
+res: Mapping<String, String> = new {
+  when (false) {
+    ["foo"] = "foo"
+  }
+  [1] = "foo"
+}

@@ -1,0 +1,14 @@
+parent {
+  x = 1
+  y = 2
+}
+
+child = (parent) {
+  x = super.x + super.y + super.x
+  y = 3
+}
+
+grandChild = (child) {
+  x = 5
+  y = super.x * 3
+}

@@ -1,0 +1,2 @@
+// covers https://github.com/apple/pkl/issues/653
+日本語 = throw("Error reporting should also handle unicode filenames!")

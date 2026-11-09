@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `=`. Expected `,` or `)`.
+
+x | res1: String(!isEmpty, length < 5 = "abc"
+                                      ^
+at missingTypeConstraintListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingTypeConstraintListDelimiter.pkl)

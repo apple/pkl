@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://localhost:0/fruit@1": {
+      "type": "remote",
+      "uri": "projectpackage://localhost:0/fruit@1.0.5",
+      "checksums": {
+        "sha256": "8ff80e5ac882650e817f261c8af024bf0db9b07888c9d18c20017457e04ffe06"
+      }
+    }
+  }
+}

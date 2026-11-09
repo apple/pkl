@@ -1,0 +1,3 @@
+amends "pkl:DocsiteInfo"
+
+title = "Single Package Docs"

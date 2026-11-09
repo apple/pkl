@@ -1,0 +1,7 @@
+amends ".../input-helper/classes/MyClass.pkl"
+
+myClass {
+  emails {
+    "baz@bar.com"
+  }
+}

@@ -1,0 +1,9 @@
+import "typeResolution1.pkl"
+import "typeResolution2.pkl"
+import "typeResolution3.pkl"
+
+res1: typeResolution1.Person1
+res2: typeResolution2.Person1
+res3: typeResolution2.Person2
+res4: typeResolution3.Person1
+res5: typeResolution3.Person2

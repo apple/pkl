@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Expected `output.value` of module `file:///$snippetsDir/input/projects/badPklProject2/PklProject` to be of type `pkl.Project`, but got type `Int`.
+
+x | value = 5
+            ^
+at value (file:///$snippetsDir/input/projects/badPklProject2/PklProject)

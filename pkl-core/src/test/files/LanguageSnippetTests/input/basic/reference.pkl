@@ -1,0 +1,56 @@
+amends "../snippetTest.pkl"
+
+import "pkl:ref"
+
+local class D extends ref.AbstractDomain {
+  function renderReference(reference: ref.Reference<this, Any>): String = reference.getData().toString()
+}
+
+local const d: D = new {}
+local typealias Ref<T> = ref.Reference<D, T>
+
+local class Holder {
+  num: Int
+  text: String
+  lit: "literal"
+  small: Int8
+  optional: Mapping<String, Int?>
+  listing: Listing<Int>
+  union: Listing<String> | Listing<Int>
+  constrainedType: String(isEmpty)
+}
+
+local class OtherHolder {
+  num: Int?
+  constrainedType: String(isEmpty)
+}
+
+local holderRef: Ref<Holder> = ref.Reference<D, Holder>(d, null)
+local holderRef2: Ref<Holder> = ref.Reference<D, Holder>(d, null)
+local otherHolderRef: Ref<OtherHolder> = ref.Reference<D, OtherHolder>(d, null)
+
+facts {
+  ["equality"] {
+    holderRef == holderRef2
+    holderRef.num == holderRef2.num
+    holderRef.lit == holderRef2.lit
+    holderRef.small == holderRef2.small
+    holderRef.optional["k"] == holderRef2.optional["k"]
+    holderRef.listing[0] == holderRef2.listing[0]
+    holderRef.union == holderRef2.union
+  }
+
+  ["equality -- constraint gets erased"] {
+    holderRef.constrainedType == otherHolderRef.constrainedType
+  }
+
+  ["inequality"] {
+    holderRef.num != holderRef2.text
+  }
+
+  ["set deduplication"] {
+    Set(holderRef.num, holderRef2.num).length == 1
+    Set(holderRef.union, holderRef2.union).length == 1
+    Set(holderRef.num, holderRef2.text).length == 2
+  }
+}

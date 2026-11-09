@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Cannot find key `"foo"`.
+
+x | res1 = x["foo"]
+           ^^^^^^^^
+at stringKeyNotFound#res1 (file:///$snippetsDir/input/mappings/stringKeyNotFound.pkl)
+
+Did you mean any of the following?
+"fooy"
+"fozo"
+"xfoo"
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

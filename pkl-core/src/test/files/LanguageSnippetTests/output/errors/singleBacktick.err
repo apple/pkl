@@ -1,0 +1,7 @@
+–– Pkl Error ––
+Unexpected character `
+`. Did you mean `backquote`?
+
+x | `
+     ^
+at singleBacktick (file:///$snippetsDir/input/errors/singleBacktick.pkl)

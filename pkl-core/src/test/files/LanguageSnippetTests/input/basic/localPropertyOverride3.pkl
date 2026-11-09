@@ -1,0 +1,11 @@
+// verify that foo2.y gets foo2.l even though foo1.l is already in the property cache
+
+foo1 {
+  local l = "origi" + "nal"
+  x = l
+}
+
+foo2 = (foo1) {
+  local l = "over" + "ridden"
+  y = l
+}

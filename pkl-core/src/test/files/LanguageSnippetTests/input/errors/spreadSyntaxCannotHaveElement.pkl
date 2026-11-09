@@ -1,0 +1,9 @@
+local source {
+  1
+  2
+  3
+}
+
+res: Mapping = new {
+  ...source
+}

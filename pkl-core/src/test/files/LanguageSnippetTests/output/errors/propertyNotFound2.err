@@ -1,0 +1,20 @@
+–– Pkl Error ––
+Cannot find property `foo` in object of type `Pair`.
+
+x | res0 = Pair(1, 2).foo
+           ^^^^^^^^^^^^^^
+at propertyNotFound2#res0 (file:///$snippetsDir/input/errors/propertyNotFound2.pkl)
+
+Available properties:
+first
+key
+second
+value
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

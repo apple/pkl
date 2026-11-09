@@ -1,0 +1,88 @@
+class C {
+  local function f1(): Int = 1
+  local function f2(x: Int): Int = x + 1
+  local function f3(x: Int, y: Int): Int = x + y + 1
+
+  res1 = f1()
+  res2 = f2(42)
+  res3 = f3(42, 21)
+
+  foo1 {
+    res4 = f1()
+    res5 = f2(42)
+    res6 = f3(42, 21)
+    bar1 {
+      res7 = f1()
+      res8 = f2(42)
+      res9 = f3(42, 21)
+      baz1 {
+        res10 = f1()
+        res11 = f2(42)
+        res12 = f3(42, 21)
+      }
+    }
+  }
+
+  foo2 {
+    local function f1(): Int = 2
+    local function f2(x: Int) = x + 2
+    local function f3(x: Int, y: Int) = x + y + 2
+
+    res13 = f1()
+    res14 = f2(42)
+    res15 = f3(42, 21)
+    bar2 {
+      res16 = f1()
+      res17 = f2(42)
+      res18 = f3(42, 21)
+      baz2 {
+        res19 = f1()
+        res20 = f2(42)
+        res21 = f3(42, 21)
+      }
+    }
+  }
+
+  foo3 {
+    res22 = f1()
+    res23 = f2(42)
+    res24 = f3(42, 21)
+    bar3 {
+      local function f1(): Int = 3
+      local function f2(x: Int) = x + 3
+      local function f3(x: Int, y: Int) = x + y + 3
+
+      res25 = f1()
+      res26 = f2(42)
+      res27 = f3(42, 21)
+      baz3 {
+        res28 = f1()
+        res29 = f2(42)
+        res30 = f3(42, 21)
+      }
+    }
+  }
+
+  foo4 {
+    res22 = f1()
+    res23 = f2(42)
+    res24 = f3(42, 21)
+    bar4 {
+      res25 = f1()
+      res26 = f2(42)
+      res27 = f3(42, 21)
+      baz4 {
+        local function f1(): Int = 4
+        local function f2(x: Int) = x + 4
+        local function f3(x: Int, y: Int) = x + y + 4
+
+        res28 = f1()
+        res29 = f2(42)
+        res30 = f3(42, 21)
+      }
+    }
+  }
+}
+
+c = new C {}
+

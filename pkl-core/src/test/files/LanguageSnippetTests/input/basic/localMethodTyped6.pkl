@@ -1,0 +1,25 @@
+import "pkl:test"
+
+class C {
+  foo {
+    local function f1(): NonExistingType = 42
+    local function f2(x: NonExistingType): Int = x
+    local function f3(x: Int, y: NonExistingType): Int = x + y
+
+    res1 = test.catch(() -> f1())
+    res2 = test.catch(() -> f2(42))
+    res3 = test.catch(() -> f3(42, 21))
+    bar {
+      res4 = test.catch(() -> f1())
+      res5 = test.catch(() -> f2(42))
+      res6 = test.catch(() -> f3(42, 21))
+      baz {
+        res7 = test.catch(() -> f1())
+        res8 = test.catch(() -> f2(42))
+        res9 = test.catch(() -> f3(42, 21))
+      }
+    }
+  }
+}
+
+c = new C {}

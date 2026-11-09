@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `open` is not applicable to properties.
+
+x | open foo: Int = 42
+    ^^^^
+at invalidPropertyModifier (file:///$snippetsDir/input/errors/invalidPropertyModifier.pkl)

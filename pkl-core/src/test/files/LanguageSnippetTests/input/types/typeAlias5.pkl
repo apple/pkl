@@ -1,0 +1,8 @@
+import "../../input-helper/types/idType.pkl"
+
+hidden modules: Listing<idType.Id<module>> = new {
+  new module {}
+  new module {}
+}
+
+res = modules.length

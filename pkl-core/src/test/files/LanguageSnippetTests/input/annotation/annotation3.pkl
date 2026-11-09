@@ -1,0 +1,4 @@
+class NoAnn
+
+@NoAnn
+invalidAnnotationOnTypedProperty: String = "hi"

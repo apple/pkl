@@ -1,0 +1,10 @@
+local a = new Mapping { [0] = new Foo {} }
+local b = (a) { [1] = new Bar {} }
+local c = b as Mapping<Int, Bar>
+local d = (c) { [2] = new Foo {} }
+local e = d as Mapping<Int, Foo>
+
+result = e
+
+open class Foo
+class Bar extends Foo

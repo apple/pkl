@@ -1,0 +1,5 @@
+res1 {
+  min = 4
+  max = 6
+}
+res2 = "Type constraint `this >= min` violated. Value: 3"

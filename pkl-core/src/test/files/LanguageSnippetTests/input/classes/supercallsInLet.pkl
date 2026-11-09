@@ -1,0 +1,44 @@
+open class A {
+  function foo() = "a"
+}
+
+class B extends A {
+  function foo() =
+    let (bar = "b")
+      super.foo() + bar
+}
+
+local b = new B {}
+
+res1 = b.foo()
+
+// Also test with property access
+open class C {
+  value = "c"
+}
+
+class D extends C {
+  result =
+    let (x = "d")
+      super.value + x
+}
+
+local d = new D {}
+
+res2 = d.result
+
+// Test with nested let expressions
+open class E {
+  function getValue() = "e"
+}
+
+class F extends E {
+  function getValue() =
+    let (x = "f")
+      let (y = " and " + x)
+        super.getValue() + y
+}
+
+local f = new F {}
+
+res3 = f.getValue()

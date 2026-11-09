@@ -1,0 +1,21 @@
+res1 {
+  x = 1
+  y = 2
+  yy = 2
+  yyy = 2
+}
+res2 {
+  x = 1
+  y = 3
+  yy = 3
+  yyy = 3
+}
+res3 {
+  x = 2
+  y = 3
+  yy = 3
+  yyy = 3
+}
+res4 = "Type constraint `this > x` violated. Value: 0"
+res5 = "Type constraint `isValid1` violated. Value: 0"
+res6 = "Type constraint `isValid2` violated. Value: 0"

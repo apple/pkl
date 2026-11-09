@@ -1,0 +1,31 @@
+open module com.package1.typealiases
+
+/// A [String] representing an [Email] address.
+@AlsoKnownAs { names { "OtherName" } }
+typealias Email = String(contains("@"))
+
+uint: UInt
+
+uints: List<UInt>
+
+/// My [Email].
+email: Email
+
+emails: List<Email>
+
+/// Sends an [Email].
+function send(email: Email): Email = "abc"
+
+open class Person {
+  uint: UInt
+
+  list: List<UInt>
+
+  /// A person's [Email].
+  email: Email
+
+  emails: List<Email>
+
+  /// Sends an [Email].
+  function send(email: Email): Email = "abc"
+}

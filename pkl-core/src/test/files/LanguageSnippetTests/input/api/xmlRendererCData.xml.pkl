@@ -1,0 +1,8 @@
+import "pkl:xml"
+
+res1 = xml.CData("The <drumroll>Dodos</drumroll>")
+res2 = xml.CData("Malicious CDATA input: ]]><script>doMaliciousThing();</script>")
+
+output {
+  renderer = new xml.Renderer {}
+}

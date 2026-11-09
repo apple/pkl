@@ -1,0 +1,4 @@
+res1 {
+  age = 30
+}
+res2 = "Type constraint `this > 0` violated. Value: -30"

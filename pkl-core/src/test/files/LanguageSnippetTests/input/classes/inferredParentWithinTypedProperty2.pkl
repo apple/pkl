@@ -1,0 +1,13 @@
+import "pkl:test"
+
+class Foo {
+  bar: Listing<Int> = new { 1; 2; 3 }
+  foo: Listing<Int>(length < 4) = bar
+}
+
+hidden obj: Foo = new {
+  foo = new { 4 }
+}
+
+first = test.catchOrNull(() -> obj.foo)
+second = test.catchOrNull(() -> obj.foo)

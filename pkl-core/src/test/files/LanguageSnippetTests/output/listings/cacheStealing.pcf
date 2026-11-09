@@ -1,0 +1,8 @@
+foo1 {
+  "hello"
+}
+foo2 {
+  "hello"
+}
+res1 = true
+res2 = true

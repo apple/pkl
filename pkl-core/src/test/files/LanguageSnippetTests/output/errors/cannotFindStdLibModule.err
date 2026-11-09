@@ -1,0 +1,45 @@
+–– Pkl Error ––
+Cannot find standard library module `pkl:nonExisting`.
+
+x | import "pkl:nonExisting"
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotFindStdLibModule#nonExisting (file:///$snippetsDir/input/errors/cannotFindStdLibModule.pkl)
+
+Available standard library modules:
+pkl:analyze
+pkl:base
+pkl:Benchmark
+pkl:Command
+pkl:DocPackageInfo
+pkl:DocsiteInfo
+pkl:EvaluatorSettings
+pkl:json
+pkl:jsonnet
+pkl:math
+pkl:net
+pkl:pklbinary
+pkl:platform
+pkl:Project
+pkl:protobuf
+pkl:ref
+pkl:reflect
+pkl:release
+pkl:semver
+pkl:settings
+pkl:shell
+pkl:syntax
+pkl:test
+pkl:xml
+pkl:yaml
+
+x | res1 = nonExisting.bar
+           ^^^^^^^^^^^
+at cannotFindStdLibModule#res1 (file:///$snippetsDir/input/errors/cannotFindStdLibModule.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,0 +1,7 @@
+local source {
+  foo = "foo"
+}
+
+res: Listing = new {
+  ...source
+}

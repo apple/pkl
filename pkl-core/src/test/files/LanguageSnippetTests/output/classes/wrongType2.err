@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `Int`, but got type `String`.
+Value: "42"
+
+x | age: Int
+         ^^^
+at wrongType2#Person.age (file:///$snippetsDir/input/classes/wrongType2.pkl)
+
+x | age = "42"
+          ^^^^
+at wrongType2#pigeon.age (file:///$snippetsDir/input/classes/wrongType2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

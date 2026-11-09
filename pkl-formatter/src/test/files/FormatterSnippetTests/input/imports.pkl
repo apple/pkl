@@ -1,0 +1,22 @@
+// top level comment
+
+import "@foo/Foo.pkl" as foo
+import* "**.pkl" /* ** */ // glob import
+import "pkl:math"
+
+import "package://example.com/myPackage@1.0.0#/Qux.pkl"
+import* "file:///tmp/*.pkl"
+
+
+import "https://example.com/baz.pkl"
+// module2 leading
+// module2 leading 2
+import "module2.pkl"
+import "pkl:reflect"
+import "..."
+import* "@foo/**.pkl"
+import "@bar/Bar.pkl"
+import "Module12.pkl"
+/* module 11 leading */
+import "module11.pkl" /* module11 block */ // trailing module11
+import "module1.pkl"

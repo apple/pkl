@@ -1,0 +1,3 @@
+import "typeAliasConstraint2.pkl"
+
+typealias MyTypeAlias = Any(this is typeAliasConstraint2.MyClass)

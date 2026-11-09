@@ -1,0 +1,13 @@
+res1 {
+  bar = null
+  baz = true
+}
+res2 = true
+res3 {
+  bar {
+    bar = null
+    baz = true
+  }
+  baz = true
+}
+res4 = true

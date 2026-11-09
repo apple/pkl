@@ -1,0 +1,56 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:xml"
+import "pkl:jsonnet"
+import "pkl:protobuf"
+
+local class TypedTestCase {
+  property: String
+  elements: Listing<String>
+  entries: Mapping<String, String>
+}
+
+examples {
+  for (format, renderer in new Mapping {
+    local converters: Mixin<ValueRenderer> = new {
+      converters {
+        [String] = (str) -> new RenderDirective { text = "(\(str))" }
+      }
+    }
+    ["pcf"] = new PcfRenderer {} |> converters
+    ["json"] = new JsonRenderer {} |> converters
+    ["jsonnet"] = new jsonnet.Renderer {} |> converters
+    ["plist"] = new PListRenderer {} |> converters
+    ["properties"] = new PropertiesRenderer {
+      converters {
+        [Listing] = (it: Listing) -> it.join(",")
+      }
+    } |> converters
+    ["textproto"] = new protobuf.Renderer {
+      converters {
+        [Dynamic] = (it) ->
+          (it) {
+            elements = it.elements.toList().toListing()
+            entries = it.entries.toMap().toMapping()
+          }.toTyped(TypedTestCase)
+        [String] = (it) -> new RenderDirective { text = "(\(it))"}
+      }
+    }
+    ["xml"] = new xml.Renderer {} |> converters
+    ["yaml"] = new YamlRenderer {} |> converters
+  }) {
+    [format] {
+      renderer.renderDocument(new Dynamic {
+        property = "value"
+        elements {
+          "element1"
+          "element2"
+        }
+        entries {
+          ["key1"] = "value1"
+          ["key2"] = "value2"
+        }
+      })
+    }
+  }
+}

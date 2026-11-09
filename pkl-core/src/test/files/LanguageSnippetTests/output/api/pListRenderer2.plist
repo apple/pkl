@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>res1</key>
+    <string>gnirts</string>
+    <key>res2</key>
+    <false/>
+    <key>res3</key>
+    <integer>43</integer>
+    <key>res4</key>
+    <real>2.33</real>
+    <key>res5</key>
+    <string>3 s</string>
+    <key>res6</key>
+    <string>4 mb</string>
+    <key>res8</key>
+    <array>
+        <integer>43</integer>
+        <false/>
+        <string>gnirts</string>
+    </array>
+    <key>res9</key>
+    <array>
+        <string>gnirts</string>
+        <false/>
+        <integer>43</integer>
+        <integer>5</integer>
+    </array>
+    <key>res10</key>
+    <dict>
+        <key>eno</key>
+        <false/>
+        <key>owt</key>
+        <real>2.33</real>
+        <key>eerht</key>
+        <string>3 s</string>
+    </dict>
+    <key>res11</key>
+    <array>
+        <string>gnirts</string>
+        <false/>
+        <integer>43</integer>
+        <integer>5</integer>
+    </array>
+    <key>res12</key>
+    <dict>
+        <key>eman</key>
+        <string>noegip</string>
+        <key>ega</key>
+        <integer>31</integer>
+        <key>eerht</key>
+        <string>3 s</string>
+    </dict>
+    <key>res13</key>
+    <dict>
+        <key>name</key>
+        <string>noegip</string>
+        <key>age</key>
+        <integer>31</integer>
+        <key>other</key>
+        <string>rehto</string>
+    </dict>
+    <key>res14</key>
+    <dict>
+        <key>name</key>
+        <string>noegip</string>
+        <key>age</key>
+        <integer>41</integer>
+    </dict>
+    <key>res15</key>
+    <string>String</string>
+    <key>res16</key>
+    <array>
+        <integer>2</integer>
+        <integer>5</integer>
+        <integer>2</integer>
+    </array>
+</dict>
+</plist>

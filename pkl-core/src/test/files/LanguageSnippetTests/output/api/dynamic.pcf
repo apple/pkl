@@ -1,0 +1,61 @@
+facts {
+  ["length()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}
+examples {
+  ["getProperty()"] {
+    "Pigeon"
+    "Pigeon"
+    42
+    "Cannot find property `other` in object of type `Dynamic`."
+  }
+  ["getPropertyOrNull()"] {
+    "Pigeon"
+    "Pigeon"
+    42
+    null
+  }
+  ["hasProperty()"] {
+    true
+    true
+    true
+    false
+    true
+    false
+    true
+  }
+  ["toMap()"] {
+    Map("name", "Pigeon", "age", 42)
+    Map("prop1", "prop1", "prop2", "prop2", "name", "Pigeon", "age", 42)
+    Map("prop1", "prop1", "prop2", "prop2", "name", "Pigeon", "age", 42)
+  }
+  ["toList()"] {
+    List()
+    List("one", "two")
+    List("one one", "two two")
+  }
+  ["toTyped()"] {
+    new {
+      name = "Pigeon"
+      age = 42
+    }
+    new {
+      name = "Pigeon"
+      age = 43
+    }
+    new {
+      name = "Default"
+      age = 42
+    }
+    "Pigeon"
+    "Tried to read property `age` but its value is undefined."
+    "Class `Pair` is not a subtype of `Typed`."
+    "Cannot instantiate abstract class `ValueRenderer`."
+  }
+}

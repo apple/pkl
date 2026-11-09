@@ -1,0 +1,7 @@
+notConst = 1
+
+class Foo {
+  foo = notConst
+}
+
+foo = new Foo {}

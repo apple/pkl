@@ -1,0 +1,5 @@
+module foo.bar
+
+import "typeMismatchHelper.pkl"
+
+mod: module = typeMismatchHelper

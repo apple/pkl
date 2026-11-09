@@ -1,0 +1,13 @@
+open module pklbinaryTest
+
+import "pkl:pklbinary"
+
+output {
+  // ensure no output file written for this specific module, only children that add properties
+  when (module.toMap().isEmpty) {
+    text = ""
+  } else {
+    value = if (module.toMap().isEmpty) "" else module
+    renderer = new pklbinary.Renderer {}
+  }
+}

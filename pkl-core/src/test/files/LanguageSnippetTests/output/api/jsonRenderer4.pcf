@@ -1,0 +1,55 @@
+res1 = "123"
+res2 = "1.23"
+res3 = "false"
+res4 = "\"pigeon\""
+res6 = """
+  [
+    "pigeon",
+    "parrot"
+  ]
+  """
+res7 = """
+  [
+    "pigeon",
+    "parrot"
+  ]
+  """
+res8 = """
+  {
+    "name": "pigeon",
+    "age": 42
+  }
+  """
+res9 = """
+  [
+    "pigeon",
+    "parrot"
+  ]
+  """
+res10 = """
+  {
+    "name": "pigeon",
+    "age": 42
+  }
+  """
+res11 = """
+  {
+    "name": "pigeon",
+    "age": 42
+  }
+  """
+res12 = """
+  {
+    "name": "pigeon",
+    "age": 42
+  }
+  """
+res13 = "null"
+res14 = "Cannot render value of type `Duration` as JSON. Value: 1.min"
+res15 = "Cannot render value of type `Pair` as JSON. Value: Pair(1, 2)"
+res16 = "Cannot render value of type `DataSize` as JSON. Value: 1.mb"
+res17 = "Cannot render value of type `Class` as JSON. Value: jsonRenderer4#Person"
+res18 = "Cannot render value of type `TypeAlias` as JSON. Value: jsonRenderer4#Email"
+res19 = "Cannot render value of type `Function1` as JSON. Value: new Function1 {}"
+res20 = "ouch"
+res21 = "Cannot render value of type `IntSeq` as JSON. Value: IntSeq(1, 4)"

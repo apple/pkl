@@ -1,0 +1,37 @@
+// Covers ElementsLiteralNode's specializations for amending a `VmNull` whose default value is
+// each of the underlying parent types it supports.
+import "pkl:test"
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { a = 1 })
+res1 = (dynamic) {
+  "b"
+  "c"
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "a" })
+res2 = (listing) {
+  "b"
+  "c"
+}
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Listing { "a" })
+local amendedFun = (fun) {
+  "b"
+}
+res3 = amendedFun.apply()
+
+// error: mapping cannot have an element
+res4 = test.catch(() -> (Null(new Mapping { ["a"] = 1 })) { "b" })
+
+// error: listing cannot have a property (other than `default`)
+res5 = test.catch(() -> (Null(new Listing { "a" })) { "b"; foo = "bar" })
+
+// error: function amendment with wrong parameter count
+local twoArgFun = (x, y) -> new Listing {}
+res6 = test.catch(() -> (Null(twoArgFun)) { x -> "b" })
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res7 = test.catch(() -> (Null(42)) { "b" })

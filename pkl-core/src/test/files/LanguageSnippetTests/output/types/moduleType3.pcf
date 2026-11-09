@@ -1,0 +1,18 @@
+bar {
+  prop = "hi"
+  myself {
+    prop = "hi again"
+    myself = null
+    prop2 = 15
+  }
+  prop2 = 15
+}
+baz {
+  prop = "hi"
+  myself {
+    prop = "hihihi"
+    myself = null
+    prop2 = "hihihihi"
+  }
+  prop2 = "hihi"
+}

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Number of `Map()` arguments must be a multiple of two: `Map(key1, value1, key2, value2, ..., keyN, valueN)`
+
+x | res1 = Map(1, 2, 3)
+                      ^
+at wrongNumberOfMapArguments#res1 (file:///$snippetsDir/input/errors/wrongNumberOfMapArguments.pkl)

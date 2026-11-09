@@ -1,0 +1,14 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["basic"] {
+    if (true) 1 else 2
+    if (false) 1 else if (false) 2 else 3
+  }
+
+  ["non-boolean condition"] {
+    module.catch(() -> if ("") true else false)
+    module.catch(() -> if (0) true else false)
+    module.catch(() -> if (null) true else false)
+  }
+}

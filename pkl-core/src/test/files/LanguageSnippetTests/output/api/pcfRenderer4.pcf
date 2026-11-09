@@ -1,0 +1,42 @@
+res1 = "123"
+res2 = "1.23"
+res3 = "false"
+res4 = "\"pigeon\""
+res5 = "List(\"pigeon\", \"parrot\")"
+res6 = "Set(\"pigeon\", \"parrot\")"
+res7 = "Map(\"name\", \"pigeon\", \"age\", 42)"
+res8 = """
+  {
+    "pigeon"
+    "parrot"
+  }
+  """
+res9 = """
+  {
+    ["name"] = "pigeon"
+    ["age"] = 42
+  }
+  """
+res10 = """
+  {
+    name = "pigeon"
+    age = 42
+  }
+  """
+res11 = """
+  {
+    name = "pigeon"
+    age = 42
+  }
+  """
+res12 = "1.min"
+res13 = "1.mb"
+res14 = "null"
+res15 = "Pair(1, 2)"
+res16 = "IntSeq(1, 4)"
+res17 = "IntSeq(1, 4).step(-2)"
+res18 = "Regex(\"a.*b\")"
+res19 = "Cannot render value of type `Class` as Pcf. Value: pcfRenderer4#Person"
+res20 = "Cannot render value of type `TypeAlias` as Pcf. Value: pcfRenderer4#Email"
+res21 = "Cannot render value of type `Function1` as Pcf. Value: new Function1 {}"
+res22 = "ouch"

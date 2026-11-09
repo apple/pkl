@@ -1,0 +1,36 @@
+foo1 {
+  bar {
+    x = "original"
+  }
+}
+foo2 {
+  bar {
+    x = "original"
+  }
+}
+res1 = "original"
+foo3 {
+  bar {
+    x = "original"
+  }
+}
+foo4 {
+  bar {
+    x = "original"
+  }
+  l = "override"
+}
+res2 = "original"
+foo5 {
+  l = "original"
+  bar {
+    x = "original"
+  }
+}
+foo6 {
+  l = "original"
+  bar {
+    x = "original"
+  }
+}
+res3 = "original"

@@ -1,0 +1,46 @@
+= Pkl XXX Release Notes
+:version: XXX (e.g., 0.9)
+:version-minor: XXX (e.g., 0.9.0)
+:release-date: XXX (e.g., July 11, 2018)
+:version-next: XXX (e.g., 0.10)
+:version-next-date: XXX (e.g., July 2018)
+
+link:partial$intro.adoc[role=include]
+
+== Highlights [small]#💖#
+
+News you don't want to miss.
+
+=== XXX
+
+== Noteworthy [small]#🎶#
+
+Ready when you need them.
+
+=== XXX
+
+== Breaking Changes [small]#💔#
+
+Things to watch out for when upgrading.
+
+=== XXX
+
+== Miscellaneous [small]#🐸#
+
+* XXX
+* XXX
+
+== Bug Fixes [small]#🐜#
+
+* XXX
+* XXX
+
+== Security Fixes [small]#🔒#
+
+The following security vulnerabilities were fixed:
+
+== Contributors [small]#🙏#
+
+We would like to thank the contributors to this release (in alphabetical order):
+
+* XXX

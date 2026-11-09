@@ -1,0 +1,184 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.runtime;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
+import java.util.function.BiFunction;
+import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+
+/**
+ * Corresponds to `pkl.base#Object|pkl.base#Function`. The lexical scope is a chain of
+ * `VmObjectLike` instances.
+ */
+public abstract class VmObjectLike extends VmValue {
+  /** The frame that was active when this object was instantiated. * */
+  protected final MaterializedFrame enclosingFrame;
+
+  protected @Nullable Object extraStorage;
+
+  protected VmObjectLike(MaterializedFrame enclosingFrame) {
+    this.enclosingFrame = enclosingFrame;
+  }
+
+  public final MaterializedFrame getEnclosingFrame() {
+    return enclosingFrame;
+  }
+
+  public final @Nullable Object getEnclosingReceiver() {
+    return VmUtils.getReceiverOrNull(enclosingFrame);
+  }
+
+  public final @Nullable VmObjectLike getEnclosingOwner() {
+    return VmUtils.getOwnerOrNull(enclosingFrame);
+  }
+
+  public final boolean hasExtraStorage() {
+    return extraStorage != null;
+  }
+
+  public Object getExtraStorage() {
+    assert extraStorage != null;
+    return extraStorage;
+  }
+
+  public final void setExtraStorage(@Nullable Object extraStorage) {
+    this.extraStorage = extraStorage;
+  }
+
+  public boolean isModuleObject() {
+    return false;
+  }
+
+  /**
+   * Returns the parent object in the prototype chain. For each concrete subclass X of VmObjectLike,
+   * the exact return type of this method is `X|VmTyped`.
+   */
+  public abstract @Nullable VmObjectLike getParent();
+
+  /** Always prefer this method over `getMembers().containsKey(key)`. */
+  @TruffleBoundary
+  public abstract boolean hasMember(Object key);
+
+  /** Always prefer this method over `getMembers().get(key)`. */
+  @TruffleBoundary
+  public abstract @Nullable ObjectMember getMember(Object key);
+
+  /** Returns the declared members of this object. */
+  public abstract UnmodifiableEconomicMap<Object, ObjectMember> getMembers();
+
+  /**
+   * Tells if it's impossible to determine if this is object describes a scope during parse time.
+   *
+   * <p>An amended lambda hides a new lexical scope if there are also no params.
+   *
+   * <p>Assuming {@code foo} is a lambda, this snippet:
+   *
+   * <pre>{@code
+   * qux = 3
+   *
+   * foo {
+   *   bar = qux
+   * }
+   * }</pre>
+   *
+   * Desugars to:
+   *
+   * <pre>{@code
+   * qux = 3
+   *
+   * foo = () -> (super.foo.apply()) {
+   *   bar = qux
+   * }
+   *
+   * }</pre>
+   *
+   * So, {@code qux} is <i>two</i> levels higher, not one. However, it's not possible to figure this
+   * out at parse time alone.
+   *
+   * <p>This method tells if we need to skip this object when traversing up lexical scopes.
+   */
+  public boolean isParseTimeInvisibleScope() {
+    return false;
+  }
+
+  /**
+   * Reads from the properties cache for this object. The cache contains the values of all members
+   * defined in this object or an ancestor thereof which have been requested with this object as the
+   * receiver.
+   */
+  @TruffleBoundary
+  public abstract @Nullable Object getCachedValue(Object key);
+
+  /**
+   * Writes to the properties cache for this object. The cache contains the values of all members
+   * defined in this object or an ancestor thereof which have been requested with this object as the
+   * receiver.
+   */
+  @TruffleBoundary
+  public abstract void setCachedValue(Object key, Object value);
+
+  /**
+   * Prefer this method over {@link #getCachedValue} if the value is not required. (There is no
+   * point in calling this method to determine whether to call {@link #getCachedValue}.)
+   */
+  @TruffleBoundary
+  public abstract boolean hasCachedValue(Object key);
+
+  public abstract VmObjectCursor properties();
+
+  public abstract VmObjectCursor properties(CursorOption option);
+
+  public abstract VmObjectCursor elements();
+
+  public abstract VmObjectCursor elements(CursorOption option);
+
+  public abstract VmObjectCursor elements(EnumSet<CursorOption> options);
+
+  public abstract VmObjectCursor entries();
+
+  public abstract VmObjectCursor entries(CursorOption option);
+
+  public abstract VmObjectCursor entries(EnumSet<CursorOption> options);
+
+  public abstract VmObjectCursor members();
+
+  public abstract VmObjectCursor members(CursorOption option);
+
+  /**
+   * Iterates over member definitions in order of their definition, from the top of the prototype
+   * chain downwards. If a member is defined multiple times, each occurrence is visited. Local
+   * properties are not visited. If an invocation of {@code consumer} returns {@code false}, the
+   * remaining members are not visited, and {@code false} is returned. Otherwise, all members are
+   * visited, and {@code true} is returned.
+   *
+   * <p>Unlike {@link #members()}, this will also visit hidden properties.
+   */
+  public abstract boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer);
+
+  /** Forces shallow or recursive (deep) evaluation of this object. */
+  public abstract void force(boolean allowUndefinedValues, boolean recurse);
+
+  /**
+   * Exports this object to an external representation. Does not export local, hidden, or external
+   * properties
+   */
+  public abstract Object export();
+}

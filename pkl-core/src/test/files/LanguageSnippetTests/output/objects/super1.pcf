@@ -1,0 +1,12 @@
+parent {
+  x = 1
+  y = 2
+}
+child {
+  x = 4
+  y = 3
+}
+grandChild {
+  x = 5
+  y = 12
+}

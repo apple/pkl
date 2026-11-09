@@ -1,0 +1,13 @@
+open module my.library
+
+name: String = "Pigeon"
+
+pigeon: Person = new Person {
+  name = "Pigeon"
+}
+
+function say(msg: String) = msg
+
+open class Person {
+  name: String(!isEmpty)
+}

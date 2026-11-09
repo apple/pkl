@@ -1,0 +1,17 @@
+–– Pkl Error ––
+Cannot find property `name` in object of type `pkl.ref#Reference<reference24#D, Int | reference24#Bird>`.
+
+xx | res = myRef.name
+           ^^^^^^^^^^
+at reference24#res (file:///$snippetsDir/input/errors/reference24.pkl)
+
+Cannot find property `name` in type `Int | reference24#Bird`.
+	└─ Cannot find property `name` in type `Int`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

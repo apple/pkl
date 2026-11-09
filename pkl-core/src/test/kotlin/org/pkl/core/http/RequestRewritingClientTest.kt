@@ -1,0 +1,481 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.http
+
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.net.URI
+import java.net.http.HttpClient as JdkHttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublishers
+import java.net.http.HttpResponse.BodyHandlers
+import java.time.Duration
+import java.util.Locale
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatList
+import org.junit.jupiter.api.Test
+import org.pkl.commons.test.FakeHttpResponse
+import org.pkl.core.util.GlobResolver
+import org.pkl.core.util.IoUtils
+
+@Suppress("UastIncorrectHttpHeaderInspection")
+class RequestRewritingClientTest {
+  private val captured = RequestCapturingClient()
+  private val client =
+    RequestRewritingClient(
+      "Pkl",
+      Duration.ofSeconds(42),
+      -1,
+      captured,
+      mapOf(URI("https://foo/") to URI("https://bar/")),
+      mapOf(),
+    )
+  private val exampleUri = URI("https://example.com/foo/bar.html")
+  private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
+
+  @Test
+  fun `fills in missing User-Agent header`() {
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
+
+    assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("Pkl")
+  }
+
+  @Test
+  fun `User-Agent from configured headers takes precedence`() {
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(URI("https://foo/") to URI("https://bar/")),
+        mapOf(IoUtils.doubleStarGlob to mapOf("User-Agent" to listOf("My-User-Agent"))),
+      )
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
+    assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("My-User-Agent")
+  }
+
+  @Test
+  fun `overrides existing User-Agent headers`() {
+    val request =
+      HttpRequest.newBuilder(exampleUri)
+        .header("User-Agent", "Agent 1")
+        .header("User-Agent", "Agent 2")
+        .build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("Pkl")
+  }
+
+  @Test
+  fun `fills in missing request timeout`() {
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.timeout()).hasValue(Duration.ofSeconds(42))
+  }
+
+  @Test
+  fun `leaves existing request timeout intact`() {
+    val request = HttpRequest.newBuilder(exampleUri).timeout(Duration.ofMinutes(33)).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.timeout()).hasValue(Duration.ofMinutes(33))
+  }
+
+  @Test
+  fun `fills in missing HTTP version`() {
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.version()).hasValue(JdkHttpClient.Version.HTTP_2)
+  }
+
+  @Test
+  fun `leaves existing HTTP version intact`() {
+    val request = HttpRequest.newBuilder(exampleUri).version(JdkHttpClient.Version.HTTP_1_1).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.version()).hasValue(JdkHttpClient.Version.HTTP_1_1)
+  }
+
+  @Test
+  fun `leaves default method intact`() {
+    val request = HttpRequest.newBuilder(exampleUri).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.method()).isEqualTo("GET")
+  }
+
+  @Test
+  fun `leaves explicit method intact`() {
+    val request = HttpRequest.newBuilder(exampleUri).DELETE().build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.method()).isEqualTo("DELETE")
+  }
+
+  @Test
+  fun `leaves body publisher intact`() {
+    val publisher = BodyPublishers.ofString("body")
+    val request = HttpRequest.newBuilder(exampleUri).PUT(publisher).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.bodyPublisher().get()).isSameAs(publisher)
+  }
+
+  @Test
+  fun `rewrites port 0 if test port is set`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf(), mapOf())
+    val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.uri().port).isEqualTo(5000)
+  }
+
+  @Test
+  fun `leaves port 0 intact if no test port is set`() {
+    val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.uri().port).isEqualTo(0)
+  }
+
+  @Test
+  fun `matches rewrite rule`() {
+    fun assertThatRewriteMatches(uri: String, rule: String) =
+      assertThat(RequestRewritingClient.matchesRewriteRule(URI(uri), URI(rule)))
+        .`as`("$uri matches $rule")
+
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    assertThatRewriteMatches("HTTPS://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    assertThatRewriteMatches("HTTPS://WWW.FOO.COM/path/to/qux.html", "https://www.foo.com/").isTrue
+
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/path/")
+      .isTrue
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/PATH/")
+      .isFalse
+    assertThatRewriteMatches("https://www.foo.com", "https://www.foo.com/").isFalse
+
+    assertThatRewriteMatches(
+        "https://www.foo.com/path/to/qux.html?foo&bar",
+        "https://www.foo.com/path/to/qux.html?foo&bar",
+      )
+      .isTrue
+    assertThatRewriteMatches(
+        "https://www.foo.com/path/to/qux.html?foo&baz",
+        "https://www.foo.com/path/to/qux.html?foo&bar",
+      )
+      .isFalse
+
+    assertThatRewriteMatches(
+        "https://www.foo.com/path/to/qux.html?foo&bar#qux",
+        "https://www.foo.com/path/to/qux.html?foo&bar#q",
+      )
+      .isTrue
+    assertThatRewriteMatches(
+        "https://www.foo.com/path/to/qux.html?foo&bar#qux",
+        "https://www.foo.com/path/to/qux.html?foo&bar#w",
+      )
+      .isFalse
+    assertThatRewriteMatches(
+        "https://www.foo.com/path/to/qux.html?foo&bar",
+        "https://www.foo.com/path/to/qux.html?foo&bar#w",
+      )
+      .isFalse
+
+    assertThatRewriteMatches("https:///", "https:///").isTrue
+    assertThatRewriteMatches("https:///", "http:///").isFalse
+
+    // userinfo
+    assertThatRewriteMatches("https://foo@foo.com/", "http://foo.com/").isFalse
+    assertThatRewriteMatches("https://foo@foo.com/", "http://foo@foo.com/").isFalse
+    assertThatRewriteMatches("https://foo@foo.com/", "http://FOO@foo.com/").isFalse
+  }
+
+  @Test
+  fun `rewrites URIs`() {
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://FOO.COM/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://FOO.COM/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/qux/baz/")),
+        )
+      )
+      .isEqualTo("https://bar.com/qux/baz/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/qux/baz/")),
+        )
+      )
+      .isEqualTo("https://bar.com/qux/baz/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz?qux=foo#corge",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz?qux=foo#corge")
+
+    assertThat(
+        rewrittenRequest(
+          "https://fooey@foo.com/bar/baz",
+          mapOf(URI("https://fooey@foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - longest rewrite wins`() {
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/qux/bar/baz",
+          mapOf(
+            URI("https://foo.com/") to URI("https://bar.com/"),
+            URI("https://foo.com/qux") to URI("https://corge.com/"),
+          ),
+        )
+      )
+      .isEqualTo("https://corge.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - hostname is always lowercased`() {
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://FOO.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://FOO.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - scheme is always lowercased`() {
+    assertThat(
+        rewrittenRequest(
+          "HTTPS://foo.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://FOO.com/bar/baz",
+          mapOf(URI("HTTPS://foo.com/") to URI("HTTPS://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - host with capital I under tr_TR locale`() {
+    // Under tr_TR, "INDEX.COM".toLowerCase() becomes "ındex.com".
+    val previous = Locale.getDefault()
+    Locale.setDefault(Locale.forLanguageTag("tr-TR"))
+    try {
+      assertThat(
+          rewrittenRequest(
+            "https://INDEX.COM/foo/bar",
+            mapOf(URI("https://index.com/") to URI("https://bar.com/")),
+          )
+        )
+        .isEqualTo("https://bar.com/foo/bar")
+    } finally {
+      Locale.setDefault(previous)
+    }
+  }
+
+  private fun rewrittenRequest(uri: String, rules: Map<URI, URI>): String {
+    val captured = RequestCapturingClient()
+    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules, mapOf())
+    val request = HttpRequest.newBuilder(URI(uri)).build()
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+    return captured.request.uri().toString()
+  }
+
+  @Test
+  fun `adds configured headers for matching URI patterns`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to mapOf("x-one" to listOf("one")),
+          GlobResolver.toRegexPattern("https://example.com/foo/**") to
+            mapOf("x-two" to listOf("two-a", "two-b")),
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThatList(captured.request.headers().allValues("x-one")).containsExactly("one")
+    assertThatList(captured.request.headers().allValues("x-two")).containsExactly("two-a", "two-b")
+  }
+
+  @Test
+  fun `does not add configured headers for non-matching URI patterns`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        mapOf(
+          GlobResolver.toRegexPattern("https://foo.com/**") to mapOf("x-foo" to listOf("foo")),
+          GlobResolver.toRegexPattern("https://bar.com/**") to mapOf("x-bar" to listOf("bar")),
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThat(captured.request.headers().firstValue("x-foo")).isEmpty
+    assertThat(captured.request.headers().firstValue("x-bar")).isEmpty
+  }
+
+  @Test
+  fun `appends configured header values to existing request headers`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to
+            mapOf("x-foo" to listOf("rule-a", "rule-b"))
+        ),
+      )
+    val request =
+      HttpRequest.newBuilder(URI("https://example.com/foo/bar")).header("x-foo", "request").build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThatList(captured.request.headers().allValues("x-foo"))
+      .containsExactly("request", "rule-a", "rule-b")
+  }
+
+  @Test
+  fun `configured headers wins over configured user-agent header`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to
+            mapOf("user-agent" to listOf("My User Agent"))
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
+
+    assertThatList(captured.request.headers().allValues("user-agent"))
+      .containsExactly("My User Agent")
+  }
+
+  @Test
+  fun `closes intermediate redirect response body before following the redirect`() {
+    val intermediateBody = CloseTrackingInputStream()
+    val delegate =
+      ReplayingClient(
+        FakeHttpResponse<InputStream>().apply {
+          statusCode = 302
+          headers = httpHeaders("Location", "/bar.pkl")
+          body = intermediateBody
+        },
+        FakeHttpResponse<InputStream>(),
+      )
+    val client =
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, delegate, mapOf(), mapOf())
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo.pkl")).build()
+
+    client.send(request, BodyHandlers.ofInputStream(), NoopChecker)
+
+    assertThat(intermediateBody.closed)
+      .`as`("intermediate 3xx response body must be closed to release its connection")
+      .isTrue
+  }
+
+  /** @ByteArrayInputStream that records whether it was closed. */
+  private class CloseTrackingInputStream : ByteArrayInputStream(ByteArray(0)) {
+    var closed = false
+      private set
+
+    override fun close() {
+      closed = true
+      super.close()
+    }
+  }
+}

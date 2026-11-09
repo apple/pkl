@@ -1,0 +1,9 @@
+amends ".../input-helper/modules/Birds2.pkl"
+
+const local myBirdName = "Birdy"
+
+local class MyBird extends Bird {
+  name: String = myBirdName
+}
+
+bird = new MyBird {}

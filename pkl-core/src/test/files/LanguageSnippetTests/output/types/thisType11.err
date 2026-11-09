@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `this` type from const method `thisType11#func.<function#1>`.
+
+x | const func = (elem: this) -> elem
+                        ^^^^
+at thisType11#func.<function#1> (file:///$snippetsDir/input/types/thisType11.pkl)

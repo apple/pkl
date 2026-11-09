@@ -1,0 +1,125 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklJavaExecutable")
+  id("pklNativeExecutable")
+  id("pklHtmlValidator")
+  alias(libs.plugins.kotlinxSerialization)
+}
+
+executable {
+  mainClass = "org.pkl.doc.Main"
+  name = "pkldoc"
+  javaName = "jpkldoc"
+  documentationName = "Pkldoc CLI"
+  publicationName = "pkldoc"
+  javaPublicationName = "jpkldoc"
+  website = "https://pkl-lang.org/main/current/pkl-doc/index.html"
+}
+
+dependencies {
+  // CliDocGeneratorOptions exposes pkl-commons-cli and pkl-base
+  api(projects.pklCore)
+  api(projects.pklCommonsCli)
+
+  implementation(projects.pklCommons)
+  implementation(projects.pklParser)
+  implementation(libs.commonMark)
+  implementation(libs.commonMarkTables)
+  implementation(libs.kotlinxHtml)
+  implementation(libs.kotlinxSerializationJson) {
+    // use our own Kotlin version
+    // (exclude is supported both for Maven and Gradle metadata, whereas dependency constraints
+    // aren't)
+    exclude(group = "org.jetbrains.kotlin")
+  }
+  implementation(libs.kotlinxCoroutinesCore) { exclude(group = "org.jetbrains.kotlin") }
+
+  testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.jimfs)
+
+  // Graal.JS
+  testImplementation(libs.graalSdk)
+  testImplementation(libs.graalJs)
+
+  // used by `pklJavaExecutable` plugin (ideally this would be inferred automatically)
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
+}
+
+publishing {
+  publications {
+    named<MavenPublication>("library") {
+      pom {
+        url.set("https://github.com/apple/pkl/tree/main/pkl-doc")
+        description.set("Documentation generator for Pkl modules.")
+      }
+    }
+  }
+}
+
+tasks.test {
+  inputs.dir("src/test/files/DocGeneratorTest/input")
+  inputs.dir("src/test/files/DocGeneratorTest/output")
+  inputs.dir("src/test/files/DocMigratorTest/input")
+  inputs.dir("src/test/files/DocMigratorTest/output")
+  inputs.dir("src/test/files/SinglePackageTest/input")
+  inputs.dir("src/test/files/SinglePackageTest/output")
+}
+
+val testNativeExecutable =
+  tasks.register<Test>("testNativeExecutable") {
+    dependsOn(tasks.assembleNative)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    inputs.dir("src/test/files/DocGeneratorTest/input")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
+    systemProperty("org.pkl.doc.NativeExecutableTest", "true")
+
+    filter { includeTestsMatching("org.pkl.doc.NativeExecutableTest") }
+  }
+
+val testJavaExecutable =
+  tasks.register<Test>("testJavaExecutable") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    dependsOn(tasks.javaExecutable)
+    inputs.dir("src/test/files/DocGeneratorTest/input")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
+    systemProperty("org.pkl.doc.JavaExecutableTest", "true")
+
+    filter { includeTestsMatching("org.pkl.doc.JavaExecutableTest") }
+  }
+
+tasks.check { dependsOn(testJavaExecutable) }
+
+tasks.testNative { dependsOn(testNativeExecutable) }
+
+tasks.withType<NativeImageBuild> { extraNativeImageArgs.add("-H:IncludeResources=org/pkl/doc/.*") }
+
+tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.doc.Main") } }
+
+htmlValidator { sources = files("src/test/files/DocGeneratorTest/output") }
+
+// Tests usually read expected output files, but may write missing ones before failing.
+// If that happens, delay validation until after any test tasks in the graph.
+tasks.validateHtml { mustRunAfter(tasks.test, testJavaExecutable, testNativeExecutable) }

@@ -1,0 +1,7 @@
+class Person {
+  name: String
+}
+
+output {
+  value = new Person {}
+}

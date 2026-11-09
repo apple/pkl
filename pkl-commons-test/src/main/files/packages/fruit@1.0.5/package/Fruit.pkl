@@ -1,0 +1,3 @@
+module fruit.Fruit
+
+name: String

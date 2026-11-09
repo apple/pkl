@@ -1,0 +1,102 @@
+.--indent
+[%collapsible]
+====
+Default: `"  "` (two spaces) +
+Example: `"\t"` (one tab) +
+The characters to use for indenting generated source code.
+====
+
+.-o, --output-dir
+[%collapsible]
+====
+Default: (not set) +
+Example: `generated/` +
+The directory where generated source code is placed.
+Relative paths are resolved against the working directory.
+====
+
+.--generate-spring-boot
+[%collapsible]
+====
+Default: (not set) +
+Flag that indicates to generate config classes for use with Spring Boot.
+====
+
+.--spring-boot-configuration-properties
+[%collapsible]
+====
+Default: (none) +
+Example: `my.mod#Server=server` +
+Explicitly configures which generated classes receive the Spring Boot `@ConfigurationProperties` annotation, and with what prefix.
+Only applies if `--generate-spring-boot` is set.
+
+The key is the Pkl class name (for example, `my.mod` for a module class, or `my.mod#Server` for a class within a module), and the value is the annotation's prefix.
+An empty value generates a bare `@ConfigurationProperties` annotation.
+
+If this option is omitted, the annotations are inferred from the structure of the input modules.
+If this option is set, no annotations are inferred, and only the specified classes are annotated.
+
+Repeat this option to define multiple mappings.
+Values must be valid Spring Boot configuration properties prefixes.
+====
+
+.--implement-serializable
+[%collapsible]
+====
+Default: (not set) +
+Flag that indicates to generate classes that implement `java.io.Serializable`.
+====
+
+.--add-generated-annotation
+[%collapsible]
+====
+Default: (not set) +
+Flag that indicates to add the `org.pkl.config.java.Generated` annotation to generated types.
+====
+
+.--rename
+[%collapsible]
+====
+Default: (none) +
+Example: `foo.=com.example.foo.` +
+Allows to change default class and package names (derived from Pkl module names) in the generated code.
+
+When you need the generated class or package names to be different from the default names derived from the Pkl module names, you can define a rename mapping, where the key is the original Pkl module name prefix, and the value is its replacement.
+When you do, the generated code's `package` declarations, class names, as well as file locations, will be modified according to this mapping.
+
+The prefixes are replaced literally, which means that dots at the end are important.
+If you want to rename packages only, in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
+
+----
+// Assuming the following arguments:
+--rename com.foo.=x  // Dot on the left only
+--rename org.bar=y.  // Dot on the right only
+--rename net.baz=z   // No dots
+
+// The following renames will be made:
+"com.foo.bar" -> "xbar"       // Target prefix merged into the suffix
+"org.bar.baz" -> "y..baz"     // Double dot, invalid name
+"net.baz.qux" -> "z.qux"      // Looks okay, but...
+"net.bazqux"  -> "zqux"       // ...may cut the name in the middle.
+----
+
+When computing the appropriate target name, the longest matching prefix is used:
+
+----
+// Assuming the following arguments:
+--rename com.foo.Main=w.Main
+--rename com.foo.=x.
+--rename com.=y.
+--rename =z.
+
+// The following renames will be made:
+com.foo.Main -> w.Main
+com.foo.bar  -> x.bar
+com.baz.qux  -> y.baz.qux
+org.foo.bar  -> z.org.foo.bar
+----
+
+Repeat this option to define multiple mappings.
+Keys can be arbitrary strings, including an empty string.
+Values must be valid dot-separated fully qualified class name prefixes, possibly terminated by a dot.
+====

@@ -1,0 +1,26 @@
+examples {
+  ["invalid attribute"] {
+    "Invalid XML 1.1 attribute name: `bar baz`"
+  }
+  ["colons are allowed"] {
+    "<bar xs:myTag=\"my tag value\"></bar>"
+  }
+  ["escaping attribute values"] {
+    "<bar bar=\"buz&quot;&gt;&lt;script&gt;maliciousThing();&lt;/script&gt;\"></bar>"
+  }
+  ["invalid element name"] {
+    "Invalid XML 1.1 element name: `bar>`"
+  }
+  ["invalid empty element name"] {
+    "Invalid XML 1.1 element name: ``"
+  }
+  ["invalid empty attribute name"] {
+    "Invalid XML 1.1 attribute name: ``"
+  }
+  ["Unicode element name is allowed"] {
+    "<😍😎😡></😍😎😡>"
+  }
+  ["Unicode attribute name is allowed"] {
+    "<div 😍😎😡=\"bar\"></div>"
+  }
+}

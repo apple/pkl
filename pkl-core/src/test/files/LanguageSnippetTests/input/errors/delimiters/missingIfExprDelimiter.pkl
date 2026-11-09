@@ -1,0 +1,3 @@
+res1 = if (cond 3 else 4
+res2 = 42
+

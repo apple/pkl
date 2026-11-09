@@ -1,0 +1,15 @@
+import "pkl:ref"
+
+class A {
+  foo: String | Int | Boolean
+}
+
+class D extends ref.AbstractDomain {
+  function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
+}
+local d: D = new {}
+
+local test = ref.Reference<D, A>(d, "").foo
+testInterpolation = "test:\(test)"
+
+// this tests that the interpolation appears in the output when renderReference throws

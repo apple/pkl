@@ -1,0 +1,8 @@
+{
+  FOO: 'a',
+  bar: 'b', // bar,
+  baz: {
+    qux: 'c', // qux,
+    quux: 'c',
+  },
+}

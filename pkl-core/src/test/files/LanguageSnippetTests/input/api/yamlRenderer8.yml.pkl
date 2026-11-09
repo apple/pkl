@@ -1,0 +1,33 @@
+// Test that non-String scalars can be rendered as YAML map keys.
+mappingInt = new Mapping {
+  [5] = "abc"
+  [10] = "def"
+  [20] = "ghi"
+}
+
+mapInt = mappingInt.toMap()
+
+mappingFloat = new Mapping {
+  [5.0] = "abc"
+  [10.5] = "def"
+  [20.999999990] = "ghi"
+}
+
+mapFloat = mappingFloat.toMap()
+
+mappingBool = new Mapping {
+  [true] = "abc"
+  [false] = "def"
+}
+
+mapBool = mappingBool.toMap()
+
+mappingNull = new Mapping {
+  [null] = "abc"
+}
+
+mapNull = mappingNull.toMap()
+
+output {
+  renderer = new YamlRenderer {}
+}

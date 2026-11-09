@@ -1,0 +1,70 @@
+a1 = List()
+a2 = Set()
+a3 = new Listing {}
+
+b1 = new Dynamic {}
+b2 = new Person {}
+b3 = new Mapping {}
+b4 = Map()
+
+c1 {
+  List()
+  Set()
+  new Listing {}
+}
+c2 {
+  x1 = List()
+  x2 = Set()
+  x3 = new Listing {}
+}
+
+d1 {
+  new Dynamic {}
+  new Person {}
+  new Mapping {}
+  Map()
+}
+d2 {
+  x1 = new Dynamic {}
+  x2 = new Person {}
+  x3 = new Mapping {}
+  x4 = Map()
+}
+
+e1 {
+  new {
+    List()
+    Set()
+    new Listing {}
+  }
+}
+e2 {
+  new Listing {
+    List()
+    Set()
+    new Listing {}
+  }
+}
+
+f1 {
+  new {
+    new Dynamic {}
+    new Person {}
+    new Mapping {}
+    Map()
+  }
+}
+f2 {
+  new Listing {
+    new Dynamic {}
+    new Person {}
+    new Mapping {}
+    Map()
+  }
+}
+
+class Person
+
+output {
+  renderer = new YamlRenderer {}
+}

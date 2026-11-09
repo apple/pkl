@@ -1,0 +1,30 @@
+–– Pkl Error ––
+fail
+
+x | const local wrong = throw("fail")
+                        ^^^^^^^^^^^^^
+at fullStackTraces#wrong (file:///$snippetsDir/input/errors/fullStackTraces.pkl)
+
+x | const hidden v1 = wrong
+                      ^^^^^
+at fullStackTraces#v1 (file:///$snippetsDir/input/errors/fullStackTraces.pkl)
+
+x | const function f1() = v1
+                          ^^
+at fullStackTraces#f1 (file:///$snippetsDir/input/errors/fullStackTraces.pkl)
+
+x | const local function f2() = f1()
+                                ^^^^
+at fullStackTraces#f2 (file:///$snippetsDir/input/errors/fullStackTraces.pkl)
+
+xx | foo = f2()
+           ^^^^
+at fullStackTraces#Foo.foo (file:///$snippetsDir/input/errors/fullStackTraces.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

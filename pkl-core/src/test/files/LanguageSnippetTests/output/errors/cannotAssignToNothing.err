@@ -1,0 +1,21 @@
+–– Pkl Error ––
+Expected `nothing`, but got type `String`.
+
+`nothing` is typically used as the return type of functions that throw errors.
+Value: "foo"
+
+x | value: nothing = "foo"
+           ^^^^^^^
+at cannotAssignToNothing#value (file:///$snippetsDir/input/errors/cannotAssignToNothing.pkl)
+
+x | value: nothing = "foo"
+                     ^^^^^
+at cannotAssignToNothing#value (file:///$snippetsDir/input/errors/cannotAssignToNothing.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

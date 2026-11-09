@@ -1,0 +1,31 @@
+examples {
+  ["equality"] {
+    true
+    false
+    false
+    false
+  }
+  ["inequality"] {
+    false
+    true
+    true
+    true
+  }
+  ["addition"] {
+    List(1, "two", 3, 1, "two", 4)
+    List()
+    List(1, "two", 3)
+    List(1, "two", 4)
+    List(1, "two", 3, 1, "two", 4)
+    List()
+    List(1, "two", 3)
+    List(1, "two", 4)
+  }
+  ["subscript"] {
+    1
+    "two"
+    3
+    "Element index `-1` is out of range `0`..`2`. Collection: List(1, \"two\", 3)"
+    "Element index `3` is out of range `0`..`2`. Collection: List(1, \"two\", 3)"
+  }
+}

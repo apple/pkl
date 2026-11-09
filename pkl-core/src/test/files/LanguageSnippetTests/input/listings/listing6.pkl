@@ -1,0 +1,46 @@
+amends "../snippetTest.pkl"
+
+local class TheClass {
+  local isLongString = (it) -> it.length > 10
+
+  prop: Listing<String(isLongString)>
+}
+
+local class TheClass2 {
+  hidden requiredLength: Int
+
+  prop: Listing<String(length > requiredLength)>
+}
+
+examples {
+  ["name resolution in type constraint"] {
+    // should be able to resolve `isLongString` when checking this member
+    module.catch(() -> new TheClass {
+      prop {
+        "too short"
+      }
+    }.prop[0])
+
+    new TheClass {
+      prop {
+        "this is long enough"
+      }
+    }
+  }
+  ["resolves the receiver"] {
+    local base: TheClass2 = new {
+      requiredLength = 5
+    }
+    (base) {
+      prop {
+        "long enough"
+      }
+    }
+    module.catch(() -> (base) {
+      requiredLength = 10
+      prop {
+        "too short"
+      }
+    }.prop[0])
+  }
+}

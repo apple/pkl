@@ -1,0 +1,6 @@
+–– Pkl Error ––
+A non-local object property cannot have a type annotation.
+
+x | name: String = "parrot"
+          ^^^^^^
+at invalidAmend3#name (file:///$snippetsDir/input/modules/invalidAmend3.pkl)

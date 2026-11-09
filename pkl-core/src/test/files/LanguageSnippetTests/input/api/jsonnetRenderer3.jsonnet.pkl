@@ -1,0 +1,46 @@
+import "pkl:jsonnet"
+
+class Person {
+  name: String
+  age: Int
+}
+
+res1 = "string"
+res2 = true
+res3 = 42
+res4 = 1.23
+res5 = 3.s
+res6 = 4.mb
+res8 = List("string", true, 42)
+res9 = Set("string", true, 42)
+res10 = Map("string", true, 42, 1.23)
+res11 = new Listing { "string"; true; 42 }
+res12 = new Mapping { ["name"] = "pigeon"; ["age"] = 30 }
+res13 = new Dynamic { name = "pigeon"; age = 30 }
+res14 = new Person { name = "pigeon"; age = 30 }
+res15 = null
+res16 = Pair(1, 2)
+res17 = IntSeq(1, 4)
+
+output {
+  renderer = new jsonnet.Renderer {
+    converters {
+      [String] = (it) -> "converted"
+      [Boolean] = (it) -> "converted"
+      [Int] = (it) -> "converted"
+      [Float] = (it) -> "converted"
+      [Duration] = (it) -> "converted"
+      [DataSize] = (it) -> "converted"
+      [List] = (it) -> "converted"
+      [Set] = (it) -> "converted"
+      [Map] = (it) ->"converted"
+      [Listing] = (it) ->"converted"
+      [Mapping] = (it) ->"converted"
+      [Dynamic] = (it) ->"converted"
+      [Person] = (it) -> "converted"
+      [Null] = (it) -> "converted"
+      [Pair] = (it) -> "converted"
+      [IntSeq] = (it) -> "converted"
+    }
+  }
+}

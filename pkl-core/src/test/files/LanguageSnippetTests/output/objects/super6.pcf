@@ -1,0 +1,12 @@
+res1 {
+  ["Feathers"] {
+    ["pigeon"] {
+      name = "Pigeon"
+      tag = "Feathers"
+    }
+    ["cormorant"] {
+      name = "Cormorant"
+      tag = "Feathers"
+    }
+  }
+}

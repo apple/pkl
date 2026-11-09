@@ -1,0 +1,34 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["set of listing"] {
+    local s1 = Set(
+      new Listing { 1; 2; 3 }
+    ) as Set<Listing<Int>>
+    local s2 = Set(
+      new Listing { "one"; "two"; "three" }
+    ) as Set<Listing<Int>>
+    s1.first[0]
+    module.catchOrNull(() -> s2.first) == null
+    module.catch(() -> s2.first[0])
+  }
+  ["listing"] {
+    local l = new Listing { 1; 2; 3 } as Listing<String>
+    module.catchOrNull(() -> l) == null
+    module.catch(() -> l[0])
+  }
+  ["mapping"] {
+    local m1 = new Mapping {
+      ["hi"] = 1
+      ["bye"] = 2
+    } as Mapping<String, String>
+    module.catchOrNull(() -> m1) == null
+    module.catch(() -> m1["hi"])
+    module.catch(() -> m1["bye"])
+    local m2 = new Mapping {
+      ["hi"] = 1
+      ["bye"] = 2
+    } as Mapping<Int, Int>
+    module.catch(() -> m2)
+  }
+}

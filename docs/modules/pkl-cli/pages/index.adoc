@@ -1,0 +1,1495 @@
+= CLI
+include::ROOT:partial$component-attributes.adoc[]
+:uri-homebrew: https://brew.sh
+:uri-mise: https://mise.jdx.dev
+:uri-winget: https://learn.microsoft.com/en-us/windows/package-manager/
+
+:uri-pkl-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-aarch64&e=bin
+:uri-pkl-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-amd64&e=bin
+:uri-pkl-linux-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-aarch64&e=bin
+:uri-pkl-alpine-download: {uri-sonatype-snapshot-download}&a=pkl-cli-alpine-linux-amd64&e=bin
+:uri-pkl-windows-download: {uri-sonatype-snapshot-download}&a=pkl-cli-windows-amd64&e=exe
+:uri-pkl-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-java&e=jar
+
+ifdef::is-release-version[]
+:uri-pkl-macos-aarch64-download: {github-releases}/pkl-macos-aarch64
+:uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
+:uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
+:uri-pkl-alpine-download: {github-releases}/pkl-alpine-linux-amd64
+:uri-pkl-windows-download: {github-releases}/pkl-windows-amd64.exe
+:uri-pkl-java-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-java/{pkl-artifact-version}/pkl-cli-java-{pkl-artifact-version}.jar
+endif::[]
+
+:uri-pkl-stdlib-docs-settings: {uri-pkl-stdlib-docs}/settings/
+:uri-pkl-cli-main-sources: {uri-github-tree}/pkl-cli/src/main/kotlin/org/pkl/cli
+:uri-pkl-cli-CliEvaluatorOptions: {uri-pkl-cli-main-sources}/CliEvaluatorOptions.kt
+:uri-certificates: {uri-github-tree}/pkl-commons-cli/src/main/resources/org/pkl/commons/cli/commands
+:uri-ci-artifacts: https://s01.oss.sonatype.org/content/groups/public/org/pkl-lang/
+
+The `pkl` command-line interface (CLI) evaluates Pkl modules and writes their output to the console or a file.
+For interactive development, the CLI includes a Read-Eval-Print Loop (REPL).
+
+[[installation]]
+== Installation
+
+The CLI comes in multiple flavors:
+
+* Native macOS executable for aarch64 (tested on macOS 10.15)
+* Native Linux executable for amd64
+* Native Linux executable for aarch64
+* Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
+* Native Windows executable for amd64 (tested on Windows Server 2022)
+* Java executable (tested with Java 17/21 on macOS and Oracle Linux)
+
+On macOS, Linux, and Windows, we recommend using the native executables.
+They are self-contained, start up instantly, and run complex Pkl code much faster than the Java executable.
+
+.What is the Difference Between the Linux and Alpine Linux Executables?
+[NOTE]
+====
+The Linux executable is dynamically linked against _glibc_ and _libstdc{plus}{plus}_,
+whereas, the Alpine Linux executable is statically linked against _musl libc_ and _libstdc{plus}{plus}_.
+====
+
+The Java executable works on multiple platforms and has a smaller binary size than the native executables.
+However, it requires a Java 17 (or higher) runtime on the system path, and has a noticeable startup delay.
+
+All flavors are built from the same codebase and undergo the same automated testing.
+Except where noted otherwise, the rest of this page discusses the native executables.
+
+[[homebrew]]
+=== Homebrew
+
+On macOS and Linux, release versions can be installed with {uri-homebrew}[Homebrew].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+----
+brew install pkl
+----
+
+To update Pkl, run:
+
+[source,shell]
+----
+brew update
+brew upgrade pkl   # or just `brew upgrade`
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
+
+[[mise]]
+=== Mise
+
+On macOS, Linux, and Windows, release versions can be installed with {uri-mise}[Mise].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+[subs="+attributes"]
+----
+# Install and activate Pkl globally
+mise use -g pkl@{pkl-version}
+
+# Install and activate Pkl locally
+mise use pkl@{pkl-version}
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
+
+[[winget]]
+=== Windows Package Manager
+
+On Windows, release versions can be installed with {uri-winget}[Windows Package Manager].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+----
+winget install Apple.Pkl
+----
+
+To update Pkl, run:
+
+[source,shell]
+----
+winget upgrade Apple.Pkl
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
+
+[[download]]
+=== Download
+
+Development and release versions can be downloaded and installed manually.
+
+=== macOS Executable
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl '{uri-pkl-macos-aarch64-download}'
+chmod +x pkl
+./pkl --version
+----
+
+This should print something similar to:
+
+[source]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (macOS, native)
+----
+
+[[linux-executable]]
+=== Linux Executable
+
+The Linux executable is dynamically linked against _glibc_ and _libstdc{plus}{plus}_ for the amd64 and aarch64 architectures.
+For a statically linked executable, see <<Alpine Linux Executable>>.
+
+On aarch64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl '{uri-pkl-linux-aarch64-download}'
+chmod +x pkl
+./pkl --version
+----
+
+On amd64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl '{uri-pkl-linux-amd64-download}'
+chmod +x pkl
+./pkl --version
+----
+
+This should print something similar to:
+
+[source]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (Linux, native)
+----
+
+[[alpine-linux-executable]]
+=== Alpine Linux Executable
+
+The Alpine Linux executable is statically linked against _musl libc_ and _libstdc{plus}{plus}_.
+For a dynamically linked executable, see <<Linux Executable>>.
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl '{uri-pkl-alpine-download}'
+chmod +x pkl
+./pkl --version
+----
+
+This should print something similar to:
+
+[source]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (Linux, native)
+----
+
+NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
+
+[[windows-executable]]
+=== Windows Executable
+
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-windows-download}' -OutFile pkl.exe
+.\pkl --version
+----
+
+This should print something similar to:
+
+[source]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (Windows 10.0, native)
+----
+
+NOTE: We currently do not support the aarch64 architecture for Windows.
+
+[[java-executable]]
+=== Java Executable
+
+The Java executable is a jar that can be executed directly on macOS, Linux, and Windows.
+
+It requires `java` to be installed, and available on `$PATH`.
+
+[tabs]
+====
+macOS/Linux::
++
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o jpkl '{uri-pkl-java-download}'
+chmod +x jpkl
+./jpkl --version
+----
+
+Windows::
++
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-java-download}' -OutFile jpkl.bat
+.\jpkl --version
+----
+====
+
+This should print something similar to:
+
+[source,shell]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (macOS 14.2, Java 17.0.10)
+----
+
+NOTE: The Java executable is named `jpkl`.
+
+[[usage]]
+== Usage
+
+*Synopsis:* `pkl <subcommand> [<options>] [<args>]`
+
+For a brief description of available options, run `pkl -h`.
+
+NOTE: The Java executable is named `jpkl`.
+
+[[command-eval]]
+=== `pkl eval`
+
+*Synopsis:* `pkl eval [<options>] [<modules>]`
+
+Evaluate the given Pkl `<modules>` and produce their rendering results.
+
+<modules>::
+The absolute or relative URIs of the modules to evaluate.
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+[[format]]
+.-f, --format
+[%collapsible]
+====
+Default: (none) +
+Example: `yaml` +
+The output format to generate.
+The default output renderer for a module supports the following formats:
+
+* `json`
+* `jsonnet`
+* `pcf`
+* `plist`
+* `properties`
+* `textproto` (deprecated in Pkl 0.33)
+* `xml`
+* `yaml`
+
+If no format is set, the default renderer chooses `pcf`.
+====
+
+[[output-path]]
+.-o, --output-path
+[%collapsible]
+====
+Default: (none) +
+Example: "config.yaml" +
+The file path where the output file is placed.
+Relative paths are resolved against the project directory.
+
+// suppress inspection "AsciiDocLinkResolve"
+This option is mutually exclusive with link:#multiple-file-output-path[`--multiple-file-output-path`].
+If neither option is set, each module's `output.text` is written to standard output.
+
+If multiple source modules are given, placeholders can be used to map them to different output files.
+The following placeholders are supported:
+
+`%\{moduleDir}`:::
+The directory path of the module, relative to the working directory.
+Only available when evaluating file-based modules.
+
+`%\{moduleName}`:::
+The simple module name as inferred from the module URI.
+For hierarchical URIs such as `+file:///foo/bar/baz.pkl+`, this is the last path segment without file extension.
+
+`%\{outputFormat}`:::
+The requested output format.
+Only available if `--format` is set.
+
+If multiple source modules are mapped to the same output file, their outputs are concatenated.
+By default, module outputs are separated with `---`, as in a YAML stream.
+// suppress inspection "AsciiDocLinkResolve"
+The separator can be customized using the link:#module-output-separator[`--module-output-separator`] option.
+====
+
+[[module-output-separator]]
+.--module-output-separator
+[%collapsible]
+====
+Default: `---` (as in a YAML stream) +
+The separator to use when multiple module outputs are written to the same file, or to standard output.
+====
+
+[[multiple-file-output-path]]
+.-m, --multiple-file-output-path
+[%collapsible]
+====
+Default: (none) +
+Example: "output/" +
+The directory where a module's output files are placed.
+
+Setting this option causes Pkl to evaluate a module's `output.files` property
+and write the files specified therein.
+Within `output.files`, a key determines a file's path relative to `--multiple-file-output-path`,
+and a value determines the file's contents.
+
+// suppress inspection "AsciiDocLinkResolve"
+This option cannot be used together with any of the following:
+
+* xref:output-path[`--output-path`]
+* xref:expression[`--expression`]
+
+// suppress inspection "AsciiDocLinkResolve"
+This option supports the same placeholders as link:#output-path[`--output-path`].
+
+Examples:
+
+[source,shell]
+----
+# Write files to `output/`
+pkl eval -m output/ myFiles.pkl
+
+# Write files to the current working directory
+pkl eval -m . myFiles.pkl
+
+# Write foo.pkl's files to the `foo` directory, and bar.pkl's files
+# to the `bar` directory
+pkl eval -m "%{moduleName}" foo.pkl bar.pkl
+----
+
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output]
+in the language reference.
+====
+
+[[expression]]
+.-x, --expression
+[%collapsible]
+====
+Default: (none) +
+The expression to be evaluated within the module.
+
+This option causes Pkl to evaluate the provided expression instead of the module's `output.text` or `output.files` properties.
+The resulting value is then stringified, and written to either standard out, or the designated output file.
+
+For example, consider the following Pkl module:
+
+.pigeon.pkl
+[source%tested,{pkl}]
+----
+metadata {
+  species = "Pigeon"
+}
+----
+
+The following command prints `Pigeon` to the console:
+
+[source,shell]
+----
+pkl eval -x metadata.species pigeon.pkl
+# => Pigeon
+----
+
+Setting an `--expression` flag can be thought of as substituting the expression in place of a module's `output.text` property.
+Running the previous command is conceptually the same as if the below module were evaluated without the `--expression` flag:
+
+[source,pkl]
+----
+metadata {
+  species = "Pigeon"
+}
+
+output {
+  text = metadata.species.toString()
+}
+----
+====
+
+[[power-assertions-eval]]
+.--power-assertions, --no-power-assertions
+[%collapsible]
+====
+Default: enabled +
+Enable or disable power assertions for detailed assertion failure messages.
+When enabled, type constraint failures will show intermediate values in the assertion expression.
+Use `--no-power-assertions` to disable this feature if you prefer simpler output or better performance.
+====
+
+[[profile-cpu-output]]
+.--profile-cpu-output
+[%collapsible]
+====
+Default: (none) +
+The file to write profiler output to. Omitting this option disables CPU profiling entirely. +
+
+The CPU profiler writes output in https://github.com/google/pprof[pprof] format.
+====
+
+[[profile-cpu-sample-period]]
+.--profile-cpu-sample-period
+[%collapsible]
+====
+Default: 10 +
+The sampling duration for the CPU sampler, in milliseconds.
+====
+
+This command also takes <<common-options, common options>>.
+
+[[command-server]]
+=== `pkl server`
+
+*Synopsis:* `pkl server`
+
+Run as a server that communicates over standard input/output.
+
+This option is used for embedding Pkl in an external client, such as xref:swift:ROOT:index.adoc[pkl-swift] or xref:go:ROOT:index.adoc[pkl-go].
+
+[[command-test]]
+=== `pkl test`
+
+*Synopsis:* `pkl test [<options>] [<modules>]`
+
+Evaluate the given `<modules>` as _tests_, producing a test report and appropriate exit code.
+
+Renderers defined in test files will be ignored by the `test` command.
+
+Tests that result in writing `pkl-expected.pcf` files are considered failing tests.
+If these are the only failures, the command exits with exit code 10.
+Otherwise, failures result in exit code 1.
+
+<modules>::
+The absolute or relative URIs of the modules to test.
+The module must extend `pkl:test`.
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+[[junit-reports]]
+.--junit-reports
+[%collapsible]
+====
+Default: (none) +
+Example: `./build/test-results` +
+Directory where to store JUnit reports.
+
+By default, one file will be created for each test module. This behavior can be changed with `--junit-aggregate-reports`, which will instead create a single JUnit report file with all test results.
+
+No JUnit reports will be generated if this option is not present.
+====
+
+[[junit-aggregate-reports]]
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
+====
+
+[[junit-aggregate-suite-name]]
+.--junit-aggregate-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
+====
+
+[[overwrite]]
+.--overwrite
+[%collapsible]
+====
+Force generation of expected examples. +
+The old expected files will be deleted if present.
+====
+
+[[power-assertions-test]]
+.--power-assertions, --no-power-assertions
+[%collapsible]
+====
+Default: enabled +
+Enable or disable power assertions for detailed assertion failure messages.
+When enabled, test failures will show intermediate values in the assertion expression, making it easier to understand why a test failed.
+Use `--no-power-assertions` to disable this feature if you prefer simpler output.
+====
+
+[[test-reporter]]
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
+====
+
+This command also takes <<common-options, common options>>.
+
+[[command-run]]
+=== `pkl run`
+
+*Synopsis:* `pkl run [<options>] [<module>] [<command options>]`
+
+Evaluate a <<cli-tools,CLI command>> defined by `<module>`.
+
+<module>::
+The absolute or relative URIs of the command module to run.
+The module must extend `pkl:Command`.
+Relative URIs are resolved against the working directory.
+
+<command options>::
+Additional CLI options and arguments defined by `<module>`.
+
+This command also takes <<common-options, common options>>.
+
+[[command-repl]]
+=== `pkl repl`
+
+*Synopsis:* `pkl repl [<options>]`
+
+Start a REPL session.
+
+This command takes <<common-options, common options>>.
+
+[[command-project-package]]
+=== `pkl project package`
+
+*Synopsis:* `pkl project package <project-dir>`
+
+This command prepares a project to be published as a package.
+Given a project directory, it creates the following artifacts:
+
+* `<name>@<version>` - the package metadata file
+* `<name>@<version>.sha256` - the dependency metadata file's SHA-256 checksum
+* `<name>@<version>.zip` - the package archive
+* `<name>@<version>.zip.sha256` - the package archive's SHA-256 checksum
+
+These artifacts are expected to be published to an HTTPS server, such that the metadata and zip files can be fetched at their expected locations.
+
+The package ZIP should be available at the `packageZipUrl` location specified in the `PklProject` file
+The package metadata should be available at the package URI's derived HTTPS URL.
+For example, given package `package://example.com/mypackage@1.0.0`, the metadata file should be published to `+https://example.com/mypackage@1.0.0+`.
+
+During packaging, this command runs these additional steps:
+
+1. Run the package's API tests, if any are defined.
+2. Validates that if the package has already been published, that the package's metadata is identical. This step can be skipped using the `--skip-publish-check` flag.
+
+Examples:
+
+[source,shell]
+----
+# Search the current working directory for a project, and package it.
+pkl project package
+
+# Package all projects within the `packages/` directory to `.out`, writing each package's artifacts to its own directory.
+pkl project package --output-path ".out/%{name}@%{version}/" packages/*/
+----
+
+==== Options
+
+.--output-path
+[%collapsible]
+====
+Default: `.out`
+
+The directory to write artifacts to.
+Accepts the following placeholders:
+
+`%\{name}`:: The name of the package
+`%\{version}`:: The version of the package
+====
+
+.--skip-publish-check
+[%collapsible]
+====
+Skips checking whether a package has already been published with different contents.
+
+By default, the packager will check whether a package at the same version has already been published.
+If the package has been published, it validates that the package's metadata is identical to the locally generated metadata.
+====
+
+.--junit-reports
+[%collapsible]
+====
+Default: (none) +
+Example: `./build/test-results` +
+Directory where to store JUnit reports.
+
+No JUnit reports will be generated if this option is not present.
+====
+
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
+====
+
+.--junit-aggregate-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
+====
+
+.--overwrite
+[%collapsible]
+====
+Force generation of expected examples. +
+The old expected files will be deleted if present.
+====
+
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
+====
+
+.--install
+[%collapsible]
+====
+Install the built package into the module cache dir.
+====
+
+This command also takes <<common-options,common options>>.
+
+[[command-project-resolve]]
+=== `pkl project resolve`
+
+*Synopsis:* `pkl project resolve <project-dir>`
+
+This command takes the dependencies of a project, and writes the resolved versions a file at path `PklProject.deps.json`.
+
+It builds a dependency list, taking the latest minor version in case of version conflicts.
+For more details, see the xref:language-reference:index.adoc#resolving-dependencies[resolving dependencies] section of the language reference.
+
+Examples:
+[source,shell]
+----
+# Search the current working directory for a project, and resolve its dependencies.
+pkl project resolve
+
+# Resolve dependencies for all projects within the `packages/` directory.
+pkl project resolve packages/*/
+----
+
+==== Options
+
+This command accepts <<common-options,common options>>.
+
+[[command-download-package]]
+=== `pkl download-package`
+
+*Synopsis*: `pkl download-package <package-uri>`
+
+This command downloads the specified packages to the cache directory.
+If the
+package already exists in the cache directory, this command is a no-op.
+
+==== Options
+
+This command accepts <<common-options,common options>>.
+
+[[command-analyze-imports]]
+=== `pkl analyze imports`
+
+*Synopsis*: `pkl analyze imports [<modules>]`
+
+This command builds a graph of imports declared in the provided modules.
+
+This is a lower level command that is meant to be useful for Pkl-related tooling.
+For example, this command feeds into the xref:pkl-gradle:index.adoc[] to determine if tasks are considered up-to-date or not.
+
+This command produces an object with two properties, `imports` and `resolvedImports`.
+
+The `imports` property is a mapping of a module's absolute URI, to the set of imports declared within that module.
+
+The `resolvedImports` property is a mapping of a module's absolute URI (as stated in `imports`), to the resolved absolute URI that might be useful for fetching the module's contents.
+For example, a xref:language-reference:index.adoc#local-dependencies[local dependency] import will have an in-language URI with scheme `projectpackage:`, and may have resolved URI with scheme `file:` (assuming that the project is file-based).
+
+Examples:
+
+[source,shell]
+----
+# Analyze the imports of a single module
+pkl analyze imports myModule.pkl
+
+# Same as the previous command, but output in JSON.
+pkl analyze imports -f json myModule.pkl
+
+# Analyze imports of all modules declared within src/
+pkl analyze imports src/*.pkl
+----
+
+<modules>::
+The absolute or relative URIs of the modules to analyze. Relative URIs are resolved against the working directory.
+
+==== Options
+
+.-f, --format
+[%collapsible]
+====
+Same meaning as <<format>> in <<command-eval>>.
+====
+
+.-o, --output-path
+[%collapsible]
+====
+Same meaning as <<output-path>> in <<command-eval>>.
+====
+
+This command also takes <<common-options,common options>>.
+
+[[command-shell-completion]]
+=== `pkl shell-completion`
+
+*Synopsis*: `pkl shell-completion <shell>`
+
+Generate shell completion script. Supported shells are: `bash`, `zsh`, `fish`.
+
+[source,shell]
+----
+# Generate shell completion script for bash
+pkl shell-completion bash
+
+# Generate shell completion script for zsh
+pkl shell-completion zsh
+----
+
+[[command-format]]
+=== `pkl format`
+
+*Synopsis*: `pkl format <options> [<paths>]`
+
+This command formats or checks formatting of Pkl files. +
+Exit codes:
+
+* 0: No violations found or files were updated.
+* 1: An unexpected error happened (ex.: IO error)
+* 11: Violations were found (when running without `--write`).
+
+If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
+
+By default, the input files are formatted, and written to standard out.
+
+==== Options
+
+.--grammar-version
+[%collapsible]
+====
+Default: `2` (latest version) +
+Select the grammar compatibility version for the formatter.
+New versions are created for each backward incompatible grammar change.
+====
+
+.-s, --silent
+[%collapsible]
+====
+Skip writing to standard out. Mutually exclusive with `--diff-name-only`.
+====
+
+.-w, --write
+[%collapsible]
+====
+Format files in place, overwriting them. Implies `--diff-name-only`.
+====
+
+.--diff-name-only
+[%collapsible]
+====
+Write the path of files with formatting violations to stdout.
+====
+
+[[common-options]]
+=== Common options
+
+The <<command-eval>>, <<command-test>>, <<command-run>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, <<command-download-package>>, and <<command-analyze-imports>> commands support the following common options:
+
+include::../../pkl-cli/partials/cli-common-options.adoc[]
+
+The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-download-package>>, and <<command-analyze-imports>> commands also take the following options:
+
+include::../../pkl-cli/partials/cli-project-options.adoc[]
+
+[[root-options]]
+=== Root options
+
+The root `pkl` command supports the following options:
+
+.-v, --version
+[%collapsible]
+====
+Display version information.
+====
+
+== Evaluating Modules
+
+Say we have the following module:
+
+[[config.pkl]]
+.config.pkl
+[source,{pkl}]
+----
+bird {
+  species = "Pigeon"
+  diet = "Seeds"
+}
+parrot = (bird) {
+  species = "Parrot"
+  diet = "Berries"
+}
+----
+
+To evaluate this module and write its output to standard output, run:
+
+[source,shell]
+----
+pkl eval config.pkl
+----
+
+You should see the following output:
+
+[source,{pkl}]
+----
+bird {
+  species = "Pigeon"
+  diet = "Seeds"
+}
+parrot {
+  species = "Parrot"
+  diet = "Berries"
+}
+----
+
+To render output as JSON, YAML, XML property list, or Java properties,
+use `--format json`, `--format yaml`, `--format plist`, or `--format properties`, respectively.
+
+To control the output format from within Pkl code, see xref:language-reference:index.adoc#module-output[Module Output].
+
+To read a source module from standard input rather than a file, use `-` as a module name:
+
+[source,shell]
+----
+echo mod2.pkl | pkl eval mod1.pkl - mod3.pkl
+----
+
+This is especially useful in environments that don't support `/dev/stdin`.
+
+To write output to a file rather than standard output, use `--output-path some/file.ext`.
+
+[[batch-evaluation]]
+=== Batch Evaluation
+
+Multiple modules can be evaluated at once:
+
+[source,shell]
+----
+pkl eval config1.pkl config2.pkl config3.pkl
+----
+
+To write module outputs to separate output files, `--output-path` supports the following placeholders:
+
+`%\{moduleDir}`:: the directory path of the source module, relative to the working directory (only available for file based modules)
+`%\{moduleName}`:: the last path segment of the module URI, without file extension
+`%\{outputFormat}`:: the target format (only available if `--format` is set)
+
+The following run produces three JSON files placed next to the given source modules:
+
+[source,shell]
+----
+pkl eval --format=json --output-path=%{moduleDir}/%{moduleName}.json config1.pkl config2.pkl config3.pkl
+----
+
+If multiple module outputs are written to the same file, or to standard output, their outputs are concatenated.
+By default, module outputs are separated with `---`, as in a YAML stream.
+The separator can be customized using the `--module-output-separator` option.
+
+[[cli-tools]]
+== Implementing CLI Tools
+
+CLI tools can be implemented in Pkl by modules extending the `pkl:Command` module.
+With `pkl:Command`, you can define a script in Pkl that is executed by your shell, providing a better CLI experience.
+
+Regular evaluation requires use of xref:language-reference:index.adoc#resources[resources] like properties and evironment variables to provide parameters:
+[source,bash]
+----
+$ pkl eval script.pkl -p username=me -p password=password
+----
+
+Commands provide a native, familiar CLI experience:
+[source,bash]
+----
+$ pkl run script.pkl --username=admin --password=hunter2
+$ ./script.pkl --username=admin --password=hunter2
+----
+
+Pkl commands have a few properties that distinguish them from standard module evaluation:
+
+* Users provide input to commands using familiar command line idioms, providing a better experience than deriving inputs from xref:language-reference:index.adoc#resources[resources] like external properties or environment variables.
+* Commands can dynamically import modules when they are specified as command line options.
+* Commands may write to standard output (via `output.text` or `output.bytes`) and the filesystem (via `output.files`) in the same evaluation.
+* Command file output may write to any absolute path (not only relative to the `--multiple-file-output-path` option).
+** Relative output paths are written relative to the current working directory (or `--working-dir`, if specified).
+** Paths of output file are printed to the command's standard error.
+
+IMPORTANT: Users of `pkl run` must be aware of the security implications of this behavior.
+Using `pkl eval` prevents accidental overwrites by not allowing absolute paths, but `pkl run` does not offer this protection.
+Commands may write to any path the invoking user has permissions to modify.
+
+Commands are implemented as regular modules and declare their supported command line flags and positional arguments using a class with annotated properties.
+
+=== Defining Commands
+
+Commands are defined by creating a module that extends `pkl:Command`:
+
+[source,pkl%tested]
+.my-tool.pkl
+----
+/// This doc comment becomes part of the command's CLI help!
+/// Markdown formatting is **allowed!**
+extends "pkl:Command"
+
+options: Options // <1>
+
+class Options {
+  // Define CLI flags/arguments...
+}
+
+// Regular module code...
+----
+<1> Re-declaration of the `options` property's type.
+
+Like `pkl eval`, when a command completes without an evaluation error the process exits successfully (exit code 0).
+Commands can return a failure using `throw` (exit code 1), but otherwise may not control the exit code.
+
+Other than the differences listed above, commands behave like any other Pkl module.
+For example, there is no way to execute other programs or make arbitrary HTTP requests.
+If additional functionality is desired, xref:language-reference:index.adoc#external-readers[external readers] may be used to extends Pkl's capabilities.
+
+=== Command Options
+
+Each property of a command's options class becomes a command line option.
+Properties with the `local`, `hidden`, `fixed`, and/or `const` modifiers are not parsed as options
+A property's doc comment, if present, becomes the corresponding option's CLI help description.
+Doc comments are interpreted as Markdown text and formatted nicely when displayed to users.
+Properties must have xref:language-reference:index.adoc#type-annotations[type annotations] to determine how they are parsed.
+
+Properties may be xref:language-reference:index.adoc#annotations[annotated] to influence how they behave:
+
+* Properties annotated with link:{uri-stdlib-Command-Flag}[`@Flag`] become CLI flags named `--<property name>` that accept a value.
+* `Boolean` properties annotated with link:{uri-stdlib-Command-BooleanFlag}[`@BooleanFlag`] become CLI flags named `--<property name>` and `--no-<property name>` that result in `true` and `false` values, respectively.
+* `Int` (and type aliases of `Int`) properties annotated with link:{uri-stdlib-Command-CountedFlag}[`@CountedFlag`] become CLI flags named `--<property name>` that produce a value equal to the number of times they are present on the command line.
+* Properties annotated with link:{uri-stdlib-Command-Argument}[`@Argument`] become positional CLI arguments and are parsed in the order they appear in the class.
+* Properties with no annotation are treated the same as `@Flag` with no further customization.
+
+Flag options may set a `shortName` property to define a single-character abbreviation (`-<short name>`).
+Flag abbreviations may be combined (e.g. `-a -b -v -v -q some-value` is equivalent to `-abvvq some-value`).
+
+[CAUTION]
+====
+Flag names and short names may not conflict with <<common-options,common options>>.
+Future versions of Pkl may introduce additional common options and the names of these options will become forbidden for use in `pkl:Command`.
+Thus, any Pkl release that adds common options may introduce breaking changes for commands.
+
+While unfortunate, this behavior eliminates potentially dangerous or misleading ambiguities between Pkl-defined and user-defined options.
+====
+
+A `@Flag` or `@Argument` property's type annotation determines how it is converted from the raw string value:
+
+|===
+|Type |Behavior
+
+|`String`
+|Value is used verbatim.
+
+|`Char`
+|Value is used verbatim but must be exactly one character.
+
+|`Boolean`
+|True values: `true`, `t`, `1`, `yes`, `y`, `on`
+
+False values: `false`, `f`, `0`, `no`, `n`, `off`
+
+|`Number`
+|Value is parsed as an `Int` if possible, otherwise parsed as `Float`.
+
+|`Float`
+|Value is parsed as a `Float`.
+
+|`Int`
+|Value is parsed as a `Int`.
+
+|`Int8`, `Int16`, `Int32`, `UInt`, `UInt8`, `UInt16`, `UInt32`
+|Value is parsed as a `Int` and must be within the type's range.
+
+|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals]
+|Value is used verbatim but must match a member of the union.
+
+|`List<Element>`, `Listing<Element>`, `Set<Element>`
+|Each occurrence of the option becomes an element of the final value.
+
+`Element` values are parsed based on the above primitive types.
+
+|`Map<Key, Value>`, `Mapping<Key, Value>`
+|Each occurrence of the option becomes an entry of the final value.
+
+Values are split on the first `"="` character; the first part is parsed as `Key` and the second as `Value`, both based on the above primitive types.
+
+|`Pair<First, Second>`
+|Value is split on the first `"="` character; the first part is parsed as `First` and the second as `Second`, both based on the above primitive types.
+
+|===
+
+If a flag that accepts only a single value is provided multiple times, the last occurrence becomes the final value.
+
+Only a single positional argument accepting multiple values is permitted per command.
+
+A property with a xref:language-reference:index.adoc#nullable-types[nullable type] is optional and, if not specified on the command line, will have value `null`.
+Properties with default values are also optional.
+Type constraints are evaluated when the command is executed, so additional restrictions on option values are enforced at runtime.
+
+==== Custom Option Conversion and Aggregation
+
+A property may be annotated with any type if its `@Flag` or `@Argument` annotation sets the `convert` or `transformAll` properties.
+The `convert` property is a xref:language-reference:index.adoc#anonymous-functions[function] that overrides how _each_ raw option value is interpreted.
+The `transformAll` property is a function that overrides how _all_ parsed option values become the final property value.
+
+The `convert` and `transformAll` functions may return an pkldoc:Import[pkl:Command] value that is replaced during option parsing with the actual value of the module specified by its `uri` property.
+If `glob` is `true`, the replacement value is a `Mapping`; its keys are the _absolute_ URIs of the matched modules and its values are the actual module values.
+When specifying glob import options on the command line, it is often necessary to quote the value to avoid it being interpreted by the shell.
+If the return value of `convert` or `transformAll` is a `List`, `Set`, `Map`, or `Pair`, each contained value (elements and entry keys/values) that are `Import` values are also replaced.
+
+[IMPORTANT]
+====
+If an option has type `Mapping<String, «some module type»>` and should accept a single glob pattern value, the option's annotation must also set `multiple = false` to override the default behavior of `Mapping` options accepting multiple values.
+Example:
+[source%parsed,{pkl}]
+----
+@Flag {
+  convert = (it) -> new Import { uri = it; glob = true }
+  multiple = false
+}
+birds: Mapping<String, Bird>
+----
+
+If multiple glob patterns values should be accepted and merged, `transformAll` may be used to merge every glob-imported `Mapping`:
+[source%parsed,{pkl}]
+----
+@Flag {
+  convert = (it) -> new Import { uri = it; glob = true }
+  transformAll =
+    (values) -> values.fold(new Mapping {}, (result, element) ->
+      (result) { ...element }
+    )
+}
+birds: Mapping<String, Bird>
+----
+====
+
+=== Subcommands
+
+Like many other command line libraries, `pkl:Command` allows building commands into a hierarchy with a root command and subcommands:
+
+[source,pkl%tested]
+.my-tool.pkl
+----
+extends "pkl:Command"
+
+command {
+  subcommands {
+    import("subcommand1.pkl")
+    import("subcommand2.pkl")
+    for (_, subcommand in import*("./subcommands/*.pkl")) {
+      subcommand
+    }
+  }
+}
+----
+
+[source,pkl%tested]
+.subcommand1.pkl
+----
+extends "pkl:Command"
+
+import "my-tool.pkl"
+
+parent: `my-tool` // <1>
+
+// Regular module code...
+----
+<1> Optional; asserts that this is a subcommand of `my-tool` and simplifies accessing properties and options of the parent command
+
+Each element of `subcommands` must have a unique value for `command.name`.
+
+=== Testing Commands
+
+Command modules are normal Pkl modules, so they may be imported and used like any other module.
+This is particularly helpful when testing commands, as the command's `options` and `parent` properties can be populated by test code.
+
+Testing the above command and subcommand might look like this:
+
+[source,pkl%tested]
+----
+amends "pkl:test"
+
+import "my-tool.pkl"
+import "subcommand1.pkl"
+
+examples {
+  ["Test my-tool"] {
+    (`my-tool`) {
+      options {
+        // Set my-tool options here...
+      }
+    }.output.text
+  }
+  ["Test subcommand1"] {
+    (subcommand1) {
+      parent { // this amends `my-tool`
+        options {
+          // Set my-tool options here...
+        }
+      }
+      options {
+        // Set subcommand options here...
+      }
+    }.output.text
+  }
+}
+----
+
+[[commands-as-standalone-scripts]]
+=== Commands as standalone scripts
+
+On *nix platforms, Pkl commands can be configured to run as standalone tools that can be invoked without the `pkl run` command.
+To achieve this, the command file must be marked executable (i.e. `chmod +x my-tool.pkl`) and a link:https://en.wikipedia.org/wiki/Shebang_(Unix)[shebang comment] must be added on the first line of the file:
+
+[source,pkl%parsed]
+----
+#!/usr/bin/env -S pkl run
+----
+
+NOTE: The `-S` flag for `env` is required on Linux systems due to a limitation of shebang handling in the Linux kernel.
+While not required on other *nix platforms like macOS, but it should be included for compatibility.
+
+==== Shell Completion
+
+Like with Pkl's own CLI, <<command-shell-completion, shell completions>> can be generated for standalone scripts.
+
+[source,shell]
+----
+# Generate shell completion script for bash
+./my-tool.pkl shell-completion bash
+
+# Generate shell completion script for zsh
+./my-tool.pkl shell-completion zsh
+----
+
+==== Customizing Completion Candidates
+
+`@Flag` and `@Argument` annotations may specify the `completionCandidates` to improve generated shell completions.
+
+Valid values include:
+
+* A `Listing<String>` of literal string values to offer for completion.
+* The literal string `"path"`, which offers local file paths for completion.
+
+Options with a string literal union type implicitly offer the members of the union as completion candidates.
+
+=== Flag name ambiguities
+
+It is possible for commands to define flags with names or short names that collide with Pkl's own command line options.
+To avoid ambiguity in parsing these options, all flags for Pkl itself (e.g. `--root-dir`) must be placed before the root command module's URI.
+Command authors are encouraged to avoid overlapping with Pkl's built-in flags, but this may not always be feasible, especially for single-character abbreviated names.
+
+This imposes a limitation around <<commands-as-standalone-scripts,standalone commands>> that prevents users from customizing Pkl evaluator options when they are invoked.
+There are two recommended workarounds for this limitation:
+
+* Use a `PklProject` to define evaluator settings instead of doing so on the command line.
+* If the command line must be used, switch to invoking via `pkl run [<flags>] [<root command module>]`.
+
+[[repl]]
+== Working with the REPL
+
+To start a REPL session, run `pkl repl`:
+
+[source,shell]
+[subs="+attributes"]
+----
+$ pkl repl
+Welcome to Pkl {pkl-version}.
+Type an expression to have it evaluated.
+Type :help or :examples for more information.
+
+pkl>
+----
+
+=== Loading Modules
+
+To load <<config.pkl,`config.pkl`>> into the REPL, run:
+
+[source,shell]
+----
+pkl> :load config.pkl
+----
+
+To evaluate the `bird.species` property, run:
+
+[source,shell]
+----
+pkl> bird.species
+"Pigeon"
+----
+
+To evaluate the entire module, force-evaluate `this`:
+
+[source,shell]
+----
+pkl> :force this
+----
+
+=== REPL Commands
+
+Commands start with `:` and can be tab-completed:
+
+[source,shell]
+[subs="+attributes,+macros"]
+----
+pkl> :{empty}kbd:[Tab]
+clear       examples    force       help        load        quit        reset
+pkl> :q{empty}kbd:[Tab]
+pkl> :quit{empty}kbd:[Return]
+$
+----
+
+Commands can be abbreviated with any unique name prefix:
+
+[source,shell]
+[subs="+attributes,+macros"]
+----
+pkl> :q{empty}kbd:[Return]
+$
+----
+
+To learn more about each command, run the `:help` command.
+
+Some commands support further command-specific tab completion.
+For example, the `:load` command supports completing file paths.
+
+With commands out of the way, let's move on to evaluating code.
+
+=== Evaluating Code
+
+To evaluate an expression, type the expression and hit kbd:[Return].
+
+[source,shell]
+----
+pkl> 2 + 4
+6
+----
+
+Apart from expressions, the REPL also accepts property, function, and class definitions.
+(See the xref:language-reference:index.adoc[Language Reference] to learn more about these language concepts.)
+
+[source,shell]
+----
+pkl> hello = "Hello, World!"
+pkl> hello
+"Hello, World!"
+pkl> function double(n) = 2 * n
+pkl> double(5)
+10
+pkl> class Bird { species: String }
+pkl> new Bird { species = "Pigeon" }
+{
+  name = ?
+}
+----
+
+Top-level expressions are only supported in the REPL.
+In a regular module, every expression is contained in a definition, and only definitions exist at the top level.
+
+=== Redefining Members
+
+Existing members can be redefined:
+
+[source,shell]
+----
+pkl> species = "Pigeon"
+pkl> species
+"Pigeon"
+pkl> species = "Barn"
+pkl> species
+"Barn"
+pkl> species + " Owl"
+pkl> species
+"Barn Owl"
+----
+
+Due to Pkl's late binding semantics, redefining a member affects dependent members:
+
+[source,shell]
+----
+pkl> name = "Barn"
+pkl> species = "\(name) Owl"
+pkl> species
+"Barn Owl"
+pkl> name = "Elf"
+pkl> species
+"Elf Owl"
+----
+
+Redefining members is only supported in the REPL. Under the hood,
+it works as follows:
+
+* The REPL environment is represented as a synthetic Pkl module.
+* When a new member is defined, it is added to the current REPL module.
+* When an existing member is redefined, it is added to a new REPL module that xref:language-reference:index.adoc#module-amend[amends] the previous REPL module.
+
+[[settings-file]]
+== Settings File
+
+The Pkl settings file allows to customize the CLI experience.
+
+A settings file is a Pkl module amending the `pkl.settings` standard library module.
+
+Unless configured explicitly, Pkl will look in the following locations:
+
+. `$XDG_CONFIG_HOME/pkl/settings.pkl`
+. `%APPDATA%/pkl/settings.pkl` (on Windows only)
+. `~/.config/pkl/settings.pkl`
+. Subdirectory `pkl/settings.pkl` within one of the paths described by `$XDG_CONFIG_DIRS`
+. `/etc/xdg/pkl/settings.pkl`
+. `~/.pkl/settings.pkl` (legacy location used by Pkl 0.32 and lower)
+
+To use a different settings file, set the `--settings` command line option, for example `--settings mysettings.pkl`.
+To enforce default settings, use `--settings pkl:settings`.
+
+The settings file is also honored by (and configurable through) the Gradle plugin and `CliEvaluator` API.
+
+Here is a typical settings file:
+
+.~/.config/pkl/settings.pkl
+[source%parsed,{pkl}]
+----
+amends "pkl:settings" // <1>
+
+editor = Idea // <2>
+----
+<1> A settings file should amend the `pkl.settings` standard library module.
+<2> Configures IntelliJ IDEA as the preferred editor.
+Other supported values are `System`, `GoLand`, `TextMate`, `Sublime`, `Atom`, and `VsCode`.
+
+With the above settings file in place, kbd:[Cmd]+Double-clicking a source code link in a stack trace opens the corresponding file in IntelliJ IDEA at the correct location.
+
+To learn more about available settings, see link:{uri-pkl-stdlib-docs-settings}[pkl.settings].
+
+[[ca-certs]]
+== CA Certificates
+
+When making TLS requests, Pkl comes with its own set of {uri-certificates}[CA certificates].
+These certificates can be overridden via either of the two options:
+
+- Set them directly via the CLI option `--ca-certificates <path>`.
+- Add them to a user directory.
+
+If CA certificates are not explicitly configured, Pkl will look in the following locations:
+
+. `$XDG_CONFIG_HOME/pkl/cacerts`
+. `%APPDATA%/pkl/cacerts` (on Windows only)
+. `~/.config/pkl/cacerts`
+. Subdirectory `pkl/cacerts` within one of the paths described by `$XDG_CONFIG_DIRS`
+. `/etc/xdg/pkl/cacerts`
+. `~/.pkl/cacerts` (legacy location used by Pkl 0.32 and lower)
+
+Both these options will *replace* the default CA certificates bundled with Pkl. +
+The CLI option takes precedence over the certificates in the cacerts directory. +
+Certificates need to be X.509 certificates in PEM format.
+
+[[http-proxy]]
+== HTTP Proxying
+
+When making HTTP(s) requests, Pkl can possibly make use of an HTTP proxy.
+
+There are two values that determine proxy settings; the proxy address and list of noproxy rules.
+When determining proxy settings, Pkl will look at the following locations, in order of precedence (lowest to highest):
+
+1. OS settings (on macOS, Windows, and GNOME environments)
+2. <<settings-file,Settings file>>
+3. xref:language-reference:index.adoc#projects[PklProject file]
+4. `--http-proxy` and `--http-no-proxy` CLI flags
+
+[NOTE]
+====
+The proxy and noproxy values are individually set.
+For example, using the `--http-no-proxy` flag but not the `--http-proxy` flag will cause Pkl to look at the PklProject file, then the settings file, then system settings for the proxy address.
+
+One exception to this rule is that setting a proxy address will cause Pkl to ignore any noproxy values set at the OS level.
+====
+
+Pkl only supports HTTP proxies, so neither HTTPS nor SOCKS proxies are supported.
+Pkl does not support authentication with a proxy.
+
+When specifying a proxy address, it must have scheme `http`, and may not contain anything other than a host and port.
+
+=== Proxy exclusions
+
+Pkl can be configured to bypass the proxy for specific requests via a proxy exclusion rule (i.e. the `--http-no-proxy` flag).
+It may be provided either as a hostname, an IP address, or an IP range via https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
+When determining whether a proxy should be excluded, hostnames do not get resolved to their IP address.
+For example, a request to `localhost` will not match `--http-no-proxy=127.0.0.1`.
+
+For individual hosts (not CIDRs), ports can be specified.
+When no port is specified for a given host, connections to all ports bypass the proxy.
+
+A hostname will match all of its subdomains.
+For example, `example.com` will match `foo.example.com`, and `bar.foo.example.com`, but not `fooexample.com`.
+
+The value `*` is a special wildcard that matches all hosts.
+
+A port can optionally be specified. If omitted, it matches all ports.
+
+NOTE: Pkl follows the rules described in https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/#standardizing-no_proxy[Standardizing `no_proxy`], except it does not look at environment variables.

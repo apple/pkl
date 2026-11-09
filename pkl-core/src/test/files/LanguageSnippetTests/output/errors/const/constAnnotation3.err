@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` within an annotation body.
+
+x | @Ann { foo = module }
+                 ^^^^^^
+at constAnnotation3#Foo.foo (file:///$snippetsDir/input/errors/const/constAnnotation3.pkl)

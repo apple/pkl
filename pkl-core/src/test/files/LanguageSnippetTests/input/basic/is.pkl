@@ -1,0 +1,218 @@
+amends "../snippetTest.pkl"
+
+local list = List(1, 2, 3)
+
+local set = Set(1, 2,3)
+
+local map = Map(1, "one", 2, "two", 3, "three")
+
+local base = new Base {}
+
+local derived = new Derived {}
+
+local other = new Other {}
+
+local listing = new Listing { "Pigeon"; 40 }
+
+local mapping = new Mapping { ["name"] = "Pigeon"; ["age"] = 40 }
+
+local f = (x) -> x
+
+local open class Base
+local class Derived extends Base
+local class Other
+
+facts {
+  ["String"] {
+    "abc" is String
+    !(42 is String)
+  }
+
+  ["Any"] {
+    "abc" is Any
+    42 is Any
+    1.23 is Any
+    true is Any
+    false is Any
+    42.s is Any
+    42.b is Any
+    list is Any
+    set is Any
+    map is Any
+    null is Any
+    Null(new Base {}) is Any
+    base is Any
+    derived is Any
+    mapping is Any
+    Base is Any
+    this is Any
+    f is Any
+  }
+
+  ["Null"] {
+    null is Null
+    Null(new Base {}) is Null
+
+    !("abc" is Null)
+    !(42 is Null)
+    !(1.23 is Null)
+    !(true is Null)
+    !(false is Null)
+    !(42.s is Null)
+    !(42.b is Null)
+    !(list is Null)
+    !(set is Null)
+    !(map is Null)
+    !(base is Null)
+    !(derived is Null)
+    !(listing is Null)
+    !(mapping is Null)
+    !(Base is Null)
+    !(this is Null)
+    !(f is Null)
+  }
+
+  ["Int"] {
+    42 is Int
+    !("abc" is Int)
+    !(1.23 is Int)
+    !(true is Int)
+    !(false is Int)
+    !(42.s is Int)
+    !(42.b is Int)
+    !(list is Int)
+    !(set is Int)
+    !(map is Int)
+    !(derived is Int)
+    !(null is Int)
+    !(Null(new Base {}) is Int)
+    !(base is Int)
+    !(listing is Int)
+    !(mapping is Int)
+    !(Base is Int)
+    !(this is Int)
+    !(f is Int)
+  }
+
+  ["Number"] {
+    42 is Number
+    1.23 is Number
+    !("abc" is Number)
+  }
+
+  ["Float"] {
+    1.23 is Float
+    !(42 is Float)
+    !("abc" is Float)
+  }
+
+  ["Boolean"] {
+    true is Boolean
+    false is Boolean
+    !("abc" is Boolean)
+  }
+
+  ["Duration"] {
+    42.s is Duration
+    !(42.b is Duration)
+    !("abc" is Duration)
+    !(42.b is Duration)
+  }
+
+  ["DataSize"] {
+    42.b is DataSize
+    !(42.s is DataSize)
+    !("abc" is DataSize)
+    !(42.s is DataSize)
+  }
+
+  ["List"] {
+    list is List
+    !(set is List)
+    !(map is List)
+  }
+
+  ["Set"] {
+    set is Set
+    !(list is Set)
+    !(map is Set)
+  }
+
+  ["Collection"] {
+    list is Collection
+    set is Collection
+    !(map is Collection)
+  }
+
+  ["Map"] {
+    map is Map
+    !(list is Map)
+    !("abc" is Map)
+  }
+
+  ["base class"] {
+    base is Base
+    derived is Base
+    !(other is Base)
+  }
+
+  ["derived class"] {
+    derived is Derived
+    !(base is Derived)
+    !(other is Derived)
+  }
+
+  ["other class"] {
+    other is Other
+    !("abc" is Other)
+    !(42 is Other)
+    !(1.23 is Other)
+    !(true is Other)
+    !(false is Other)
+    !(42.s is Other)
+    !(42.b is Other)
+    !(list is Other)
+    !(set is Other)
+    !(derived is Other)
+    !(map is Other)
+    !(listing is Other)
+    !(mapping is Other)
+    !(base is Other)
+    !(Base is Other)
+    !(null is Other)
+    !(Null(new Base {}) is Other)
+    !(this is Other)
+    !(f is Other)
+  }
+
+  ["Listing"] {
+    listing is Listing
+    !(mapping is Listing)
+    !("abc" is Listing)
+  }
+
+  ["Mapping"] {
+    mapping is Mapping
+    !(listing is Mapping)
+    !("abc" is Mapping)
+  }
+
+  ["Module"] {
+    module is Module
+    !(this is Module)
+    !("abc" is Module)
+  }
+
+  ["Class"] {
+    Base is Class
+    base.getClass() is Class
+    !(base is Class)
+  }
+
+  ["Function"] {
+    f is Function
+    f is Function1
+    !(f is Function2)
+    !("abc" is Function)
+  }
+}

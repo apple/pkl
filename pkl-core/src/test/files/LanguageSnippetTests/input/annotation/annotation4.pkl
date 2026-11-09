@@ -1,0 +1,5 @@
+@Mapping {
+  a = "hi"
+  b = "hi"
+}
+someProperty: String = "hi"

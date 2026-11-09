@@ -1,0 +1,14 @@
+–– Pkl Error ––
+I/O error reading resource `package://localhost:0/badImportsWithinPackage@1.0.0#/not/a/valid/path.txt`.
+
+x | res = read("not/a/valid/path.txt")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidPathRead#res (package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

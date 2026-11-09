@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `EOF`. Expected `,` or `)`.
+
+x | l = List("one", "two"
+                         ^
+at missingListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingListDelimiter.pkl)

@@ -1,0 +1,3 @@
+foo: List(fold(0, (a, b) -> a + b) == 5) = myList
+
+myList = List(1, 2, 3)

@@ -1,0 +1,5 @@
+res1 = new Mapping {
+  ["barn owl"] = 1
+  ["pigeon"] = 2
+  ["barn owl"] = 3
+}

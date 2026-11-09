@@ -1,0 +1,6 @@
+output {
+  renderer = new JsonRenderer {}
+}
+
+// defining properties after output {} used to cause NPE
+res1 = 42

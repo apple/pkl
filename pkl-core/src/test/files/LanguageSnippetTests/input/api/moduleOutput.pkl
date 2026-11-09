@@ -1,0 +1,5 @@
+amends "../snippetTest.pkl"
+
+output {
+  text = "some string"
+}

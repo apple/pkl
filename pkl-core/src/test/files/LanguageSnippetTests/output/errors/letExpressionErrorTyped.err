@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `Float`, but got type `String`.
+Value: "abc"
+
+x | let (x: Float = "abc")
+            ^^^^^
+at letExpressionErrorTyped#res1 (file:///$snippetsDir/input/errors/letExpressionErrorTyped.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

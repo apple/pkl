@@ -1,0 +1,3 @@
+res: Mapping<String, String> = new {
+  ...Map("foo", 1)
+}

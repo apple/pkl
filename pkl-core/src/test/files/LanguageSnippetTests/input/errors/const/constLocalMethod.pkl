@@ -1,0 +1,7 @@
+bar = 15
+
+obj {
+  const local function foo() = bar
+  
+  res = foo()
+}

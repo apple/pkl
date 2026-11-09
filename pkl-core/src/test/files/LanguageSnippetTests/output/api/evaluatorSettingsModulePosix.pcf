@@ -1,0 +1,66 @@
+examples {
+  ["resolve()"] {
+    new {
+      modulePath {
+        "/path/to/dir/first/module/path"
+        "/path/to/dir/second/module/path"
+      }
+      moduleCacheDir = "/path/to/dir/my/cache/dir"
+      rootDir = "/path/to/dir/my/root/dir"
+      externalModuleReaders {
+        ["foo"] {
+          executable = "/path/to/dir/path/to/my/executable"
+          workingDir = "/path/to/dir"
+        }
+      }
+      externalResourceReaders {
+        ["foo"] {
+          executable = "/path/to/dir/path/to/my/executable"
+          workingDir = "/path/to/dir"
+        }
+      }
+    }
+  }
+  ["relative path"] {
+    "/path/to/dir/foo/bar"
+  }
+  ["absolute path"] {
+    "/foo/bar"
+  }
+  ["enclosing URI has spaces"] {
+    "/path/to/dir with spaces/foo/bar"
+  }
+  ["relative path with dot segments"] {
+    "/path/to/my/module/path"
+  }
+  ["relative path with dot segments 2"] {
+    "/path/my/module/path"
+  }
+  ["relative path with dot segments 3"] {
+    "/path/to/dir"
+  }
+  ["relative path with dot segments 4"] {
+    "/path/to/dir"
+  }
+  ["relative path with dot segments 5"] {
+    "/"
+  }
+  ["file:/ instead of file:///"] {
+    "/path/to/dir/foo/bar"
+  }
+  ["executable with simple name is not resolved"] {
+    "my-reader"
+  }
+  ["executable with path segments is resolved against enclosingUri"] {
+    "/path/to/dir/path/to/reader"
+  }
+  ["workingDir defaults to enclosingUri"] {
+    "/path/to/dir"
+  }
+  ["workingDir with relative path"] {
+    "/path/to/dir"
+  }
+  ["workingDir with absolute path"] {
+    "/foo/bar"
+  }
+}

@@ -1,0 +1,43 @@
+import "pkl:json"
+
+local parser = new json.Parser {
+  useMapping = true
+}
+res1 = parser.parse("""
+  ["one", "two", "three"]
+  """)
+
+res2 = parser.parse("""
+  { "name": "Pigeon", "age": 42 }
+  """)
+
+res3 = parser.parse("""
+  {
+    "firstName": "John",
+    "lastName": "Smith",
+    "age": 25,
+    "address": {
+      "streetAddress": "21 2nd Street",
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10021"
+    },
+    "phoneNumber": [
+      {
+        "type": "home",
+        "number": "212 555-1234"
+      },
+      {
+        "type": "fax",
+        "number": "646 555-4567"
+      }
+    ],
+    "gender": {
+      "type": "male"
+    }
+  }
+  """)
+
+res4 = res3 is Mapping
+
+res5 = res3["address"] is Mapping

@@ -1,0 +1,3 @@
+class Foo {
+  external bar: String
+}

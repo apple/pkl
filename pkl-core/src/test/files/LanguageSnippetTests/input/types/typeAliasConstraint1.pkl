@@ -1,0 +1,12 @@
+// length should bind to `String#length` instead of `ClassWithLengthProperty#length`
+local typealias OneCharacterString = String(length == 1)
+
+local class ClassWithLengthProperty {
+  length: Int = 99
+  
+  // length constraint binds to ClassWithLengthProperty.length here
+  characters: List<OneCharacterString> = List("a", "b")
+}
+
+res1: OneCharacterString = "a"
+res2 = let (c = new ClassWithLengthProperty {}) c.characters

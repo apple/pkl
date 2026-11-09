@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected end of file.
+
+x | 
+    ^
+at parser14 (file:///$snippetsDir/input/errors/parser14.pkl)

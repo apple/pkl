@@ -1,0 +1,12 @@
+a {
+  prop = "hello"
+  prop2 = 1
+  res = 1
+}
+b {
+  prop = "hello"
+  prop2 = 1
+  res = 2
+}
+pkl: TRACE: "hello" = "hello" (file:///$snippetsDir/input/basic/constModifier5.pkl)
+pkl: TRACE: "hello again" = "hello again" (file:///$snippetsDir/input/basic/constModifier5.pkl)

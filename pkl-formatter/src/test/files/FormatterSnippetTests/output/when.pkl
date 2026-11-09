@@ -1,0 +1,18 @@
+foo {
+  when (true) {
+    bar = 1
+  } else {
+    bar = 2
+  }
+}
+
+bar {
+  when (
+    new Listing {
+      1
+      2
+    }.contains(1)
+  ) {
+    "1"
+  }
+}

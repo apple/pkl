@@ -1,0 +1,139 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Basic mathematical constants and functions.
+///
+/// Note that some mathematical functions, such as `sign()`, `abs()`, and `round()`,
+/// are directly defined in classes [Number], [Int], and [Float].
+@ModuleInfo { minPklVersion = "0.34.0" }
+module pkl.math
+
+/// The minimum [Int] value: `-9223372036854775808`.
+external const minInt: Int
+
+/// The minimum [Int8] value: -128.
+external const minInt8: Int8
+
+/// The minimum [Int16] value: -32768.
+external const minInt16: Int16
+
+/// The minimum [Int32] value: -2147483648.
+external const minInt32: Int32
+
+/// The maximum [Int] value: `9223372036854775807`.
+external const maxInt: Int
+
+/// The maximum [Int8] value: 127.
+external const maxInt8: Int8
+
+/// The maximum [Int16] value: 32767.
+external const maxInt16: Int16
+
+/// The maximum [Int32] value: 2147483647.
+external const maxInt32: Int32
+
+/// The maximum [UInt] value: 9223372036854775807.
+///
+/// Note that [maxUInt] is equal to [maxInt],
+/// not `maxInt * 2 + 1` as one might expect.
+/// That is, [UInt] has half the range of [Int].
+external const maxUInt: UInt
+
+/// The maximum [UInt8] value: 255.
+external const maxUInt8: UInt8
+
+/// The maximum [UInt16] value: 65535.
+external const maxUInt16: UInt16
+
+/// The maximum [UInt32] value: 4294967295.
+external const maxUInt32: UInt32
+
+/// The minimum finite [Float] value: `-1.7976931348623157e308`.
+///
+/// Operations whose value is less than [minFiniteFloat] return -[Infinity].
+external const minFiniteFloat: Float
+
+/// The maximum finite [Float] value: `1.7976931348623157e308`.
+///
+/// Operations whose value is greater than [maxFiniteFloat] return [Infinity].
+external const maxFiniteFloat: Float
+
+/// The minimum positive [Float] value that is greater than zero: `4.9e-324`.
+external const minPositiveFloat: Float
+
+/// The number [e](https://en.wikipedia.org/wiki/E_(mathematical_constant)).
+external const e: Float
+
+/// The number [π](https://en.wikipedia.org/wiki/Pi).
+external const pi: Float
+
+/// Returns e [raised to the power](https://en.wikipedia.org/wiki/Exponential_function) of
+/// [exponent].
+external function exp(exponent: Number): Float
+
+/// Returns the [square root](https://en.wikipedia.org/wiki/Square_root) of [x].
+external function sqrt(x: Number): Float
+
+/// Returns the [cube root](https://en.wikipedia.org/wiki/Cube_root) of [x].
+external function cbrt(x: Number): Float
+
+/// Returns the [natural logarithm](https://en.wikipedia.org/wiki/Natural_logarithm) (base e logarithm) of [x].
+external function log(x: Number): Float
+
+/// Returns the [base 2 logarithm](https://en.wikipedia.org/wiki/Binary_logarithm) of [x].
+external function log2(x: Number): Float
+
+/// Returns the [base 10 logarithm](https://en.wikipedia.org/wiki/Common_logarithm) of [x].
+external function log10(x: Number): Float
+
+/// Returns the [sine](https://en.wikipedia.org/wiki/Sine_and_cosine) of [angle] given in radians.
+external function sin(angle: Number): Float
+
+/// Returns the [cosine](https://en.wikipedia.org/wiki/Sine_and_cosine) of [angle] given in radians.
+external function cos(angle: Number): Float
+
+/// Returns the [tangent](https://en.wikipedia.org/wiki/Tangent) of [angle] given in radians.
+external function tan(angle: Number): Float
+
+/// Returns the [arcsine](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
+external function asin(x: Number): Float
+
+/// Returns the [arccosine](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
+external function acos(x: Number): Float
+
+/// Returns the [arctangent](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
+external function atan(x: Number): Float
+
+/// Returns the [2-argument arctangent](https://en.wikipedia.org/wiki/Atan2) of [x] and [y].
+@Since { version = "0.28.0" }
+external function atan2(x: Number, y: Number): Float
+
+/// Returns the [greatest common divisor](https://en.wikipedia.org/wiki/Greatest_common_divisor) of
+/// [x] and [y].
+external function gcd(x: Int, y: Int): Int
+
+/// Returns the [least common multiple](https://en.wikipedia.org/wiki/Least_common_multiple) of [x]
+/// and [y].
+external function lcm(x: Int, y: Int): Int
+
+/// Returns `true` if [x] is a power of two.
+external function isPowerOfTwo(x: Number): Boolean
+
+/// Returns the minimum of [x] and [y].
+external function min(x: Number, y: Number): Number
+
+/// Returns the maximum of [x] and [y].
+external function max(x: Number, y: Number): Number

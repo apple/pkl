@@ -1,0 +1,133 @@
+= Development
+:uri-gng: https://gng.dsun.org
+:uri-jenv: https://www.jenv.be
+:uri-intellij: https://www.jetbrains.com/idea/download/
+:uri-native-prerequisites-linux: https://www.graalvm.org/latest/getting-started/linux/#prerequisites-for-native-image-on-linux
+:uri-native-prerequisites-windows: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
+
+== Setup
+
+. (mandatory) Install a JDK (JDK 21+ required).
+. (recommended) Install {uri-intellij}[IntelliJ IDEA] +
+To import the project into IntelliJ, go to File->Open and select the project's root directory.
+If the project is opened but not imported, look for a popup in the lower right corner
+and click its "Import Gradle Project" link.
+. (recommended) Install {uri-gng}[gng] +
+_gng_ enables you to run Gradle commands with `gw` (instead of `./gradlew`) from any subdirectory.
+. (recommended) Set up Git ignore-revs +
+`git config blame.ignoreRevsFile .git-blame-ignore-revs`
+. (recommended) Install {uri-jenv}[jenv] and plugins +
+_jenv_ uses specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 21. +
+Enable _jenv_ plugins for better handling by `gradle`:
++
+[source,shell]
+----
+jenv enable-plugin gradle
+jenv enable-plugin export
+----
+. (optional) If you've named the original apple/pkl git repository something other than `origin`, set env var `PKL_ORIGINAL_REMOTE_NAME` to that name in your `.bashrc`, `.zshrc`, `config.fish` or however you manage your local environment.
++
+This will allow spotless to pick the correct starting branch when formatting source code files.
+Otherwise, you might see that _every_ file has its copyright year updated.
+
+=== Additional Linux Setup
+. (optional) To build the native executable (`./gradlew buildNative`),
+install {uri-native-prerequisites-linux}[Prerequisites For Native Image on Linux].
+
+=== Additional Windows Setup
+. (optional) Go to `System->For developers` and enable `Developer Mode`.
+Otherwise, some tests may fail due to insufficient file system privileges.
+. (optional) To build the native executable (`./gradlew buildNative`), 
+install {uri-native-prerequisites-windows}[Prerequisites For Native Image on Windows].
+
+== Common Build Commands
+
+[source,shell]
+----
+gw clean
+gw test                 # run all tests except native executable tests
+gw spotlessApply        # fix code formatting
+gw build                # build everything except native executables
+gw pkl-cli:testNative   # run native executable tests
+gw pkl-cli:buildNative  # build native executable for current platform
+
+pkl-cli/build/executable/jpkl                   # run Java executable
+pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
+pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
+pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
+pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 
+----
+
+== Update Gradle
+
+. Go to https://gradle.org/release-checksums/ and copy the checksum for the new Gradle version
+. Run the following command *twice* (until it prints UP-TO-DATE):
++
+[source,shell]
+----
+gw wrapper --gradle-version [version] --gradle-distribution-sha256-sum [sha]
+----
+. Commit the updated wrapper files
+
+== Update Dependencies
+
+. (optional) Update _gradle/libs.version.toml_
+based on version information from https://search.maven.org, https://plugins.gradle.org, and GitHub repos
+. Validate changes with `gw build buildNative`
+
+== Code Generation
+
+* Truffle code generation is performed by Truffle's annotation processor, which runs as part of task `:pkl-core:compileJava`
+** Output dir is `generated/truffle/`
+
+== Remote JVM Debugging
+
+To enable remote JVM debugging when running Gradle tasks (e.g. test), add the flag `-Djvmdebug=true`.
+This will listen on port 5005.
+
+Example: `./gradlew test -Djvmdebug=true`
+
+== Snippet Test Plugin
+
+There is an IntelliJ plugin meant for development on the Pkl project itself located in https://github.com/apple/pkl-project-commons[pkl-project-commons].
+
+See https://github.com/apple/pkl-project-commons?tab=readme-ov-file#internal-intellij-plugin[its readme] for instructions on how to set it up.
+
+== Working on libpkl
+
+libpkl is a native library written in C, and is best written in CLion, or VSCode.
+
+IntelliJ has limited support for editing C sources.
+
+There is a CMakeLists.txt file whose only job is to configure CLion with proper include paths.
+
+== Resources
+
+For automated build setup examples see our https://github.com/apple/pkl/blob/main/.github/[GitHub Actions] jobs like our https://github.com/apple/pkl/blob/main/.github/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.
+
+=== Truffle
+
+* http://ssw.jku.at/Research/Projects/JVM/Truffle.html[Homepage]
+* https://github.com/graalvm/truffle[GitHub]
+* http://lafo.ssw.uni-linz.ac.at/javadoc/truffle/latest/[Javadoc]
+* https://mail.openjdk.org/pipermail/graal-dev/[Mailing List]
+* https://medium.com/@octskyward/graal-truffle-134d8f28fb69#.2db370y2g[Graal & Truffle (Article)]
+* https://comserv.cs.ut.ee/home/files/Pool_ComputerScience_2016.pdf?study=ATILoputoo&reference=6319668E7151D556131810BC3F4A627D7FEF5F3B[Truffle Overview (see chapter 1)]
+* https://gist.github.com/smarr/d1f8f2101b5cc8e14e12[Truffle: Languages and Material]
+* https://github.com/smarr/truffle-notes[Truffle Notes]
+* https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/[Truffle Language Implementation Framework]
+
+=== Other Config Languages
+
+* https://github.com/google/jsonnet[Jsonnet]
+* https://github.com/dhall-lang/dhall-lang[Dhall]
+* https://cuelang.org[CUE]
+* https://nickel-lang.org[Nickel]
+* https://kcl-lang.io[KCL]
+* https://github.com/google/skylark[Skylark]
+* https://github.com/typesafehub/config[Typesafe Config]
+* https://www.flabbergast.org[Flabbergast]
+(defunct, http://artefacts.masella.name/2015-srecon-andre_masella.pdf[paper])
+* https://medium.com/@MrJamesFisher/nix-by-example-a0063a1a4c55[Nix by example: The Nix expression language]
+* http://lethalman.blogspot.co.at/2014/07/nix-pill-4-basics-of-language.html[Nix pill 4: the basics of the language]
+* https://docs.puppetlabs.com/puppet/latest/reference/lang_summary.html[Puppet Configuration Language]

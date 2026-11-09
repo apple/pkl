@@ -1,0 +1,58 @@
+// respect line breaks on:
+// * operator chains
+// * argument lists in method calls
+//
+// only look for line breaks on either side of the operator, or the comma.
+res1 =
+  foo
+    * bar
+    * baz
+
+res2 = foo
+  |> bar + bar
+  |> baz
+
+res3 = foo
+  |> bar
+    + baz
+  |> qux
+
+res4 = foo(
+  (it) -> it + 1,
+  (it) -> it + 2
+)
+
+res5 = foo(
+  1,
+  2, 3, 4
+)
+
+// don't respect newlines right after opening paren and closing paren
+res6 = foo.bar(
+  1, 2, 3
+)
+
+// only respect newlines on either side of a binary operator (we still want to inline `bar(3)` here).
+res7 = foo + bar(
+      3
+    ) + baz
+
+// only the newlines after each "entry" are respected 
+res8 = Map(
+  1, 2,
+  3, 4
+)
+
+res9 = Map(
+  1,
+  2,
+  3, 4
+)
+
+res10 = foo(1
+  ,2
+  ,3)
+
+res11 = foo +
+  bar +
+  baz

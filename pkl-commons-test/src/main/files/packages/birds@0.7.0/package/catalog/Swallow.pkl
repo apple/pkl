@@ -1,0 +1,7 @@
+amends "../Bird.pkl"
+
+import "@fruities/catalog/apple.pkl"
+
+name = "Swallow"
+
+favoriteFruit = apple

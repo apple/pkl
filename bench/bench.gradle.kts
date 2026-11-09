@@ -1,0 +1,69 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("me.champeau.jmh")
+}
+
+val truffle: Configuration = configurations.create("truffle")
+val graal: Configuration = configurations.create("graal")
+
+dependencies {
+  jmh(projects.pklCore)
+  jmh(projects.pklCommonsTest)
+  jmh(projects.pklParser)
+  truffle(libs.truffleApi)
+  graal(libs.graalCompiler)
+}
+
+jmh {
+  //  includes = listOf("ParserBenchmark")
+  jmhVersion.set(libs.versions.jmh)
+  // jvmArgsAppend = "-Dgraal.TruffleCompilationExceptionsAreFatal=true " +
+  //  "-Dgraal.Dump=Truffle,TruffleTree -Dgraal.TraceTruffleCompilation=true " +
+  //  "-Dgraal.TruffleFunctionInlining=false"
+  val graalVm =
+    when (buildInfo.arch) {
+      Target.Arch.AARCH64 -> buildInfo.graalVmAarch64
+      Target.Arch.AMD64 -> buildInfo.graalVmAmd64
+    }
+  jvm.set("${graalVm.baseDir}/bin/java")
+  // see:
+  // https://docs.oracle.com/en/graalvm/enterprise/20/docs/graalvm-as-a-platform/implement-language/#disable-class-path-separation
+  jvmArgs.set(
+    listOf(
+      // one JVM arg per list element doesn't work, but the following does
+      "-Dgraalvm.locatorDisabled=true --module-path=${truffle.asPath} --upgrade-module-path=${graal.asPath}"
+    )
+  )
+  includeTests.set(false)
+  // threads = Runtime.runtime.availableProcessors() / 2 + 1
+  // synchronizeIterations = false
+}
+
+tasks.named("jmh") {
+  if (buildInfo.arch == Target.Arch.AARCH64) {
+    dependsOn(":installGraalVmAarch64")
+  } else if (buildInfo.arch == Target.Arch.AMD64) {
+    dependsOn(":installGraalVmAmd64")
+  }
+}
+
+// Prevent this error which occurs when building in IntelliJ:
+// "Entry org/pkl/core/fib_class_typed.pkl is a duplicate but no duplicate handling strategy has
+// been set."
+tasks.processJmhResources { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }

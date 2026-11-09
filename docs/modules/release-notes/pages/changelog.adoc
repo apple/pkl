@@ -1,0 +1,362 @@
+= Changelog
+include::ROOT:partial$component-attributes.adoc[]
+
+[[release-0.34.0]]
+== 0.34.0 (UNRELEASED)
+
+xref:0.34.adoc[Release Notes]
+
+[[release-0.33.0]]
+== 0.33.0 (2026-11-05)
+
+xref:0.33.adoc[Release Notes]
+
+[[release-0.32.2]]
+== 0.32.2 (2026-10-21)
+
+=== Security Fixes [small]#🔒#
+
+* Update fallback CA certificate trust and remove trust for the issuer of compromised intermediate CAs (https://github.com/apple/pkl/pull/1923[#1923]).
+
+=== Fixes
+
+* Fix rendering of stack traces for evaluated multi-line expressions (https://github.com/apple/pkl/pull/1793[#1793]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/HT154[@HT154]
+* https://github.com/protobufel2[@protobufel2]
+
+[[release-0.32.1]]
+== 0.32.1 (2026-07-23)
+
+=== Fixes
+
+* Fix closing intermediate response bodies when following HTTP redirects (https://github.com/apple/pkl/pull/1749[#1749]).
+* Fix `eval -x` of local members (https://github.com/apple/pkl/pull/1760[#1760]).
+* Fix variable resolution of object body params (https://github.com/apple/pkl/pull/1788[#1788]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/KushalP[@KushalP]
+
+[[release-0.32.0]]
+== 0.32.0 (2026-07-08)
+
+xref:0.32.adoc[Release Notes]
+
+[[release-0.31.1]]
+== 0.31.1 (2026-03-26)
+
+=== Breaking Changes [small]#💔#
+
+* Allow nullable reads for custom/external resources (pr:https://github.com/apple/pkl/pull/1471[]).
+
+This allows custom/external resources to produce `null` values for xref:language-reference:index.adoc#nullable-reads[nullable reads] (`read?`).
+While this is a breaking change in behavior, it is currently not possible to exercise with versions of pkl-go or pkl-swift released prior to this change.
+
+=== Fixes
+
+* Fix typo in changelog and language reference (pr:https://github.com/apple/pkl/pull/1455[]).
+* Fix bugs in `CommandSpecParser` (pr:https://github.com/apple/pkl/pull/1448[], pr:https://github.com/apple/pkl/pull/1449[]).
+* Respect `--omit-project-settings` for all evaluator options (pr:https://github.com/apple/pkl/pull/1459[]).
+* Fix SecurityManager check for HTTP(S) module URIs (pr:https://github.com/apple/pkl/pull/1463[]).
+* Fix performance regression caused by activation of power assertion instrumentation during some union type checks (pr:https://github.com/apple/pkl/pull/1462[]).
+* Fix module reflection when power assertion instrumentation is active (pr:https://github.com/apple/pkl/pull/1464[]).
+* Prevent I/O when checking UNC paths against `--root-dir` (pr:https://github.com/apple/pkl/pull/1466[]).
+* Prevent `--multiple-file-output-path` writes from following symlinks outside the target directory
+(pr:https://github.com/apple/pkl/pull/1467[]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/04cb[@04cb]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+
+[[release-0.31.0]]
+== 0.31.0 (2026-02-26)
+
+xref:0.31.adoc[Release Notes]
+
+[[release-0.30.2]]
+
+== 0.30.2 (2025-12-15)
+
+=== Fixes
+
+* Fixes formatting of blank files (https://github.com/apple/pkl/pull/1351[#1351]).
+* Fixes an issue where the `pkl format` CLI command adds an extra newline when writing formatted content to standard output (https://github.com/apple/pkl/issues/1346[#1346]).
+* Make linux executables link to glibc 2.17 (https://github.com/apple/pkl/pull/1352[#1352]).
+* Fix incorrect parsing of super expressions (https://github.com/apple/pkl/pull/1364[#1364]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/stackoverflow[@stackoverflow]
+
+[[release-0.30.1]]
+== 0.30.1 (2025-12-03)
+
+=== Fixes
+
+* Fixes formatting of `Map` constructors with line comments (https://github.com/apple/pkl/pull/1312[#1312]).
+* Fixes a crash when parsing empty parenthesized types (https://github.com/apple/pkl/pull/1323[#1323]).
+* Fixes a parser issue allowing too many newlines between tokens (https://github.com/apple/pkl/pull/1328[#1328]).
+* Fixes parsing of URIs with schemes containing `+`, `-`, or `.` (https://github.com/apple/pkl/pull/1335[#1335]).
+* Fixes a crash when creating very large `List` instances (https://github.com/apple/pkl/pull/1337[#1337]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/spyoungtech[@spyoungtech]
+* https://github.com/stackoverflow[@stackoverflow]
+
+[[release-0.30.0]]
+== 0.30.0 (2025-10-30)
+
+xref:0.30.adoc[Release notes]
+
+[[release-0.29.1]]
+== 0.29.1 (2025-08-27)
+
+=== Fixes
+
+* Fixes an issue where autocompletion in Bash and ZSH do noes not suggest filenames (https://github.com/apple/pkl/pull/1161[#1161]).
+* Fixes an issue where `pkldoc` throws a runtime error about failing to load class path resources (https://github.com/apple/pkl/issues/1174[#1174]).
+* Fixes an issue where `pkldoc` always runs with `testMode` set to true.
+* Fixes an issue where evaluating a module that ends with an unmatched backtick throws `ArrayIndexOutOfBoundsException` (https://github.com/apple/pkl/issues/1182[#1182]).
+* Fixes the formatting of YAML strings when emitting backslash characters within quoted strings (https://github.com/apple/pkl/pull/1165[#1165]).
+* Fixes an issue where `local` members inside `Mapping` objects are incorrectly encoded into binary format (https://github.com/apple/pkl/issues/1151[#1151]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/gordonbondon[@gordonbondon]
+* https://github.com/HT154[@HT154]
+
+[[release-0.29.0]]
+== 0.29.0 (2025-07-24)
+
+xref:0.29.adoc[Release notes]
+
+[[release-0.28.2]]
+== 0.28.2 (2025-04-17)
+
+=== Fixes
+
+* Adds an optimization when object bodies with generators produce no members (https://github.com/apple/pkl/pull/1013[#1013]).
+* Fixes a runtime crash when `--output-path` points to a directory (https://github.com/apple/pkl/pull/1038[#1038]).
+* Fixes a bug that sometimes causes pkl-doc to crash (https://github.com/apple/pkl/pull/1028[#1028]).
+
+=== Miscellaneous
+
+* Documentation improvements (https://github.com/apple/pkl/pull/982[#982], https://github.com/apple/pkl/pull/1010[#1010], https://github.com/apple/pkl/pull/1031[#1031]).
+* CI improvements (https://github.com/apple/pkl/pull/1020[#1020]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/JeroenSoeters[@JeroenSoeters]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/mbvissers[@mbvissers]
+* https://github.com/pepicrft[@pepicrft]
+
+[[release-0.28.1]]
+== 0.28.1 (2025-03-03)
+
+=== Fixes
+
+* Fixes an issue where Pkl Gradle tasks can possibly fail with `java.lang.UnsatisfiedLinkError` (https://github.com/apple/pkl/pull/995[#995]).
+* Fixes an issue where the artifacts pkl-tools and pkl-config-java-all fail with `java.lang.ClassFormatError` (https://github.com/apple/pkl/pull/998[#998]).
+
+=== Changes
+
+* Adds the ability to configure `native-image` build with Gradle system properties (https://github.com/apple/pkl/pull/1001[#1001]).
++
+Now, any system property starting with `"pkl.native"` will have that prefix stripped, and the rest passed as CLI arguments to `native-image`. For example, the native-image resource cache can be configured by passing Gradle flag `-Dpkl.native-Dpolyglot.engine.userResourceCache=/my/cache/dir`.
+
+[[release-0.28.0]]
+== 0.28.0 (2025-02-26)
+
+xref:0.28.adoc[Release notes]
+
+[[release-0.27.2]]
+== 0.27.2 (2025-01-22)
+
+=== Fixes
+
+* Fixes issues where server mode message decoding might result in null pointer exceptions (https://github.com/apple/pkl/pull/853[#853], https://github.com/apple/pkl/pull/882[#882]).
+* Fixes an issue where the test report outputs decimal numbers using local-specific decimals (https://github.com/apple/pkl/pull/868[#868]).
+* Fixes an issue where the native executables might not run on some environments, resulting in an error like "Fatal error: Failed to create the main Isolate" (https://github.com/apple/pkl/pull/875[#875]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/HT154[@HT154]
+* link:https://github.com/StefMa[@StefMa]
+
+[[release-0.27.1]]
+== 0.27.1 (2024-12-06)
+
+=== Fixes
+
+- Fixes a broken "number literals" link in the 0.27 release notes (https://github.com/apple/pkl/pull/784[#784]).
+- Fixes a possible deadlock during external reader process close (https://github.com/apple/pkl/pull/786[#786]).
+- Fixes counting elements with computed indices multiple times in length computation of listings (https://github.com/apple/pkl/pull/797[#797]).
+- Fixes non Pkl modules being reported in GatherImports task, leading to plugin failures (https://github.com/apple/pkl/pull/821[#821]).
+- Fixes a problem where the delegate chain of type casts for Listing/Mapping get unreasonably big, even though the type nodes are the same, which may lead to a stack overflow or performance degradation (https://github.com/apple/pkl/pull/826[#826]).
+- Fixes incorrect scoping of type variables in lazy Listing/Mapping type checking in cross-module typealiases (https://github.com/apple/pkl/pull/789[#789]).
+- Fixes regression in type checking logic for Listing/Mapping (https://github.com/apple/pkl/pull/789[#789]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/GUI[@GUI]
+* link:https://github.com/HT154[@HT154]
+* link:https://github.com/odenix[@odenix] (formerly @translatenix)
+
+
+[[release-0.27.0]]
+== 0.27.0 (2024-11-05)
+
+xref:0.27.adoc[Release notes]
+
+[[release-0.26.3]]
+== 0.26.3 (2024-08-06)
+
+=== Fixes
+
+* Fixes an issue where CLI argument `--property foo=""` is effectively parsed as `--property foo="true"`. This is now parsed as an empty string (https://github.com/apple/pkl/pull/596[#596]).
+* Fixes a regression where amending a globbed import or globbed read results in a PklBugException (https://github.com/apple/pkl/pull/607[#607]).
+* Fixes an issue around using `file()` notation when using the pkl-gradle plugin on Windows (https://github.com/apple/pkl/pull/611[#611]).
+
+[[release-0.26.2]]
+== 0.26.2 (2024-07-18)
+
+=== Fixes
+
+* Fixes a possible race condition where multiple concurrent Pkl evaluations results in a thrown exception when downloading packages (https://github.com/apple/pkl/pull/584[#584]).
+
+[[release-0.26.1]]
+== 0.26.1 (2024-06-28)
+
+=== Fixes
+
+* Fixes a regression where native executables fail to run on some environments that don't support newer CPU features (https://github.com/apple/pkl/pull/551[#551]).
+* Fixes a `PklBugException` when passing `.` as a project directory to `pkl project resolve` and `pkl project package` (https://github.com/apple/pkl/pull/544[#544]).
+
+=== Changes
+
+* Disable revocation checking of TLS certificates (https://github.com/apple/pkl/pull/553[#553]).
++
+As part of HTTP improvements in 0.26, we unwittingly fixed a bug where Pkl does not actually perform cert revocation checks when making HTTPS requests.
+This fix, unfortunately, caused a regression in some cases.
+For example, this happens when connecting to a server that bears a public trust certificate, while in an environment with no internet access.
+This is because the HTTP client needs to check the revocation status of all certificates in the chain.
++
+Revocation checks are a nuanced topic with some benefits, and also with its own problem areas.
+For this reason, revocation checking is disabled for Pkl's native CLIs.
+Users of Pkl's Java APIs will respect the revocation settings set in the JVM.
+
+[[release-0.26.0]]
+== 0.26.0 (2024-06-17)
+
+xref:0.26.adoc[Release notes]
+
+[[release-0.25.3]]
+== 0.25.3 (2024-03-26)
+
+=== Fixes
+
+* Fixes some issues with generated pkldoc websites (link:https://github.com/apple/pkl/pull/357[#357], link:https://github.com/apple/pkl/pull/362[#362])
+* Fixes a bug where amending a module that defines an abstract class might cause a Java `AssertionError` (link:https://github.com/apple/pkl/pull/319[#319])
+* Fixes a bug where a for/when generator within a lambda declared with `new {}` syntax might not resolve variables correctly (link:https://github.com/apple/pkl/pull/297[#297])
+* Fixes a bug where `const` and `local` modifiers are not exported when obtaining a class's mirror in `pkl:reflect` (link:https://github.com/apple/pkl/pull/265[#265]).
+
+=== Miscellaneous
+
+* Documentation improvements (link:https://github.com/apple/pkl/pull/93[#93], link:https://github.com/apple/pkl/pull/106[#106], link:https://github.com/apple/pkl/pull/143[#143], link:https://github.com/apple/pkl/pull/205[#205], link:https://github.com/apple/pkl/pull/214[#214], link:https://github.com/apple/pkl/pull/224[#224], link:https://github.com/apple/pkl/pull/257[#257], link:https://github.com/apple/pkl/pull/270[#270], link:https://github.com/apple/pkl/pull/282[#282], link:https://github.com/apple/pkl/pull/283[#283], link:https://github.com/apple/pkl/pull/299[#299], link:https://github.com/apple/pkl/pull/337[#337], link:https://github.com/apple/pkl/pull/340[#340])
+* Build script improvements (link:https://github.com/apple/pkl/pull/253[#253], link:https://github.com/apple/pkl/pull/314[#314], link:https://github.com/apple/pkl/pull/333[#333], link:https://github.com/apple/pkl/pull/338[#338])
+
+=== Changes
+
+* Add `jpkl` to the set of artifacts released to GitHub (link:https://github.com/apple/pkl/pull/314[#314])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/r1ft1[@r1ft1]
+* link:https://github.com/WardsParadox[@WardsParadox]
+* link:https://github.com/grantabbott[@grantabbott]
+* link:https://github.com/mshakhmaykin[@mshakhmaykin]
+* link:https://github.com/d4wae89d498[@d4wae89d498]
+* link:https://github.com/KushalP[@KushalP]
+* link:https://github.com/zihluwang[@zihluwang]
+* link:https://github.com/Malix-off[@Malix-off]
+
+[[release-0.25.2]]
+== 0.25.2 (2024-02-08)
+
+=== Fixes
+
+* Fixes some issues with generated pkldoc websites (link:https://github.com/apple/pkl/pull/70[#70],
+link:https://github.com/apple/pkl/pull/81[#81], link:https://github.com/apple/pkl/pull/96[#96])
+* Fixes an issue where a PklBugException produces an incorrect URL to file issues (link:https://github.com/apple/pkl/pull/73[#73])
+
+=== Miscellaneous
+
+* Documentation fixes (link:https://github.com/apple/pkl/pull/21[#21], link:https://github.com/apple/pkl/pull/29[#29], link:https://github.com/apple/pkl/pull/41[#41], link:https://github.com/apple/pkl/pull/44[#44], link:https://github.com/apple/pkl/pull/51[#51], link:https://github.com/apple/pkl/pull/57[#57], link:https://github.com/apple/pkl/pull/60[#60], link:https://github.com/apple/pkl/pull/64[#64], link:https://github.com/apple/pkl/pull/68[#68], link:https://github.com/apple/pkl/pull/74[#74], link:https://github.com/apple/pkl/pull/77[#77], link:https://github.com/apple/pkl/pull/78[#78], link:https://github.com/apple/pkl/pull/82[#82], link:https://github.com/apple/pkl/pull/84[#84], link:https://github.com/apple/pkl/pull/86[#86], link:https://github.com/apple/pkl/pull/89[#89], link:https://github.com/apple/pkl/pull/91[#91], link:https://github.com/apple/pkl/pull/104[#104])
+* Build script improvements (https://github.com/apple/pkl/pull/53[#53], link:https://github.com/apple/pkl/pull/83[#83])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/uhooi[@uhooi]
+* link:https://github.com/mnin[@mnin]
+* link:https://github.com/TinkoLiu[@TinkoLiu]
+* link:https://github.com/shufanhao[@shufanhao]
+* link:https://github.com/pfeilbr[@pfeilbr]
+* link:https://github.com/KadoBOT[@KadoBOT]
+* link:https://github.com/KushalP[@KushalP]
+* link:https://github.com/translatenix[@translatenix]
+* link:https://github.com/Edward-Knight[@Edward-Knight]
+* link:https://github.com/jamesward[@jamesward]
+* link:https://github.com/shubhgng[@shubhgng]
+* link:https://github.com/hayashikun[@hayashikun]
+* link:https://github.com/lanzafame[@lanzafame]
+* link:https://github.com/igmrrf[@igmrrf]
+* link:https://github.com/kelvinelove[@kelvinelove]
+* link:https://github.com/lilyball[@lilyball]
+* link:https://github.com/maiph[@maiph]
+
+[[release-0.25.1]]
+== 0.25.1 (2024-02-01)
+
+=== Fixes
+
+* Fixes an issue where pkl-tools fat jar is empty.
+
+[[release-0.25.0]]
+== 0.25.0 (2024-02-01)
+
+xref:0.25.adoc[Release notes]

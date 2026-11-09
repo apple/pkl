@@ -1,0 +1,3 @@
+import "helpers/originalTypealias.pkl"
+
+res: originalTypealias.Birds = new { "Jimmy Bird" }

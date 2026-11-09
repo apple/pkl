@@ -1,0 +1,17 @@
+c {
+  foo {
+    res1 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+    res2 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+    res3 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+    bar {
+      res4 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      res5 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      res6 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      baz {
+        res7 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+        res8 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+        res9 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      }
+    }
+  }
+}

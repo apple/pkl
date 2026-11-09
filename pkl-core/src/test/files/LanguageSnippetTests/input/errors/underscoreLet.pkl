@@ -1,0 +1,1 @@
+foo = let (_ = throw("oops")) 0

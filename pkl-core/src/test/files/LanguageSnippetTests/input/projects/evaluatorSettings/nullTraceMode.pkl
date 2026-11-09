@@ -1,0 +1,18 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["traceMode = null results in single-line trace() values"] {
+    trace(new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+  }
+}

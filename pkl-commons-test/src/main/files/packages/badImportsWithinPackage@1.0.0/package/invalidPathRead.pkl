@@ -1,0 +1,1 @@
+res = read("not/a/valid/path.txt")

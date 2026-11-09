@@ -1,0 +1,1 @@
+res = read("@doesnotexist/bar/baz.pkl")

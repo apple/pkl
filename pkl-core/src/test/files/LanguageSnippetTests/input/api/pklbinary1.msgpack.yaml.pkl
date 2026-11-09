@@ -1,0 +1,48 @@
+open module encoding1
+
+import "pkl:pklbinary"
+import "pkl:base"
+
+class Foo {
+  dynamic: Dynamic = new {
+    hello = "world"
+    ["hello"] = "world"
+    "hello world"
+  }
+  string: String = "foo"
+  map = Map("foo", "bar")
+  mapping: Mapping = new { ["foo"] = "bar" }
+  list = List("foo", "bar")
+  listing: Listing = new { "foo"; 0 }
+  set = Set("foo", "bar")
+  duration = 123.h
+  dataSize = 123.gib
+  pair = Pair("foo", "bar")
+  intSeq = IntSeq(123, 456)
+  regex = Regex("foo.*")
+  func: ((String, Int) -> Boolean)? =
+    (a, b) -> a.sha256Int + b % 2 == 0
+  bytes = Bytes(0x01, 0x02, 0x03)
+  moduleClass: Class
+  baseModuleClass: Class = base.getClass()
+  pklbinaryModuleClass: Class = pklbinary.getClass()
+  stdlibClass: Class = PcfRenderer
+  someClass: Class = Foo
+  stdlibTypealias: TypeAlias = UInt 
+  someTypealias: TypeAlias = Bar
+  something: Any = new PcfRenderer {} // a non-external class from pkl:base
+}
+
+typealias Bar = Mapping<String, String>
+
+classInstance: Foo = new {
+  moduleClass = Map(true, module.getClass())[true]
+}
+
+hidden noFunc: Foo = (classInstance) { func = null }
+
+hidden encoded: Bytes = new pklbinary.Renderer {}.renderValue(noFunc)
+
+output {
+  bytes = encoded
+}

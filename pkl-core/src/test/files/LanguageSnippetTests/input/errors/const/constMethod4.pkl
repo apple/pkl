@@ -1,0 +1,5 @@
+obj {
+  x = 1
+  local const function f() = x
+  r = f()
+}

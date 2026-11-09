@@ -1,0 +1,210 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+
+class EvaluateExpressionTest {
+  companion object {
+    private val evaluator by lazy { Evaluator.preconfigured() }
+
+    @AfterAll
+    @JvmStatic
+    fun afterAll() {
+      evaluator.close()
+    }
+  }
+
+  private fun evaluate(program: String, expression: String): Any {
+    return evaluator.evaluateExpression(ModuleSource.text(program), expression)
+  }
+
+  @Test
+  fun `evaluate expression`() {
+    val program =
+      """
+      res1 = 1
+      res2 {
+        res3 = 3
+        res4 = 4
+      }
+      """
+        .trimIndent()
+    assertThat(evaluate(program, "res1")).isEqualTo(1L)
+    val res2 = evaluate(program, "res2")
+    assertThat(res2).isInstanceOf(PObject::class.java)
+    res2 as PObject
+    assertThat(res2.get("res3")).isEqualTo(3L)
+    assertThat(res2.get("res4")).isEqualTo(4L)
+  }
+
+  @Test
+  fun `evaluate subpath`() {
+    val resp =
+      evaluate(
+        """
+        foo {
+          bar = 2
+        }
+        """
+          .trimIndent(),
+        "foo.bar",
+      )
+
+    assertThat(resp).isEqualTo(2L)
+  }
+
+  @Test
+  fun `evaluate output text`() {
+    val result =
+      evaluate(
+        """
+        foo {
+          bar = 2
+        }
+
+        output {
+          renderer = new YamlRenderer {}
+        }
+        """
+          .trimIndent(),
+        "output.text",
+      )
+
+    assertThat(result)
+      .isEqualTo(
+        """
+        foo:
+          bar: 2
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `evaluate let expression`() {
+    val result = evaluate("foo = 1", "let (bar = 2) foo + bar")
+
+    assertThat(result).isEqualTo(3L)
+  }
+
+  @Test
+  fun `evaluate import expression`() {
+    val result = evaluate("", """import("pkl:release").current.documentation.homepage""")
+
+    assertThat(result as String).startsWith("https://pkl-lang.org/")
+  }
+
+  @Test
+  fun `evaluate expression with invalid syntax`() {
+    val error = assertThrows<PklException> { evaluate("foo = 1", "<>!!!") }
+
+    assertThat(error).hasMessageContaining("Unexpected token")
+    assertThat(error).hasMessageContaining("<>!!!")
+  }
+
+  @Test
+  fun `evaluate non-expression`() {
+    val error = assertThrows<PklException> { evaluate("bar = 2", "bar = 15") }
+
+    assertThat(error).hasMessageContaining("Unexpected token")
+    assertThat(error).hasMessageContaining("bar = 15")
+  }
+
+  @Test
+  fun `evaluate semantically invalid expression`() {
+    val error = assertThrows<PklException> { evaluate("foo = 1", "foo as String") }
+
+    assertThat(error).hasMessageContaining("Expected value of type `String`, but got type `Int`")
+  }
+
+  @Test
+  fun `evaluate local property`() {
+    val result = evaluate("local foo = 1", "foo")
+
+    assertThat(result).isEqualTo(1L)
+  }
+
+  @Test
+  fun `evaluate throwing local property trims expression preamble when rendering stack frames`() {
+    val error = assertThrows<PklException> { evaluate("local foo = throw(\"uh oh\")", "foo") }
+
+    assertThat(error.message)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        uh oh
+
+        1 | local foo = throw("uh oh")
+                        ^^^^^^^^^^^^^^
+        at text#foo (repl:text)
+
+        1 | foo
+            ^^^
+        at  (repl:text)
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `evaluate throwing multi-line expression renders without crashing`() {
+    val error =
+      assertThrows<PklException> {
+        evaluate(
+          "x = 1",
+          """
+          let (_a = 1)
+          let (_b = 2)
+            throw("boom")
+          """
+            .trimIndent(),
+        )
+      }
+
+    assertThat(error.message)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        boom
+
+        3 | throw("boom")
+            ^^^^^^^^^^^^^
+        at  (repl:text)
+
+        1 | let (_a = 1)
+            ^^^^^^^^^^^^
+        at repl:text.<let expr> (repl:text)
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `evaluate import`() {
+    val result = evaluate("import \"pkl:base\"", "base")
+
+    assertThat(result).isInstanceOf(PModule::class.java)
+    result as PModule
+    assertThat(result.moduleName).isEqualTo("pkl.base")
+  }
+}

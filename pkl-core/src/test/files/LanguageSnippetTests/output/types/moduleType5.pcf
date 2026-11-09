@@ -1,0 +1,14 @@
+bar {
+  mod {
+    mod = null
+    num = 5
+  }
+  num = 5
+}
+baz {
+  mod {
+    mod = null
+    num2 = 5
+  }
+  num2 = 5
+}

@@ -1,0 +1,5 @@
+amends "../../basic/constModifier.pkl"
+
+constDyn {
+  bar = 1
+}

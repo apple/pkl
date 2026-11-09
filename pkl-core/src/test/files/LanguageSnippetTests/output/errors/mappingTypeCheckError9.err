@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 1
+
+x | local mapping2: Mapping<String, String> = mapping1
+                                    ^^^^^^
+at mappingTypeCheckError9#mapping2 (file:///$snippetsDir/input/errors/mappingTypeCheckError9.pkl)
+
+x | local mapping1: Mapping<String, Int> = new { ["foo"] = 1 }
+                                                           ^
+at mappingTypeCheckError9#mapping1["foo"] (file:///$snippetsDir/input/errors/mappingTypeCheckError9.pkl)
+
+x | first = mapping3["foo"]
+            ^^^^^^^^^^^^^^^
+at mappingTypeCheckError9#first (file:///$snippetsDir/input/errors/mappingTypeCheckError9.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

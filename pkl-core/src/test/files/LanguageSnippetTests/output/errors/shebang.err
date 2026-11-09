@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Invalid token at position. Expected a class, typealias, method, or property.
+
+x | #!/usr/bin/env pkl eval
+    ^^^^^^^^^^^^^^^^^^^^^^^
+at shebang (file:///$snippetsDir/input/errors/shebang.pkl)

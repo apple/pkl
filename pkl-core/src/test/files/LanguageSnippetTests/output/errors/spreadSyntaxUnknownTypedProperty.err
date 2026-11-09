@@ -1,0 +1,21 @@
+–– Pkl Error ––
+Cannot find property `age` in object of type `spreadSyntaxUnknownTypedProperty#Person`.
+
+x | res1: Person = new { ...personDynamic }
+                         ^^^^^^^^^^^^^^^^
+at spreadSyntaxUnknownTypedProperty#res1 (file:///$snippetsDir/input/errors/spreadSyntaxUnknownTypedProperty.pkl)
+
+Available properties:
+name
+
+x | age = 34
+    ^^^
+at spreadSyntaxUnknownTypedProperty#personDynamic.age (file:///$snippetsDir/input/errors/spreadSyntaxUnknownTypedProperty.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

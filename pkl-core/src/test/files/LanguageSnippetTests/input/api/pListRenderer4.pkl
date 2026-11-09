@@ -1,0 +1,31 @@
+import "pkl:test"
+
+class Person {
+  name: String
+  age: Int
+}
+
+typealias Email = String
+
+local renderer = new PListRenderer {}
+
+res1 = renderer.renderValue(123)
+res2 = renderer.renderValue(1.23)
+res3 = renderer.renderValue(false)
+res4 = renderer.renderValue("pigeon")
+res6 = renderer.renderValue(List("pigeon", "parrot"))
+res7 = renderer.renderValue(Set("pigeon", "parrot"))
+res8 = renderer.renderValue(Map("name", "pigeon", "age", 42))
+res9 = renderer.renderValue(new Listing { "pigeon"; "parrot" })
+res10 = renderer.renderValue(new Mapping { ["name"] = "pigeon"; ["age"] = 42 })
+res11 = renderer.renderValue(new Dynamic { name = "pigeon"; age = 42 })
+res12 = renderer.renderValue(new Person { name = "pigeon"; age = 42 })
+
+res13 = test.catch(() -> renderer.renderValue(null))
+res14 = test.catch(() -> renderer.renderValue(1.min))
+res15 = test.catch(() -> renderer.renderValue(1.mb))
+res16 = test.catch(() -> renderer.renderValue(Person))
+res17 = test.catch(() -> renderer.renderValue(Email))
+res18 = test.catch(() -> renderer.renderValue((x) -> x))
+res19 = test.catch(() -> new PListRenderer { converters { [Int] = (_) -> throw("ouch") } }.renderValue(42))
+res20 = test.catch(() -> renderer.renderValue(IntSeq(1, 4)))

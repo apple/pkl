@@ -1,0 +1,15 @@
+
+local baz = new Dynamic {}
+
+local foo = new Dynamic {
+  bar = 1
+}
+
+qux {
+  (foo) {
+    ...super.bar
+    (baz) {
+      qux = 1
+    }
+  }
+}

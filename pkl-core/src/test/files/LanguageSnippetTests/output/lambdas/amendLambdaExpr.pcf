@@ -1,0 +1,34 @@
+res0 {
+  zero = 0
+  amended = "amended"
+}
+res1 {
+  one = 1
+  amended = "amended"
+}
+res2 {
+  one = 1
+  two = 2
+  amended = "amended"
+}
+res3 {
+  one = 1
+  two = 2
+  three = 3
+  amended = "amended"
+}
+res4 {
+  one = 1
+  two = 2
+  three = 3
+  four = 4
+  amended = "amended"
+}
+res5 {
+  one = 1
+  two = 2
+  three = 3
+  four = 4
+  five = 5
+  amended = "amended"
+}

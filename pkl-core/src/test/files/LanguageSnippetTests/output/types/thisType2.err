@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `this` type within a type alias body.
+
+x | typealias Foo = this
+                    ^^^^
+at thisType2#Foo (file:///$snippetsDir/input/types/thisType2.pkl)

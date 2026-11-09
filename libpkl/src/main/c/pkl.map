@@ -1,0 +1,9 @@
+PKL {
+  global:
+    pkl_init;
+    pkl_send_message;
+    pkl_close;
+    pkl_version;
+  local:
+    *;
+};

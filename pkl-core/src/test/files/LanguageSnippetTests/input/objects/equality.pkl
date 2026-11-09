@@ -1,0 +1,89 @@
+a1 = new Dynamic {} == new Dynamic {}
+a2 = new Dynamic { foo = 1 } == new Dynamic { foo = 1 }
+a3 = new Dynamic { foo = 1; bar = "two" } == new Dynamic { foo = 1; bar = "two" }
+a4 = new Dynamic { foo = 1; bar = "two" } == new Dynamic { bar = "two"; foo = 1 }
+a5 = new Dynamic { foo = 1; bar = "two" } == new Dynamic { foo = 1; bar = "one" }
+a6 = new Dynamic { foo = 1; bar = "two" } == new Dynamic { foo = 1; bar = "two"; baz = "two" }
+a7 = new Dynamic { foo = 1 } == new Dynamic { bar = "two" }
+a8 = new Dynamic { foo = x; local x = 1 } == new Dynamic { foo = 1 }
+a9 = new Dynamic { foo = x; local x = 1 } == new Dynamic { foo = y; local y = 1 }
+a10 = new Dynamic { foo = x; local x = 1; local `_` = 2 } == new Dynamic { foo = 1 }
+a11 = new Dynamic { foo = x; local x = 1 } { bar = y; local y = 2 } == new Dynamic { foo = 1; bar = 2 }
+
+local obj1 {
+  foo = 1
+}
+local obj2 {
+  foo = 1
+  bar = "two"
+}
+local obj3 {
+  bar = "two"
+  foo = 1
+}
+
+b1 = (obj1) {} == new Dynamic { foo = 1 }
+b2 = (obj1) { bar = "two" } == obj2
+b3 = (obj1) { bar = "two" } == (obj2) {}
+b4 = (obj1) { bar = "two" } == (obj2) { bar = "two" }
+b5 = (obj1) { bar = "two" } == (obj2) { foo = 1 }
+b6 = (obj1) { bar = "two" } == obj3
+b7 = (obj1) { baz = "two" } == obj3
+b8 = (obj1) { bar = "three" } == obj3
+
+class Person {
+  name = "Pigeon"
+  age: Int?
+  street: String
+}
+
+class Person2 {
+  name = "Pigeon"
+  age: Int?
+  street: String
+}
+
+c1 = new Person {} == Person
+c2 = new Person {} == new Person2 {}
+c3 = new Person { street = "Fulton St." } == new Person { street = "Fulton St." }
+c4 = new Person { street = "Fulton St." } == new Person2 { street = "Fulton St." }
+c5 = new Person { age = 40; street = "Fulton St." } == new Person { street = "Fulton St."; age = 40 }
+c6 = new Person { age = 80; street = "Fulton St." } == new Person { street = "Fulton St."; age = 40 }
+c7 = 
+  new Person { age = x; local x = 40; street = y; local y = "Fulton St." } ==
+    new Person { street = "Fulton St."; age = 40 }
+c8 =
+  new Person { age = x; local x = 40; street = y; local y = "Fulton St." } ==
+    new Person { age = x2; local x2 = 40; street = y2; local y2 = "Fulton St." }
+
+class Person3 {
+  name: String
+  age: Int
+  hidden street: String
+}
+
+// equal by definition
+local person3_1 = new Person3 { name = "Pigeon"; age = 42 }
+local person3_2 = new Person3 { name = "Pigeon"; age = 42; street = "Fox St." }
+local person3_3 = new Person3 { name = street; age = 42; street = "Pigeon" }
+
+d1 = person3_1 == person3_2
+d2 = person3_2 == person3_1
+d3 = person3_1 == person3_3
+d4 = person3_3 == person3_1
+
+class Person4 {
+  name: String
+  age: Int
+  hidden street: String
+  hidden hobby: String
+}
+
+// equal by definition
+local person4_1 = new Person4 { name = "Pigeon"; age = 42 }
+local person4_2 = new Person4 { name = "Pigeon"; age = 42; street = "Fox St." }
+local person4_3 = new Person4 { name = "Pigeon"; age = 42; street = "Fox St."; hobby = "swimming" }
+
+e1 = person4_1 == person4_2
+e2 = person4_2 == person4_3
+e3 = person4_3 == person4_1

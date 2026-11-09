@@ -1,0 +1,13 @@
+examples {
+  ["catch"] {
+    "ouch"
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+    "nested"
+  }
+  ["catchOrNull"] {
+    null
+    "ouch"
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+    "nested"
+  }
+}

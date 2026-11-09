@@ -1,0 +1,198 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.module
+
+import java.io.File
+import java.net.URI
+import java.nio.file.Path
+import java.util.regex.Pattern
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.outputStream
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.test.Executables
+import org.pkl.commons.toPath
+import org.pkl.commons.writeString
+import org.pkl.core.EvaluatorBuilder
+import org.pkl.core.ModuleSource
+import org.pkl.core.SecurityManagers
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.externalreader.ExternalReaderProcess
+import org.pkl.core.externalreader.TestExternalModuleReader
+import org.pkl.core.externalreader.TestExternalReaderProcess
+import org.pkl.core.resource.ResourceReaders
+
+class ModuleKeyFactoriesTest {
+  companion object {
+    @JvmStatic
+    private fun pathEnvIsSet(): Boolean {
+      return System.getenv("PATH")
+        ?.split(File.pathSeparator)
+        ?.contains(Executables.externalReaderFixture.toAbsolutePath().toString()) ?: false
+    }
+  }
+
+  @Test
+  fun `standard library`() {
+    val factory = ModuleKeyFactories.standardLibrary
+    assertThat(factory.create(URI("other:test"))).isNotPresent
+
+    val module = factory.create(URI("pkl:test"))
+    assertThat(module).isPresent
+  }
+
+  @Test
+  fun file() {
+    val factory = ModuleKeyFactories.file
+    assertThat(factory.create(URI("other:test"))).isNotPresent
+
+    val module = factory.create(URI("file:///some/file"))
+    assertThat(module).isPresent
+  }
+
+  @Test
+  fun `generic url`() {
+    val factory = ModuleKeyFactories.genericUrl
+    assertThat(factory.create(URI("other:text"))).isNotPresent
+
+    val module = factory.create(URI("file:///some/file"))
+    assertThat(module).isPresent
+  }
+
+  @Test
+  fun `class path`() {
+    val factory = ModuleKeyFactories.classPath(this::class.java.classLoader)
+    assertThat(factory.create(URI("other:text"))).isNotPresent
+
+    val module = factory.create(URI("modulepath:/foo/bar.pkl"))
+    assertThat(module).isPresent
+  }
+
+  @Test
+  fun `module path - basics`() {
+    val factory = ModuleKeyFactories.modulePath(ModulePathResolver(listOf("/path".toPath())))
+    assertThat(factory.create(URI("other:text"))).isNotPresent
+
+    val module = factory.create(URI("modulepath:/foo/bar.pkl"))
+    assertThat(module).isPresent
+  }
+
+  @Test
+  fun `module path - directories`(@TempDir tempDir: Path) {
+    val dir1 = tempDir.resolve("foo/bar").createDirectories()
+    val dir2 = tempDir.resolve("foo2/bar2").createDirectories()
+    val filePath = dir2.resolve("baz/mymodule.pkl").createParentDirectories().writeString("x = 1")
+
+    val factory = ModuleKeyFactories.modulePath(ModulePathResolver(listOf(dir1, dir2)))
+    val module = factory.create(URI("modulepath:/baz/mymodule.pkl"))
+    assertThat(module).isPresent
+
+    val resolved = module.get().resolve(SecurityManagers.defaultManager)
+    assertThat(resolved.original).isSameAs(module.get())
+    assertThat(resolved.uri).isEqualTo(filePath.toRealPath().toUri())
+    assertThat(resolved.loadSource().trim()).isEqualTo("x = 1")
+  }
+
+  @Test
+  fun `module path - jar files`(@TempDir tempDir: Path) {
+    val jarFile = tempDir.resolve("test.jar")
+    jarFile.outputStream().use { outStream ->
+      javaClass.getResourceAsStream("test.jar")!!.use { inStream -> inStream.copyTo(outStream) }
+    }
+
+    val factory = ModuleKeyFactories.modulePath(ModulePathResolver(listOf(jarFile)))
+    val module = factory.create(URI("modulepath:/dir1/module1.pkl"))
+    assertThat(module).isPresent
+
+    val resolved = module.get().resolve(SecurityManagers.defaultManager)
+    assertThat(resolved.original).isSameAs(module.get())
+    assertThat(resolved.uri.toString()).startsWith("jar:file:")
+    assertThat(resolved.uri.toString()).endsWith("/test.jar!/dir1/module1.pkl")
+    assertThat(resolved.loadSource().trim()).isEqualTo("x = 1")
+
+    // Assert that creating a modulekey from the resolved URI is still a ModulePath
+    val module2 = factory.create(resolved.uri)
+    assertThat(module2).isPresent
+    assertThat(module2.get()).hasSameClassAs(module.get())
+  }
+
+  @Test
+  fun `module path via service provider`() {
+    val factories = ModuleKeyFactories.fromServiceProviders()
+    assertThat(factories).hasSize(1)
+
+    val factory = factories.single()
+
+    val module = factory.create(URI("test:foo"))
+    assertThat(module).isPresent
+    assertThat(module.get().uri.scheme).isEqualTo("modulepath")
+
+    val module2 = factory.create(URI("other"))
+    assertThat(module2).isNotPresent
+  }
+
+  @Test
+  fun externalProcess() {
+    val extReader = TestExternalModuleReader()
+    val (proc, runtime) =
+      TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
+
+    val factory = ModuleKeyFactories.externalProcess(extReader.scheme, proc)
+
+    val module = factory.create(URI("test:foo"))
+    assertThat(module).isPresent
+    assertThat(module.get().uri.scheme).isEqualTo("test")
+
+    val module2 = factory.create(URI("other"))
+    assertThat(module2).isNotPresent
+
+    proc.close()
+    runtime.close()
+  }
+
+  @Test
+  fun `external process -- spawning an executable using a path`() {
+    testExternalReader(Executables.externalReaderFixture.toAbsolutePath().toString())
+  }
+
+  @Test
+  fun `external process -- spawning an executable using a simple name off PATH`() {
+    assumeTrue(pathEnvIsSet(), "PATH contains fixtures dir")
+    testExternalReader("externalreader")
+  }
+
+  private fun testExternalReader(executable: String) {
+    val evaluator = makeEvaluatorWithExternalReader(executable)
+    val result = evaluator.use {
+      evaluator.evaluateExpression(ModuleSource.uri("pkl:base"), "read(\"foo:foo\").text")
+    }
+    assertThat(result).isEqualTo("hello")
+  }
+
+  private fun makeEvaluatorWithExternalReader(reader: String) =
+    with(EvaluatorBuilder.preconfigured()) {
+      val process =
+        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(reader, listOf(), null))
+      addModuleKeyFactory(ModuleKeyFactories.externalProcess("foo", process))
+      addResourceReader(ResourceReaders.externalProcess("foo", process))
+      setAllowedModules(allowedModules + listOf(Pattern.compile("foo:")))
+      setAllowedResources(allowedResources + listOf(Pattern.compile("foo:")))
+      build()
+    }
+}

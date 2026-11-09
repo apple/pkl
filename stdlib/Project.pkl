@@ -1,0 +1,453 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A manifest that defines the presence of a project.
+///
+/// A project is useful for defining [dependencies], and also for 
+/// [common evaluator settings][evaluatorSettings].
+///
+/// A project is a directory that contains a project file at its root.
+/// The project file is a file named `PklProject` exactly, that amends or embeds `"pkl:Project"`.
+///
+/// When evaluating from the CLI, the project directory can be specified explicitly using
+/// `--project-dir` flag, or is determined implicitly by walking up the working directory, looking
+/// for a directory containing a `PklProject` file.
+///
+/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must
+/// be explicitly stated via the evaluator builder.
+///
+/// ## Embedding [Project]
+///
+/// In a project file, instead of amending `pkl:Project`, it is possible simply set the
+/// `output.value` property of a module to an instance of [Project].
+/// This allows defining higher levels of abstraction that encapsulate an underlying [Project]
+/// definition.
+///
+/// When defining an abstraction, it is important to:
+///   1. Set the module's `output.value` to the underlying project output.
+///   2. Set [projectFileUri] to the enclosing module's URI.
+///      This is necessary to determine the correct project directory, as well as for resolving
+///      local project dependencies correctly.
+///
+///      The [newInstance()] helper method exists as a convenient way to set this when embedding
+///      project definitions.
+///
+/// Example:
+/// ```
+/// module MyTeamProject
+///
+/// import "pkl:Project"
+///
+/// /// The package name, to be prefixed with `myteam`.
+/// packageName: String
+///
+/// project: Project = (Project.newInstance(module)) {
+///   package {
+///     name = "myteam.\(packageName)"
+///   }
+/// }
+///
+/// output {
+///   value = project
+/// }
+/// ``` 
+@ModuleInfo { minPklVersion = "0.34.0" }
+module pkl.Project
+
+import "pkl:EvaluatorSettings" as EvaluatorSettingsModule
+import "pkl:Project"
+import "pkl:reflect"
+import "pkl:semver"
+
+/// The details for the package represented by this project.
+///
+/// This section is used if publishing this project as a package.
+package: Package?
+
+/// The tests of the project.
+///
+/// If set, allows running `pkl test` without specifying the paths to source modules.
+///
+/// Relative paths are resolved against PklProject's enclosing directory.
+///
+/// Glob imports can be useful for defining this property.
+///
+/// Example:
+///
+/// ```
+/// tests = import*("**.test.pkl").keys.toListing()
+/// ```
+tests: Listing<String>(isDistinct)
+
+/// Tells if the project is a local module named `PklProject`, is not self, and has a [package] section
+local isValidLoadDependency = (it: Project) ->
+  isUriLocal(projectFileUri, it.projectFileUri)
+    && it.projectFileUri.endsWith("/PklProject")
+    && it != module
+    && it.package != null
+
+local const function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
+  // This is an imperfect check; should also check that the URIs have the same authority.
+  // We should improve this if/when there is a URI library in the stdlib.
+  uri1.substring(0, uri1.indexOf(":")) == uri2.substring(0, uri2.indexOf(":"))
+
+/// The dependencies of this project.
+///
+/// A dependency is a group of Pkl modules and file resources that can be imported within the
+/// project.
+/// Within the project, a dependency can be referenced via _dependency notation_, where the name
+/// is prefixed with the `@` character.
+///
+/// For example, given the following descriptor:
+///
+/// ```
+/// dependencies {
+///   ["birds"] {
+///     uri = "package://example.com/birds@1.0.0"
+///   }
+/// }
+/// ```
+///
+/// This enables the following snippet:
+///
+/// ```
+/// import "@birds/canary.pkl" // Import a module from the `birds` dependency
+///
+/// birdIndex = read("@birds/index.txt") // Read a file from the `birds` dependency
+/// ```
+///
+/// A dependency's coordinates can either be specified in the form of a [RemoteDependency]
+/// descriptor, which gets fetched over the network, or an import of another PklProject file, which
+/// represents a package that exists locally.
+///
+/// Remote dependencies are fetched over HTTPS.
+/// When fetching a remote dependency, two HTTPS requests are made.
+/// Given dependency URI `package://example.com/foo@0.5.0`, the following requests are made:
+///
+///   1. `GET https://example.com/foo@0.5.0` to retrieve the metadata JSON file.
+///   2. Given the metadata JSON file, make a GET request to the package URI ZIP archive.
+///
+/// If this project is published as a package, these dependencies are included within the published
+/// package metadata.
+///
+/// ## Local project dependencies
+///
+/// A local project can alternatively be used as a dependency.
+/// This is useful when structuring a single repository that publishes multiple packages.
+///
+/// To specify a local project dependency, import the relative `PklProject` file.
+///
+/// The local project dependency must define its own [package].
+///
+/// Example:
+/// ```
+/// dependencies {
+///   ["penguins"] = import("../penguins/PklProject")
+/// }
+/// ```
+///
+/// ## Resolving dependencies
+///
+/// Dependencies must be _resolved_ before they can be used.
+/// To resolve dependencies, run the CLI command `pkl project resolve`.
+/// This will generate a `PklProject.deps.json` file next to the `PklProject` file.
+///
+/// ### Minimum version selection
+///
+/// Pkl uses the
+/// [minimum version selection algorithm 1](https://research.swtch.com/vgo-mvs#algorithm_1)
+/// to resolve dependencies.
+/// A dependency is identified by its package URI, as well as its major semver number.
+///
+/// To determine the resolved dependencies of a project, the following algorithm is applied:
+///   1. Gather all dependencies, both direct and transitive.
+///   2. For each package's major version, determine the highest declared minor version.
+///   3. Write each resolved dependency to sibling file `PklProject.deps.json`.
+dependencies: Mapping<String(!contains("/")), *RemoteDependency | Project(isValidLoadDependency)>
+
+local isFileBasedProject = projectFileUri.startsWith("file:")
+
+/// If set, controls the base evaluator settings when running the evaluator.
+///
+/// These settings influence the behavior of the evaluator when running the `pkl eval`, `pkl test`,
+/// and `pkl repl` CLI commands.
+/// Command line flags passed to the CLI will override any settings defined here.
+///
+/// Other integrations can possibly ignore these evaluator settings.
+///
+/// Evaluator settings do not get published as part of a package.
+/// It is not possible for a package dependency to influence the evaluator settings of a project.
+///
+/// The following values can only be set if this is a file-based project:
+///
+///  - [modulePath][EvaluatorSettingsModule.modulePath]
+///  - [rootDir][EvaluatorSettingsModule.rootDir]
+///  - [moduleCacheDir][EvaluatorSettingsModule.moduleCacheDir]
+///  - [externalModuleReaders][EvaluatorSettingsModule.externalModuleReaders]
+///  - [externalResourceReaders][EvaluatorSettingsModule.externalResourceReaders]
+evaluatorSettings: EvaluatorSettingsModule(
+  (modulePath != null).implies(isFileBasedProject),
+  (rootDir != null).implies(isFileBasedProject),
+  (moduleCacheDir != null).implies(isFileBasedProject),
+  (externalModuleReaders != null).implies(isFileBasedProject),
+  (externalResourceReaders != null).implies(isFileBasedProject),
+)
+
+/// The [evaluatorSettings] resolved against the project dir.
+@Since { version = "0.32.0" }
+fixed resolvedEvaluatorSettings: EvaluatorSettingsModule = evaluatorSettings.resolve(projectFileUri)
+
+/// The URI of the PklProject file.
+///
+/// This value is used to:
+///
+///  * Resolve relative paths when importing another local project as a
+///    dependency.
+///  * Resolve relative paths declared within [evaluatorSettings].
+projectFileUri: String = reflect.Module(module).uri
+
+/// Instantiates a project definition within the enclosing module.
+///
+/// This is a convenience method for setting [projectFileUri] to the enclosing module's URI.
+///
+/// Example:
+/// ```
+/// myProject: Project = (Project.newInstance(module)) {
+///   dependencies { /* etc */ }
+/// }
+/// ```
+function newInstance(enclosingModule: Module): Project = new {
+  projectFileUri = reflect.Module(enclosingModule).uri
+}
+
+local const hasVersion = (it: Uri) ->
+  let (versionSep = it.lastIndexOf("@"))
+    if (versionSep == -1)
+      false
+    else
+      let (version = it.drop(versionSep + 1))
+        semver.parseOrNull(version) != null
+
+typealias PackageUri = Uri(startsWith("package:"), hasVersion)
+
+class RemoteDependency {
+  /// The URI that this dependency is published to.
+  uri: PackageUri
+
+  /// The checksums of this package.
+  ///
+  /// If omitted, this is taken from the derived package coordinates.
+  checksums: Checksums?
+}
+
+class Checksums {
+  /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2) checksum value of the dependency, in hexadecimal representation.
+  sha256: String
+}
+
+/// An email address, conformant to the
+/// [RFC5322 mailbox](https://www.rfc-editor.org/rfc/rfc5322#section-3.4) specification.
+///
+/// Can be in the form of an address spec, or a named address.
+///
+/// Examples:
+///   * `"johnny.appleseed@example.com"`
+///   * `"Johnny Appleseed <johnny.appleseed@example.com>"`
+typealias EmailAddress = String(matches(Regex(#".+@\S+|.+<\S+@\S+>"#)))
+
+class Package {
+  /// The name of this package.
+  ///
+  /// The package name is only used for display purposes.
+  ///
+  /// Example:
+  /// ```
+  /// name = "myproject"
+  /// ```
+  name: String
+
+  /// The URI that the package is published to, without the version part.
+  ///
+  /// This, along with the version, determines the import path for modules and resources published
+  /// by this package.
+  ///
+  /// Example:
+  /// ```
+  /// baseUri = "package://example.com/myproject"
+  /// ```
+  baseUri: Uri(startsWith("package:"))
+
+  /// The version of this package.
+  ///
+  /// Must adhere to semantic versioning.
+  ///
+  /// Example:
+  /// ```
+  /// version = "1.5.0"
+  /// ```
+  version: String(semver.isValid(this))
+
+  /// The HTTPS location for the zip archive for this package.
+  ///
+  /// Example:
+  /// ```
+  /// packageZipUrl = "https://example.com/artifacts/myproject/\(version).zip"
+  /// ```
+  packageZipUrl: Uri(startsWith("https:"))
+
+  /// The description of this package.
+  description: String?
+
+  /// The maintainers' emails for this package.
+  ///
+  /// Email addresses must adhere to
+  /// [RFC5322 mailbox](https://www.rfc-editor.org/rfc/rfc5322#section-3.4) specification.
+  ///
+  /// Example:
+  /// ```
+  /// email { "Johnny Appleseed <johnny.appleseed@example.com>" }
+  /// ```
+  authors: Listing<EmailAddress>
+
+  /// The website for this package.
+  ///
+  /// Example:
+  /// ```
+  /// website = "https://example.com/myproject"
+  /// ```
+  website: String?
+
+  /// The web URL of the Pkldoc documentation for this package.
+  documentation: Uri(!endsWith("/"))?
+
+  /// The source code repository for this package.
+  ///
+  /// Example:
+  /// ```
+  /// sourceCode = "https://github.com/myorg/myproject"
+  /// ```
+  sourceCode: String?
+
+  /// The source code scheme for this package.
+  ///
+  /// This is used to transform stack frames for errors arising for this package.
+  ///
+  /// The following placeholders are available:
+  ///
+  /// - `%{path}`
+  ///   absolute file path of the file to open
+  /// - `%{line}`
+  ///   start line number to navigate to
+  /// - `%{endLine}`
+  ///   end line number to navigate to
+  /// - `%{column}`
+  ///   column number to navigate to
+  /// - `%{endColumn}`
+  ///   end column number to navigate to
+  ///
+  /// For example, if publishing to GitHub, assuming that the version gets published as a tag:
+  ///
+  /// ```
+  /// sourceCodeUrlScheme = "\(sourceCode)/blob/\(version)%{path}#L%{line}-L%{endLine}"
+  /// ```
+  sourceCodeUrlScheme: String?
+
+  /// The license associated with this package.
+  ///
+  /// If using a common license, use its [SPDX license identifier](https://spdx.org/licenses/).
+  ///
+  /// If using multiple common licenses, use a
+  /// [SPDX license expression syntax version 2.0 string](https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/).
+  /// For example: `"Apache-2.0 or MIT"`.
+  ///
+  /// If using an uncommon license, also provide its full text in the [licenseText] property.
+  ///
+  /// Example:
+  /// ```
+  /// license = "Apache-2.0"
+  /// ```
+  license: (CommonSpdxLicenseIdentifier | String)?
+
+  /// The full text of the license associated with this package.
+  licenseText: String?
+
+  /// The web URL of the issue tracker for this package.
+  issueTracker: String?
+
+  /// Paths to the tests that define the API of the package.
+  ///
+  /// These tests are run as part of the `pkl project package` command.
+  ///
+  /// Relative paths are resolved against PklProject's enclosing directory.
+  ///
+  /// Glob imports can be useful for defining this property.
+  ///
+  /// Example:
+  ///
+  /// ```
+  /// tests = import*("**.test.pkl").keys.toListing()
+  /// ```
+  apiTests: Listing<String>(isDistinct)
+
+  /// Glob patterns describing the set of files to exclude from packaging.
+  ///
+  /// By default, the project manifest files are excluded, and any paths that start with a dot.
+  ///
+  /// Glob patterns follows the same glob rules as glob imports and reads.
+  exclude: Listing<String> = new {
+    "PklProject"
+    "PklProject.deps.json"
+    ".**"
+  }
+
+  /// The effective package URI for the package represented by this project.
+  fixed uri: PackageUri = "\(baseUri)@\(version)"
+}
+
+@Deprecated { since = "0.26.0"; replaceWith = "EvaluatorSettingsModule" }
+typealias EvaluatorSettings = EvaluatorSettingsModule
+
+/// Common software licenses in the [SPDX License List](https://spdx.org/licenses/).
+typealias CommonSpdxLicenseIdentifier =
+  "Apache-2.0"
+    | "MIT"
+    | "BSD-2-Clause"
+    | "BSD-3-Clause"
+    | "ISC"
+    | "GPL-3.0"
+    | "GPL-2.0"
+    | "MPL-2.0"
+    | "MPL-1.1"
+    | "MPL-1.0"
+    | "AGPL-1.0-only"
+    | "AGPL-1.0-or-later"
+    | "AGPL-3.0-only"
+    | "AGPL-3.0-or-later"
+    | "LGPL-2.0-only"
+    | "LGPL-2.0-or-later"
+    | "LGPL-2.1-only"
+    | "LGPL-2.1-or-later"
+    | "LGPL-3.0-only"
+    | "LGPL-3.0-or-later"
+    | "EPL-1.0"
+    | "EPL-2.0"
+    | "UPL-1.0"
+    | "BSL-1.0"
+    | "Unlicense"
+
+@Unlisted
+@Since { version = "0.27.0" }
+fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations

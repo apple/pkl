@@ -1,0 +1,8 @@
+res1 {
+  result = 3
+  bar = 3
+}
+res2 {
+  result = 3
+  bar = 3
+}

@@ -1,0 +1,10 @@
+= Tools
+include::ROOT:partial$component-attributes.adoc[]
+
+* xref:pkl-cli:index.adoc[CLI]
+* xref:pkl-doc:index.adoc[Pkldoc]
+* xref:pkl-gradle:index.adoc[Gradle Plugin]
+* Editor support
+** xref:intellij:ROOT:index.adoc[IntelliJ]
+** xref:vscode:ROOT:index.adoc[VSCode]
+** xref:neovim:ROOT:index.adoc[Neovim]

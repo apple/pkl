@@ -1,0 +1,62 @@
+res1 = "<integer>123</integer>"
+res2 = "<real>1.23</real>"
+res3 = "<false/>"
+res4 = "<string>pigeon</string>"
+res6 = """
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  """
+res7 = """
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  """
+res8 = """
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  """
+res9 = """
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  """
+res10 = """
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  """
+res11 = """
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  """
+res12 = """
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  """
+res13 = "Cannot render value of type `Null` as XML property list. Value: null"
+res14 = "Cannot render value of type `Duration` as XML property list. Value: 1.min"
+res15 = "Cannot render value of type `DataSize` as XML property list. Value: 1.mb"
+res16 = "Cannot render value of type `Class` as XML property list. Value: pListRenderer4#Person"
+res17 = "Cannot render value of type `TypeAlias` as XML property list. Value: pListRenderer4#Email"
+res18 = "Cannot render value of type `Function1` as XML property list. Value: new Function1 {}"
+res19 = "ouch"
+res20 = "Cannot render value of type `IntSeq` as XML property list. Value: IntSeq(1, 4)"

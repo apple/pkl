@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `4`. Expected `,` or `)`.
+
+x | map = Map(1, 2, 3  4, 5, 6)
+                       ^
+at missingMapSeparator (file:///$snippetsDir/input/errors/delimiters/missingMapSeparator.pkl)

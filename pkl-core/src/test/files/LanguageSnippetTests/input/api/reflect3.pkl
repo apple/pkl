@@ -1,0 +1,27 @@
+/// Module doc comment line 1
+/// Module doc comment line 2
+module api.reflect
+
+amends ".../snippetTest.pkl"
+
+import "pkl:reflect"
+import ".../input-helper/api/reflect/BaseModule.pkl"
+import ".../input-helper/api/reflect/amendingModule.pkl"
+import ".../input-helper/api/reflect/testHelpers.pkl"
+
+local mod = reflect.Module(amendingModule)
+
+facts {
+  ["Reflecting an amended module"] {
+    mod.reflectee == amendingModule
+    mod.annotations == testHelpers.MyAnn("amending module annotation")
+    mod.docComment == "amending module doc comment"
+    mod.uri.matches(Regex(#"file:///.*/input-helper/api/reflect/amendingModule.pkl"#))
+    mod.supermodule == reflect.Module(BaseModule)
+    mod.isAmend
+    mod.classes.keys == Set()
+    mod.typeAliases.keys == Set()
+    mod.moduleClass.reflectee == BaseModule.getClass()
+    reflect.Module(module) == reflect.moduleOf((module) { facts { ["Can amend"] {} } })
+  }
+}

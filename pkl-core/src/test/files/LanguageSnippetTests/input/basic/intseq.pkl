@@ -1,0 +1,33 @@
+amends "../snippetTest.pkl"
+
+import "pkl:math"
+
+local seq1 = IntSeq(0, -1)
+local seq2 = IntSeq(0, -2)
+local seq3 = IntSeq(10, -10)
+
+facts {
+  ["equality"] {
+    seq1 == seq2
+    seq2 == seq1
+    seq2 == seq3
+    seq3 == seq2
+    seq3 == seq1
+    seq1 == seq3
+
+    IntSeq(-10, 10) == IntSeq(-10, 10)
+    !(IntSeq(-10, 10) == IntSeq(10, -10).step(-1))
+    !(IntSeq(-10, 10) == IntSeq(-10, 10).step(2))
+
+    IntSeq(-10, 10).step(2) == IntSeq(-10, 11).step(2)
+    IntSeq(-10, 10).step(5) == IntSeq(-10, 14).step(5)
+    !(IntSeq(-10, 10).step(5) == IntSeq(-10, 15).step(5))
+
+    IntSeq(10, -10).step(-2) == IntSeq(10, -11).step(-2)
+    IntSeq(10, -10).step(-5) == IntSeq(10, -14).step(-5)
+    !(IntSeq(10, -10).step(-5) == IntSeq(10, -15).step(-5))
+
+    IntSeq(math.minInt, math.maxInt) == IntSeq(math.minInt, math.maxInt)
+    !(IntSeq(math.minInt, math.maxInt) == IntSeq(math.maxInt, math.minInt))
+  }
+}

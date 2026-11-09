@@ -1,0 +1,7 @@
+open module currentModuleType5
+
+import ".../input-helper/types/aliasHolder.pkl"
+
+local foo: aliasHolder.MyList<module> = List(this)
+x = 1
+y = foo.first.x

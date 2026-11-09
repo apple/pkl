@@ -1,0 +1,14 @@
+res1 = List("one")
+res2 {
+  ["one"] = "one"
+}
+res3 = List(Set("one"), Set("one"))
+res4 = List("one")
+res5 {
+  res1 = List("one")
+  res2 {
+    ["one"] = "one"
+  }
+  res3 = List(List("one"), List("one"))
+}
+res6 = List(Set("one"), Set("one"))

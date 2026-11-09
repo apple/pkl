@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Cannot iterate over value of type `Int`.
+Value: 5
+
+x | for (n in 5) { n }
+              ^
+at forGeneratorCannotIterateOverThisValue#foo (file:///$snippetsDir/input/errors/forGeneratorCannotIterateOverThisValue.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

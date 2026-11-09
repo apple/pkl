@@ -1,0 +1,2 @@
+// invalid semver
+res = import("package://localhost:0/foo@notAVersion#/bar.pkl")

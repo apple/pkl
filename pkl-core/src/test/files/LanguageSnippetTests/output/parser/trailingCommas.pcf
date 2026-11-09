@@ -1,0 +1,3 @@
+res1 {
+  ["hello"] = "world"
+}

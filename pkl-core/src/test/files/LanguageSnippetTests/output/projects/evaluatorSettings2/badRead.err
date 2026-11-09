@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Refusing to read resource `file:///file.txt` because it is not within the root directory (`--root-dir`).
+
+x | res = read("file:///file.txt")
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+at badRead#res (file:///$snippetsDir/input/projects/evaluatorSettings2/badRead.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

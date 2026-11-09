@@ -1,0 +1,22 @@
+class Foo {
+  normalProperty: Boolean
+  nestedStructure: Bar
+}
+
+class Bar {
+  propertyInNestedStructure: Listing<String>
+}
+
+foo = new Foo {
+  nestedStructure {
+    propertyInNestedStructure {
+      "Hello world"
+    }
+  }
+  normalProperty = true
+}
+
+foo2 = (foo) {
+  (nestedStructure.propertyInNestedStructure) { "Hello world!!!" }
+  normalProperty = false
+}

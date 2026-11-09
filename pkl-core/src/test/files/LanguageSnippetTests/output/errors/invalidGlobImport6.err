@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Invalid glob pattern `../*/../*/../*/../*/../*/../*/../*.`.
+
+x | res = import*("../*/../*/../*/../*/../*/../*/../*.")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobImport6#res (file:///$snippetsDir/input/errors/invalidGlobImport6.pkl)
+
+The glob pattern is too complex.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

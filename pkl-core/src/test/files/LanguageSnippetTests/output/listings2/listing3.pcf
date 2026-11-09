@@ -1,0 +1,58 @@
+res1 = "one"
+res2 = "two"
+res3 = "three"
+res4 = "Element index `-1` is out of range `0`..`2`."
+res5 = "Element index `3` is out of range `0`..`2`."
+res6 = "Element index `-9,223,372,036,854,775,808` is out of range `0`..`2`."
+res7 = "Element index `9,223,372,036,854,775,807` is out of range `0`..`2`."
+res8 = "one"
+res9 = "two"
+res10 = "three"
+res11 = 4
+res12 = "Element index `3` is out of range `0`..`2`."
+res13 = "Element index `2` is out of range `0`..`1`."
+res14 = "Cannot find key `\"other\"`."
+res15 {
+  "one"
+  "one"
+  "two"
+  "two"
+  "one"
+}
+res16 {
+  "one"
+  "one"
+  "two"
+  "two"
+  "one"
+  "three"
+  "one"
+  "three"
+}
+res17 {
+  "item"
+  "item2"
+}
+res18 {
+  "element"
+  "element2"
+  "element3"
+}
+res19 {
+  "object"
+  "object2"
+  "object3"
+  "object4"
+}
+res20 {
+  "one2"
+  "one3"
+  "three"
+  "one4"
+  "one24"
+}
+res21 = "Element index `3` is out of range `0`..`1`."
+res22 {
+  new {}
+  new {}
+}

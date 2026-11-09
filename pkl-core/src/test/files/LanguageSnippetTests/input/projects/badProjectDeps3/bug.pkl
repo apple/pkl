@@ -1,0 +1,3 @@
+import "@bird/Bird.pkl"
+
+bird: Bird

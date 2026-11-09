@@ -1,0 +1,34 @@
+foo =
+  let (
+    vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
+      10
+  )
+    1 * 1
+
+bar =
+  let (
+    someVariable = new Listing {
+      1
+    }
+  )
+    1 * 1
+
+baz =
+  let (someVariable = 10000000)
+  let (someOtherVariable = 2000000)
+  let (someAnotherVariable = 3000000)
+    someVariable + someOtherVariable + someAnotherVariable
+
+qux =
+  let ( // some comment
+    // another comment
+    bar = 5
+  )
+    bar
+
+quzzy = let (baz = 1) baz + 1
+
+// respect newlines in lets
+quzzzy =
+  let (baz = 1)
+    baz + 1

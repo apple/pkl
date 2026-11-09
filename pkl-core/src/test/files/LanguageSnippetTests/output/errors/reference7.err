@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Operator `[]` is not defined for operand types `pkl.ref#Reference<reference7#D, List>` and `String`.
+Left operand : Reference(new reference7#D {}, List, List())
+Right operand: "hi"
+
+x | test = ref.Reference<D, List>(d, List())["hi"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference7#test (file:///$snippetsDir/input/errors/reference7.pkl)
+
+Operator `[]` is not defined for operand types `List` and `String`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

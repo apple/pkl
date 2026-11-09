@@ -1,0 +1,18 @@
+class Gauge {
+  min: Int
+  max: Int(this >= min)
+}
+
+res1 = new Gauge {
+  min = 4
+  max = 6
+}
+
+// check constraint validation during forcing rather than evaluation
+res2 = new Gauge {
+  min = 4
+  max = 3
+}
+
+
+

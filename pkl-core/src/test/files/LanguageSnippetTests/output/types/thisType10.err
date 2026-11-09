@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `this` type from const method `thisType10#foo`.
+
+x | [let (myself: this = this) myself.qux] = 5
+                  ^^^^
+at thisType10#foo (file:///$snippetsDir/input/types/thisType10.pkl)

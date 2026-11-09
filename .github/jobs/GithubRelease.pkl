@@ -1,0 +1,42 @@
+module GithubRelease
+
+extends "PklJob.pkl"
+
+import "@gha/catalog.pkl"
+import "@gha/context.pkl"
+
+fixed job {
+  `runs-on` = "ubuntu-latest"
+  permissions {
+    contents = "write"
+  }
+  needs = module.needs
+  steps {
+    (catalog.`actions/download-artifact@v6`) {
+      with {
+        pattern = "deploy-artifacts-**"
+        `merge-multiple` = true
+      }
+    }
+    new {
+      name = "Publish release on GitHub"
+      env {
+        ["GH_TOKEN"] = context.github.token
+        ["TAG_NAME"] = context.github.refName
+        ["GIT_SHA"] = context.github.sha
+        ["GH_REPO"] = context.github.repository
+      }
+      // language=bash
+      run =
+        #"""
+        gh release create ${TAG_NAME} \
+          --draft \
+          --title "${TAG_NAME}" \
+          --target "${GIT_SHA}" \
+          --verify-tag \
+          --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
+          */build/executable/*
+        """#
+    }
+  }
+}

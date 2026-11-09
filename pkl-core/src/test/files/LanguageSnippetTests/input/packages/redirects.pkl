@@ -1,0 +1,15 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["permanent redirect is followed"] {
+    import("package://localhost:0/HTTP301/birds@0.5.0#/catalog/Swallow.pkl")
+  }
+
+  ["temporary redirect is followed"] {
+    import("package://localhost:0/HTTP307/birds@0.5.0#/catalog/Swallow.pkl")
+  }
+  
+  ["double redirect is followed"] {
+    import("package://localhost:0/HTTP301/HTTP307/birds@0.5.0#/catalog/Swallow.pkl")
+  }
+}

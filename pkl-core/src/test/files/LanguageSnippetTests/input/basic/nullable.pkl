@@ -1,0 +1,52 @@
+amends "../snippetTest.pkl"
+
+facts {
+  ["equality"] {
+    null == null
+    !(null == 1)
+    !(1 == null)
+  }
+
+  ["inequality"] {
+    null != 1
+    1 != null
+    !(null != null)
+  }
+}
+
+examples {
+  ["literal"] {
+    null
+  }
+
+  ["coalescing"] {
+    null ?? 2
+    1 ?? 2
+    1 ?? 2 ?? 3
+    null ?? null ?? 3
+    new Person {}.age ?? 40
+  }
+
+  ["null-safe invocation"] {
+    null?.toUpperCase()
+    "Pigeon"?.toUpperCase()
+    null?.kb
+    3?.kb
+
+    module.catch(() -> null.foo)
+    module.catch(() -> null.foo())
+  }
+
+  ["amendment"] {
+    local p = Null(new Person {})
+    local p2 = (p) {
+      age = 20
+    }
+    p2
+    p2 is Person
+  }
+}
+
+local class Person {
+  age: Int?
+}

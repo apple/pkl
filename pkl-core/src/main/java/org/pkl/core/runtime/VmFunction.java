@@ -1,0 +1,250 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.runtime;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
+import java.util.function.BiFunction;
+import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.PklRootNode;
+import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
+import org.pkl.core.util.EconomicMaps;
+
+public final class VmFunction extends VmObjectLike {
+
+  private final Object thisValue;
+  private final int paramCount;
+  private final PklRootNode rootNode;
+  private final boolean hasObjectParams;
+  private final boolean isFunctionAmend;
+
+  public VmFunction(
+      MaterializedFrame enclosingFrame,
+      Object thisValue,
+      int paramCount,
+      PklRootNode rootNode,
+      @Nullable Object extraStorage) {
+    this(enclosingFrame, thisValue, paramCount, rootNode, extraStorage, false, false);
+  }
+
+  public VmFunction(
+      MaterializedFrame enclosingFrame,
+      Object thisValue,
+      int paramCount,
+      PklRootNode rootNode,
+      @Nullable Object extraStorage,
+      boolean isFunctionAmend,
+      boolean hasObjectParams) {
+    super(enclosingFrame);
+    this.thisValue = thisValue;
+    this.paramCount = paramCount;
+    this.rootNode = rootNode;
+    this.hasObjectParams = hasObjectParams;
+    this.extraStorage = extraStorage;
+    this.isFunctionAmend = isFunctionAmend;
+  }
+
+  public RootCallTarget getCallTarget() {
+    return rootNode.getCallTarget();
+  }
+
+  public int getParameterCount() {
+    return paramCount;
+  }
+
+  // if call site is a node, use ApplyVmFunction1Node.execute() or DirectCallNode.call() instead of
+  // this method
+  public Object apply(Object arg1) {
+    return getCallTarget().call(thisValue, this, arg1);
+  }
+
+  // if call site is a node, use ApplyVmFunction2Node.execute() or DirectCallNode.call() instead of
+  // this method
+  public Object apply(Object arg1, Object arg2) {
+    return getCallTarget().call(thisValue, this, arg1, arg2);
+  }
+
+  public VmFunction copy(
+      int newParamCount, @Nullable PklRootNode newRootNode, @Nullable Object newExtraStorage) {
+    return new VmFunction(
+        enclosingFrame,
+        thisValue,
+        newParamCount,
+        newRootNode == null ? rootNode : newRootNode,
+        newExtraStorage,
+        isFunctionAmend,
+        hasObjectParams);
+  }
+
+  public Object getThisValue() {
+    return thisValue;
+  }
+
+  @Override
+  public VmObjectLike getParent() {
+    return getPrototype();
+  }
+
+  @Override
+  public boolean hasMember(Object key) {
+    return false;
+  }
+
+  @Override
+  public @Nullable ObjectMember getMember(Object key) {
+    return null;
+  }
+
+  @Override
+  public UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
+    return EconomicMaps.create();
+  }
+
+  public PklRootNode getRootNode() {
+    return rootNode;
+  }
+
+  @Override
+  public @Nullable Object getCachedValue(Object key) {
+    return null;
+  }
+
+  @Override
+  @TruffleBoundary
+  public void setCachedValue(Object key, Object value) {
+    throw new VmExceptionBuilder()
+        .bug("Class `VmFunction` does not support method `setCachedValue()`.")
+        .build();
+  }
+
+  @Override
+  public boolean hasCachedValue(Object key) {
+    throw new VmExceptionBuilder()
+        .bug("Class `VmFunction` does not support method `hasCachedValue()`.")
+        .build();
+  }
+
+  @Override
+  public boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
+    return true;
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmClass getVmClass() {
+    return BaseModule.getFunctionNClass(paramCount);
+  }
+
+  @Override
+  public void force(boolean allowUndefinedValues, boolean recurse) {
+    // do nothing
+  }
+
+  @Override
+  public void force(boolean allowUndefinedValues) {
+    // do nothing
+  }
+
+  @Override
+  public Object export() {
+    throw new VmExceptionBuilder().evalError("cannotExportValue", getVmClass()).build();
+  }
+
+  @Override
+  public void accept(VmValueVisitor visitor) {
+    visitor.visitFunction(this);
+  }
+
+  @Override
+  public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
+    return converter.convertFunction(this, path);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return this == obj;
+  }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
+  }
+
+  @Override
+  public boolean isParseTimeInvisibleScope() {
+    return isFunctionAmend && !hasObjectParams;
+  }
+
+  @Override
+  @TruffleBoundary
+  public String toPklString() {
+    return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
+  }
+}

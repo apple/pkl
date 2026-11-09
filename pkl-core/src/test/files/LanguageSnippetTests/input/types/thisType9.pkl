@@ -1,0 +1,14 @@
+// okay to use `this` if it doesn't break the const scope
+const function myFunc() = new {
+  local myself: this = this
+  result = myself.bar
+  bar = 3
+}
+
+const res1 = new {
+  local myself: this = this
+  result = myself.bar
+  bar = 3
+}
+
+res2 = myFunc()

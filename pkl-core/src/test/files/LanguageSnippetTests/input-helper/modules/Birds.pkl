@@ -1,0 +1,12 @@
+module Birds
+
+abstract class Bird {
+  name: String
+}
+
+class Pigeon extends Bird {
+  name = "Pigeon"
+  passenger: Boolean
+}
+
+pidgy: Pigeon?

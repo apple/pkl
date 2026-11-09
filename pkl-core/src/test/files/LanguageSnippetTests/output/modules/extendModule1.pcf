@@ -1,0 +1,8 @@
+name = "Pigeon"
+pigeon {
+  name = "PIGEON"
+}
+parrot {
+  name = "Parrot"
+  subjects = List("Fire making", "Stone age")
+}

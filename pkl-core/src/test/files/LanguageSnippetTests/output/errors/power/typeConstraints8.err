@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `!(this is Null)` violated.
+Value: null
+
+    !(this is Null)
+    │
+    false
+
+xx | typealias NonNull = Any(!(this is Null))
+                             ^^^^^^^^^^^^^^^
+at typeConstraints8#foo (pkl:base)
+
+x | foo: NonNull = null
+                   ^^^^
+at typeConstraints8#foo (file:///$snippetsDir/input/errors/power/typeConstraints8.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

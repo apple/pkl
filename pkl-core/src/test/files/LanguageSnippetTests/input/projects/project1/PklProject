@@ -1,0 +1,15 @@
+amends "pkl:Project"
+
+dependencies {
+  ["birds"] {
+    uri = "package://localhost:0/birds@0.5.0"
+  }
+  ["fruits"] {
+    uri = "package://localhost:0/fruit@1.1.0"
+  }
+  ["badImportsWithinPackage"] {
+    uri = "package://localhost:0/badImportsWithinPackage@1.0.0"
+  }
+  ["project2"] = import("../project2/PklProject")
+  ["project6"] = import("../project6/PklProject")
+}

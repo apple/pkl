@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `EOF`. Expected `,` or `)`.
+
+x | map = Map("one", 1, "two", 2
+                                ^
+at missingMapDelimiter (file:///$snippetsDir/input/errors/delimiters/missingMapDelimiter.pkl)

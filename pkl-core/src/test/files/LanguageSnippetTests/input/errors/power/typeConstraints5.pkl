@@ -1,0 +1,3 @@
+foo: String(isCapitalized) = "hello"
+
+local isCapitalized = (it: String) -> it == it.capitalize() 

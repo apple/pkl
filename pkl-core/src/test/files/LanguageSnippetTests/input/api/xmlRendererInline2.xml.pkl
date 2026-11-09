@@ -1,0 +1,17 @@
+import "pkl:xml"
+
+order {
+  items {
+    new { name = "banana"; quantity = 42 }
+    new { name = "orange"; quantity = 21 }
+  }
+}
+
+output {
+  renderer = new xml.Renderer {
+    converters {
+      ["order.items"] = (it) -> xml.Inline(it) // remove `items` (repeated element)
+      ["order.items[*]"] = (it) -> (xml.Element("item")) { xml.Inline(it) } // element + inline = rename
+    }
+  }
+}

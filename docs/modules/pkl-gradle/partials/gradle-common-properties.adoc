@@ -1,0 +1,145 @@
+.allowedModules: ListProperty<String>
+[%collapsible]
+====
+Default: `["pkl:", "file:", "modulepath:", "https:", "repl:", "package:", "projectpackage:"]` +
+Example: `allowedModules = ["file:"]` +
+URI patterns that determine which modules can be loaded and evaluated.
+Patterns are matched against the beginning of module URIs.
+(File paths have been converted to `file:` URLs at this stage.)
+At least one pattern needs to match for a module to be loadable.
+====
+
+.allowedResources: ListProperty<String>
+[%collapsible]
+====
+Default: `["env:", "prop:", "modulepath:", "https:", "file:", "package:", "projectpackage:"]` +
+Example: `allowedResources = ["env:", "prop:"]` +
+URL patterns that determine which external resources can be read.
+Patterns are matched against the beginning of resource URLs.
+At least one pattern needs to match for a resource to be readable.
+====
+
+.environmentVariables: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` (note that Gradle default differs from CLI default) +
+Example 1: `environmentVariables = ["MY_VAR_1": "myValue1", "MY_VAR_2": "myValue2"]` +
+Example 2: `environmentVariables = System.getenv()` +
+Environment variables that can be read by Pkl code with `read("env:<envVariableName>")`.
+====
+
+.evalRootDir: DirectoryProperty
+[%collapsible]
+====
+Default: `rootProject.layout.projectDirectory` +
+Example 1: `evalRootDir = layout.projectDirectory.dir("pkl-modules")` +
+Example 2: `evalRootDir.fileValue file("/some/absolute/path")` +
+
+Root directory for `file:` modules and resources.
+If non-null, access to file-based modules and resources is restricted to those located under the root directory.
+Any symlinks are resolved before this check is performed.
+====
+
+.evalTimeout: Property<java.time.Duration>
+[%collapsible]
+====
+Default: `null` +
+Example: `evalTimeout = Duration.ofSeconds(10)` +
+Duration after which evaluation of a source module will be timed out.
+Note that a timeout is treated the same as a program error in that any subsequent source modules will not be evaluated.
+====
+
+.externalProperties: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `externalProperties = ["myProp1": "myValue1", "myProp2": "myValue2"]` +
+External properties that can be read by Pkl code with `read("prop:<propertyName>")`.
+====
+
+.moduleCacheDir: DirectoryProperty
+[%collapsible]
+====
+Default: `null` +
+Example 1: `moduleCacheDir = layout.buildDirectory.dir("pkl-module-cache")` +
+Example 2: `moduleCacheDir.fileValue file("/absolute/path/to/cache")` +
+The cache directory for storing packages.
+If `null`, defaults to `~/.cache/pkl` on Unix or `%LOCALAPPDATA%/pkl/Cache` on Windows.
+
+This setting can also be configured using the `$XDG_CACHE_HOME` environment variable.
+====
+
+.color: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Format messages using ANSI color.
+====
+
+.noCache: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Disable caching of packages.
+====
+
+.modulePath: ConfigurableFileCollection
+[%collapsible]
+====
+Default: `files()` (empty collection) +
+Example: `modulePath.from files("dir1", "zip1.zip", "jar1.jar")` +
+The directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs.
+Relative paths are resolved against the project directory.
+====
+
+.proxy: Property<URI>
+[%collapsible]
+====
+Default: `null` +
+Example: `proxy = uri("http://proxy.example.com:1234")` +
+Configures HTTP connections to connect to the provided proxy address.
+The URI must have scheme `http`, and may not contain anything other than a host and port.
+====
+
+.noProxy: ListProperty<String>
+[%collapsible]
+====
+Default: `null` +
+Example: `noProxy = ["example.com", "169.254.0.0/16"]` +
+Hosts to which all connections should bypass the proxy.
+Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
+====
+
+.httpRewrites: MapProperty<String, String>
+[%collapsible]
+====
+Default: `null` +
+Example: `httpRewrites = [uri("https://pkg.pkl-lang.org/"): uri("https://my.internal.mirror/")]` +
+Replace outbound HTTP(S) requests from one URL with another URL.
+The left-hand side describes the source prefix, and the right-hand describes the target prefix.
+This option is commonly used to enable package mirroring.
+The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
+====
+
+.httpHeaders: MapProperty<String, Map<String, List<String>>>
+[%collapsible]
+====
+Default: `null` +
+Example: `httpHeaders = ["**": ["User-Agent": ["My User Agent"]]]` +
+Additional headers to add to outbound HTTP requests.
+The key is a glob pattern that is used to match against the URLs of outbound HTTP calls, and the value is the header name and values to add.
+Each header value becomes its own HTTP header.
+
+To describe a prefix match, the `\\**` wildcard should be added to the pattern.
+For example, `https?://example.com/**` matches against every request to host `example.com`.
+====
+
+.powerAssertions: Property<Boolean>
+[%collapsible]
+====
+Default: `false` (except for test tasks, which default to `true`) +
+Example: `powerAssertions = true` +
+Enable power assertions for detailed assertion failure messages.
+When enabled, type constraint failures will show intermediate values in the assertion expression.
+This option has a performance impact when constraint failures occur.
+====

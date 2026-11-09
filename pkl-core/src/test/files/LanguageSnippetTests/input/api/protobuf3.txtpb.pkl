@@ -1,0 +1,28 @@
+import "pkl:protobuf"
+
+import ".../input-helper/api/annotationConverter.pkl"
+
+class Comment extends Annotation
+
+@protobuf.Property { name = "FOO" }
+foo: String = "a"
+
+@annotationConverter.LineComment { text = "bar" }
+bar: String = "b"
+
+baz: Nested
+
+class Nested {
+  @annotationConverter.LineComment { text = "qux" }
+  qux: String = "c"
+
+  quux: String = "c"
+}
+
+output {
+  renderer = new protobuf.Renderer {
+    convertPropertyTransformers {
+      [annotationConverter.LineComment] { prefix = " # " }
+    }
+  }
+}

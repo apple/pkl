@@ -1,0 +1,33 @@
+amends "../snippetTest.pkl"
+
+import "pkl:analyze"
+import "pkl:reflect"
+
+import ".../input-helper/analyze/a.pkl"
+import ".../input-helper/analyze/cyclicalA.pkl"
+import ".../input-helper/analyze/globImport.pkl"
+
+examples {
+  ["basic"] {
+    analyze.importGraph(Set(reflect.Module(a).uri))
+  }
+  ["cycles"] {
+    analyze.importGraph(Set(reflect.Module(cyclicalA).uri))
+  }
+  ["globs"] {
+    analyze.importGraph(Set(reflect.Module(globImport).uri))
+  }
+  ["packages"] {
+    analyze.importGraph(Set("package://localhost:0/birds@0.5.0#/Bird.pkl"))
+  }
+}
+
+output {
+  renderer {
+    // mimick result of `pkl analyze imports` CLI command
+    converters {
+      [Map] = (it) -> it.toMapping()
+      [Set] = (it) -> it.toListing()
+    }
+  }
+}

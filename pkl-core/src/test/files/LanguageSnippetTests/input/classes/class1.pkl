@@ -1,0 +1,11 @@
+class Person extends Typed {
+  name = "X"
+  age = 40
+}
+
+pigeon = new Person {
+  name = "Pigeon Who"
+}
+
+pigeonName = pigeon.name
+pigeonAge = pigeon.age

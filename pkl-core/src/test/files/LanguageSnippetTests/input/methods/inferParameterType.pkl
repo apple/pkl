@@ -1,0 +1,61 @@
+open module inferParameterType
+
+import "pkl:test"
+
+hidden x: Int
+
+open class Foo extends module {
+  function bar(baz: Foo): Int = super.bar(baz) * this.x
+
+  function superBar(baz: Foo): Int = super.bar(new { x = 5 + baz.x }) * this.x
+
+  function thisBar(baz: Foo): Int = this.x + baz.x
+}
+
+class Qux extends Foo {
+  function bar(baz: Foo): Int = thisBar(new { x = baz.x })
+}
+
+class Quux {
+  function selfType(arg: this): String = arg.getClass().toString()
+}
+
+function bar(baz: Foo): Int = baz.x
+function selfType(arg: this): String = arg.getClass().toString()
+
+const function outerMethod(a: Int, b: Qux) = a + b.x * 2
+
+local quux = (a: Foo) -> a.x
+
+
+qualified = this.bar(new { x = 1 })
+unqualifiedLexical {
+  call = bar(new { x = 1 })
+}
+unqualifiedThis1 = bar(new { x = 1 })
+unqualifiedThis2 = new Qux { x = 7 }.bar(new { x = 1 })
+`super` = new Foo { x = 2 }.superBar(new Foo { x = 3 })
+nestedMethodCalls = outerMethod(bar(new { x = 8 }), new { x = 9 })
+objectMethod {
+  local function corge(prop: Foo) = prop
+  call = corge(new { x = 0 }).x
+  tooManyParams = test.catch(() -> corge(new {}, new {}))
+}
+
+intrinsicConstructor = test.catch(() -> List(new {}))
+genericMethod = test.catch(() -> Pair(new {}, new {}))
+fnApply = test.catch(() -> quux.apply(new {}))
+tooManyParams = test.catch(() -> bar(new {}, new {}))
+finalSelfType = test.catch(() -> new Quux {}.selfType(new {}))
+nonFinalSelfType1 = test.catch(() -> selfType(new {}))
+nonFinalSelfType2 = test.catch(() -> new Qux {}.selfType(new {}))
+
+class Bar1 { x: Int = 1 }
+class Bar2 { x: Int = 2 }
+class C1 { function f(p: Bar1) = p.x }
+class C2 { function f(p: Bar2) = p.x * 10 }
+
+local function call(a) = a.f(new {}) // poly call
+
+polyCall1 = call(new C1 {})
+polyCall2 = call(new C2 {})

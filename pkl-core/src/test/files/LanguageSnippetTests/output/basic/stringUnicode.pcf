@@ -1,0 +1,34 @@
+facts {
+  ["equality"] {
+    true
+    true
+  }
+  ["inequality"] {
+    true
+    true
+  }
+}
+examples {
+  ["interpolation"] {
+    "😈👿👾 are 🤑🤓😎 today? Are 🤑🤓😎 hungry?"
+    "Can 🤑🤓😎 nest 🙈🙉🙊🐒 for me?"
+    "Is 😈👿👾🤑🤓😎 a word?"
+    "Is soma a word?"
+    "Can 🤑🤓😎 nest ((( for me?"
+    "Can 🤑🤓😎 nest ))) for me?"
+    "Can you nest 🙈🙉🙊🐒 for me?"
+  }
+  ["multiline interpolation"] {
+    """
+    How are you today?
+    Are 🤑🤓😎 hungry?
+    
+    Can you nest 🙈🙉🙊🐒 for me?
+    """
+  }
+  ["subscript"] {
+    "🙊"
+    "Character index `-1` is out of range `0`..`3`. String: \"🙈🙉🙊🐒\""
+    "Character index `4` is out of range `0`..`3`. String: \"🙈🙉🙊🐒\""
+  }
+}

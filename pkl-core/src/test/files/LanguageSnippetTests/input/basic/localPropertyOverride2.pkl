@@ -1,0 +1,44 @@
+// try to override local property, referenced from nested scope, with local property on amend
+
+foo1 {
+  local l = "original"
+  bar {
+    x = l
+  }
+}
+
+foo2 = (foo1) {
+  local l = "override"
+}
+
+res1 = foo2.bar.x
+
+// try to override local property, referenced from nested scope, with non-local property on amend
+
+foo3 {
+  local l = "original"
+  bar {
+    x = l
+  }
+}
+
+foo4 = (foo3) {
+  l = "override"
+}
+
+res2 = foo4.bar.x
+
+// try to override non-local property, referenced from nested scope, with local property on amend
+
+foo5 {
+  l = "original"
+  bar {
+    x = l
+  }
+}
+
+foo6 = (foo5) {
+  local l = "override"
+}
+
+res3 = foo6.bar.x

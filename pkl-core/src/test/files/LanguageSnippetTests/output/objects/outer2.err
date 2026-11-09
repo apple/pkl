@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Cannot find property `y` in object of type `Dynamic`.
+
+x | z = outer.y
+        ^^^^^^^
+at outer2#res1.x.z (file:///$snippetsDir/input/objects/outer2.pkl)
+
+Available properties:
+default
+x
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

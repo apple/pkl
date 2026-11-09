@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <res1><![CDATA[The <drumroll>Dodos</drumroll>]]></res1>
+  <res2><![CDATA[Malicious CDATA input: ]]]]><![CDATA[><script>doMaliciousThing();</script>]]></res2>
+</root>

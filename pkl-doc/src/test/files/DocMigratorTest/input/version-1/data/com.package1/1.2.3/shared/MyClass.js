@@ -1,0 +1,2 @@
+runtimeData.links('known-versions','[{"text":"1.2.3","classes":"current-version"}]');
+runtimeData.links('known-usages','[{"text":"TypeReferences","href":"../classMethodTypeReferences/TypeReferences.html"},{"text":"TypeReferences","href":"../classPropertyTypeReferences/TypeReferences.html"},{"text":"moduleMethodTypeReferences","href":"../moduleMethodTypeReferences/index.html"},{"text":"modulePropertyTypeReferences","href":"../modulePropertyTypeReferences/index.html"}]');

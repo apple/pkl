@@ -1,0 +1,72 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.ast.member;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.runtime.VmLanguage;
+
+public final class LocalTypedPropertyNode extends RegularMemberNode {
+  private final VmLanguage language;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable TypeNode typeNode;
+  private @Nullable Object defaultValue;
+  private boolean defaultValueInitialized;
+
+  public LocalTypedPropertyNode(
+      VmLanguage language,
+      FrameDescriptor descriptor,
+      ObjectMember member,
+      ExpressionNode bodyNode,
+      UnresolvedTypeNode unresolvedTypeNode) {
+
+    super(language, descriptor, member, bodyNode);
+
+    this.language = language;
+    this.unresolvedTypeNode = unresolvedTypeNode;
+  }
+
+  public @Nullable Object getDefaultValue(VirtualFrame frame) {
+    if (!defaultValueInitialized) {
+      assert typeNode != null;
+      // typeNode.createDefaultValue() is a regular polymorphic call rather than a child node.
+      // passing a non-materialized frame will cause GraalVM to emit diagnostics that it failed
+      // to compile this call.
+      defaultValue =
+          typeNode.createDefaultValue(
+              frame.materialize(), language, member.getHeaderSection(), member.getQualifiedName());
+      defaultValueInitialized = true;
+    }
+    return defaultValue;
+  }
+
+  @Override
+  protected Object executeImpl(VirtualFrame frame) {
+    if (typeNode == null) {
+      CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
+      typeNode = insert(unresolvedTypeNode.execute(frame));
+      unresolvedTypeNode = null;
+    }
+    var result = bodyNode.executeGeneric(frame);
+    return typeNode.execute(frame, result);
+  }
+}

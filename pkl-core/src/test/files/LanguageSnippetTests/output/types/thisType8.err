@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `this` type from const method `thisType8#foo`.
+
+x | const function foo(bar: this) = 1
+                            ^^^^
+at thisType8#foo (file:///$snippetsDir/input/types/thisType8.pkl)

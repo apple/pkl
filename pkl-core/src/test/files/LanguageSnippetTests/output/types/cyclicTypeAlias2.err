@@ -1,0 +1,22 @@
+–– Pkl Error ––
+Type alias definitions must not be cyclic.
+
+x | typealias Baz = Map<String, Foo>
+                                ^^^
+at cyclicTypeAlias2#Baz (file:///$snippetsDir/input/types/cyclicTypeAlias2.pkl)
+
+x | typealias Bar = Set<Baz>
+                        ^^^
+at cyclicTypeAlias2#Bar (file:///$snippetsDir/input/types/cyclicTypeAlias2.pkl)
+
+x | typealias Foo = List<Bar>
+                         ^^^
+at cyclicTypeAlias2#Foo (file:///$snippetsDir/input/types/cyclicTypeAlias2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

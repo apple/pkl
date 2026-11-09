@@ -1,0 +1,17 @@
+–– Pkl Error ––
+Cannot render value of type `Function1` as Jsonnet.
+Value: new Function1 {}
+
+x | m = new Mixin {}
+    ^^^^^^^^^^^^^^^^
+at pkl.jsonnet#Renderer.renderDocument (file:///$snippetsDir/input/api/jsonnetRenderer7.pkl)
+
+Consider adding a converter to `output.converters`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

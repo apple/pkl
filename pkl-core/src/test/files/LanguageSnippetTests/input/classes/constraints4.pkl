@@ -1,0 +1,20 @@
+import "pkl:test"
+
+class Gauge {
+  min: Int
+  max: Int(this >= min)
+}
+
+res1 = new Gauge {
+  min = 4
+  max = 6
+}
+
+res2 = test.catch(() ->
+  new Gauge {
+    min = 4
+    max = 3
+  }.max
+)
+
+

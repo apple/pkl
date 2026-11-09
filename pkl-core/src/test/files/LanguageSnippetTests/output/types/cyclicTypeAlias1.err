@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Type alias definitions must not be cyclic.
+
+x | typealias Foo = List<Foo>
+                         ^^^
+at cyclicTypeAlias1#Foo (file:///$snippetsDir/input/types/cyclicTypeAlias1.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

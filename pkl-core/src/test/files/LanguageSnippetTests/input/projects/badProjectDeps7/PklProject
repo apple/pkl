@@ -1,0 +1,7 @@
+amends "pkl:Project"
+
+dependencies {
+  // version declared in PklProject.deps.json does not line up with what this local dependency
+  // tells us its version is
+  ["project6"] = import("../project6/PklProject")
+}

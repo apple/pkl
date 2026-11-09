@@ -1,0 +1,3 @@
+import "../../input-helper/types/typealias2.pkl"
+
+myProp: typealias2.Outer = "Alice Jenkins"

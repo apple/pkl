@@ -1,0 +1,90 @@
+import "pkl:test"
+
+res1 = new Mapping {
+  ["one"] = 1
+  ["two"] = 2
+}
+
+res2 = new Mapping {
+  ["one"] = 1
+  ["two"] = this["one"] + 1
+}
+
+res3 = new Mapping {
+  ["item one"] = 1
+  ["two"] = this["item one"] + 1
+}
+
+res4 = (res2) {
+  ["one"] = 2
+}
+
+res5 = new Mapping {
+  ["one"] = new Mapping {
+    ["a"] = new Mapping {
+      ["x"] = 1
+    }
+    ["b"] = new Mapping {
+      ["y"] = 2
+    }
+  }
+  ["two"] = new Mapping {
+    ["c"] = new Mapping {
+      ["z"] = 3
+    }
+  }
+}
+res5a = res5["one"]
+res5b = res5["one"]["a"]
+res5c = res5["one"]["a"]["x"]
+res5d = res5["one"]["b"]
+res5e = res5["one"]["b"]["y"]
+res5f = res5["two"]
+res5g = res5["two"]["c"]
+res5h = res5["two"]["c"]["z"]
+res5i = test.catch(() -> res5["three"])
+
+res6 = new Mapping {
+  ["one"] = List(1, 2, 3)
+  ["two"] = this["one"] + List(4, 5, 6)
+  ["three"] = 3
+}
+
+res7 = (res6) {
+  ["one"] = super["one"] + List(4, 5, 6)
+  ["three"] = super["three"] * 2
+}
+
+res8 = new Mapping {
+  default = (key) -> new Dynamic {
+    name = key
+    age = 42
+  }
+
+  ["pigeon"] {}
+  ["barn owl"] {}
+  ["parrot"] {}
+}
+
+res9 = new Mapping {
+  default = (key) -> new Dynamic {
+    name = key
+    age = 42
+  }
+
+  ["pigeon"] {}
+  ["barn owl"] {}
+  ["parrot"] {
+    age = 32
+  }
+}
+
+res10 = (res9) {
+  ["parrot"] {}
+  ["elf owl"] {}
+  ["barn owl"] {
+    age = 22
+  }
+}
+
+res11 = (res1) {}

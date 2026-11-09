@@ -1,0 +1,9 @@
+open class A {
+  function a() = 1
+}
+
+class B extends A {
+  const b = a()
+}
+
+b: B

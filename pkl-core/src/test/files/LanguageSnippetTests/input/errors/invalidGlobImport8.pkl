@@ -1,0 +1,4 @@
+import* "../../input-helper/globtest/**.pkl" as globbedImports
+
+// test for ResolveQualifiedDeclaredTypeNode
+res: globbedImports.Foo

@@ -1,0 +1,5 @@
+import "pkl:analyze"
+import "pkl:reflect"
+import ".../input-helper/analyze/cannotFindModule.pkl"
+
+res = analyze.importGraph(Set(reflect.Module(cannotFindModule).uri))

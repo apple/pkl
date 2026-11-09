@@ -1,0 +1,12 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["relativePathTo()"] {
+    module.relativePathTo(import("dir1/dir2/relativePathTo.pkl"))
+    module.relativePathTo(import("list.pkl"))
+    import("list.pkl").relativePathTo(import("set.pkl"))
+    module.relativePathTo(module)
+    module.catch(() -> import("dir1/dir2/relativePathTo.pkl").relativePathTo(module))
+  }
+}
+

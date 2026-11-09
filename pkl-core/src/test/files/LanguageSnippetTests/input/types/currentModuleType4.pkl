@@ -1,0 +1,21 @@
+typealias Foo = module
+
+@Baz { valid = true is module }
+class Bar {
+  baz: module
+}
+
+class Baz extends Annotation {
+  valid: Boolean
+}
+
+const qux = true is module
+const function quux() = true is module
+
+const corge = new {
+  grault {
+    garply = true is module
+  }
+}
+
+hidden const waldo = (x: module) -> true

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `const` can only be applied to object members that are also `local`.
+
+x | const foo = 10
+    ^^^^^
+at constObjectMember#foo (file:///$snippetsDir/input/errors/const/constObjectMember.pkl)

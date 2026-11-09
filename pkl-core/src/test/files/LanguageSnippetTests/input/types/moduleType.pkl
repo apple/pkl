@@ -1,0 +1,12 @@
+import "helpers/someModule.pkl"
+
+res1: someModule = new {
+  foo = "foo2"
+}
+
+res2 = res1 is someModule
+
+res3: Listing<someModule> = new {
+  res1
+}
+

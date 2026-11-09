@@ -1,0 +1,41 @@
+class Zebra {
+  party: Party
+}
+
+class Party {
+  time: Mapping<Foo, Int>
+}
+
+class Foo {
+  bar: Bar
+}
+
+class Bar {
+  num: Mapping<Alpha, Boolean>
+}
+
+class Alpha {
+  beta: Bravo
+}
+
+class Bravo {
+  charlie: Charlie
+}
+
+class Charlie {
+  delta: Int
+}
+
+zebra: Zebra = new {
+  party {
+    time {
+      [new Foo {
+        bar {
+          num {
+            [new Alpha {}] = true
+          }
+        }
+      }] = 1
+    }
+  }
+}

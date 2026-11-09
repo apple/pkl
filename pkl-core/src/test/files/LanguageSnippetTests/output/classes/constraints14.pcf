@@ -1,0 +1,15 @@
+myClass {
+  emails {
+    "foo@bar.com"
+  }
+}
+others {
+  new {
+    myClass {
+      emails {
+        "baz@bar.com"
+      }
+    }
+    others {}
+  }
+}

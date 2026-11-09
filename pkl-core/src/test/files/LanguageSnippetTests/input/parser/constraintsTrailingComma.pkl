@@ -1,0 +1,9 @@
+res1: Int(isEven, isNonZero, isBetween(-10, 10), ) = 6
+res2: Int(
+    isEven, isNonZero, isBetween(-10, 10),
+) = 6
+res3: Int(
+    isEven,
+    isNonZero,
+    isBetween(-10, 10),
+) = 6

@@ -1,0 +1,50 @@
+import "pkl:xml"
+
+class Person {
+  name: String
+  age: Int
+  address: Address
+  friend: Person?
+}
+
+class Address {
+  street: String
+}
+
+int = 123
+
+float = 1.23
+
+bool = true
+
+string = "Pigeon"
+
+unicodeString = "abc😀abc😎abc"
+
+multiLineString = """
+  have a
+  great
+  day
+  """
+
+typedObject = new Person {
+  name = "Pigeon"
+  age = 30
+  address {
+    street = "Folsom St."
+  }
+  friend = null
+}
+
+dynamicObject {
+  name = "Pigeon"
+  age = 30
+  address {
+    street = "Folsom St."
+  }
+  friend = null
+}
+
+output {
+  renderer = new xml.Renderer {}
+}

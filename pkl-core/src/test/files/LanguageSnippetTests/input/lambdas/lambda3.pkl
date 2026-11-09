@@ -1,0 +1,34 @@
+x = 4
+function double(n) = n * 2
+pigeon {
+  name = "Pigeon"
+  age = 30
+}
+class Multiplier {
+  function mult4(x) = x * 4
+  hidden mult = (x, y) -> x * y
+}
+multiplier = new Multiplier {}
+l = List(1, 2, 3)
+
+// 1-arg lambda
+res1 = l.map((n) -> x * x)
+res2 = l.map((n) -> double(n))
+res3 = l.map((n) -> pigeon.age * n)
+res4 = l.map((n) -> multiplier.mult4(n))
+res5 = l.map((n) -> multiplier.mult.apply(n, 4))
+
+// 2-arg lambda
+res6 = l.fold(0, (m, n) -> m + n + x)
+res7 = l.fold(0, (m, n) -> double(m) + n)
+res8 = l.fold(0, (m, n) -> pigeon.age * n + m)
+res9 = l.fold(0, (m, n) -> multiplier.mult4(m) + n)
+res10 = l.fold(0, (m, n) -> multiplier.mult.apply(m, n))
+
+// 0-arg lambda
+function kick(fn) = fn.apply()
+res11 = kick(() -> x)
+res12 = kick(() -> double(4))
+res13 = kick(() -> pigeon.age)
+res14 = kick(() -> multiplier.mult4(4))
+res15 = kick(() -> multiplier.mult.apply(2, 3))

@@ -1,0 +1,48 @@
+a = """
+  pigeon
+  --- 42
+  ---
+  - barn owl
+  - parrot
+  ---
+  surfing:
+    skill: low
+  firemaking:
+    skill: high
+  ---
+  street: Norton St.
+  zip: 12345
+  
+  """
+b = """
+  pigeon
+  --- 42
+  ---
+  - barn owl
+  - parrot
+  ---
+  surfing:
+    skill: low
+  firemaking:
+    skill: high
+  ---
+  street: Norton St.
+  zip: 12345
+  
+  """
+c = """
+  pigeon
+  --- 42
+  ---
+  - barn owl
+  - parrot
+  ---
+  surfing:
+    skill: low
+  firemaking:
+    skill: high
+  ---
+  street: Norton St.
+  zip: 12345
+  
+  """

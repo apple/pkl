@@ -1,0 +1,112 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.ast.internal;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.expression.member.InvokeMethodVirtualNode;
+import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
+import org.pkl.core.ast.expression.unary.UnaryExpressionNode;
+import org.pkl.core.runtime.*;
+
+@SuppressWarnings("unused")
+public abstract class ToStringNode extends UnaryExpressionNode {
+  protected ToStringNode(SourceSection sourceSection) {
+    super(sourceSection);
+  }
+
+  /**
+   * When only using this execute method, pass `null` for `operandNode` to {@link
+   * ToStringNodeGen#create}.
+   */
+  public abstract String executeWith(VirtualFrame frame, Object value);
+
+  @Specialization
+  protected String evalString(String value) {
+    return value;
+  }
+
+  @Specialization
+  @TruffleBoundary
+  protected String evalInt(long value) {
+    return String.valueOf(value);
+  }
+
+  @Specialization
+  @TruffleBoundary
+  protected String evalFloat(double value) {
+    return String.valueOf(value);
+  }
+
+  @Specialization
+  protected String evalBoolean(boolean value) {
+    return String.valueOf(value);
+  }
+
+  @Specialization
+  protected String evalTyped(
+      VirtualFrame frame,
+      VmTyped value,
+      @Cached(value = "createInvokeNode()", neverDefault = true)
+          InvokeMethodVirtualNode invokeNode) {
+    return (String) invokeNode.executeWith(frame, value, value.getVmClass());
+  }
+
+  @Specialization
+  protected String evalReference(
+      VirtualFrame frame,
+      VmReference value,
+      @Cached(value = "createReferenceCallNode(value)", neverDefault = true)
+          DirectCallNode callNode) {
+    return (String) callNode.call(value, value.getVmClass().getPrototype());
+  }
+
+  @Specialization(guards = {"!value.isTyped()", "!value.isReference()"})
+  @TruffleBoundary
+  protected String evalVmValue(VmValue value) {
+    return value.toPklString();
+  }
+
+  protected InvokeMethodVirtualNode createInvokeNode() {
+    return InvokeMethodVirtualNodeGen.create(
+        sourceSection,
+        Identifier.TO_STRING,
+        null,
+        new ExpressionNode[] {},
+        MemberLookupMode.EXPLICIT_RECEIVER,
+        -1,
+        "",
+        null,
+        null);
+  }
+
+  protected DirectCallNode createReferenceCallNode(VmReference reference) {
+    var toStringMethod = reference.getVmClass().getDeclaredMethod(Identifier.TO_STRING);
+    assert toStringMethod != null;
+    return DirectCallNode.create(toStringMethod.getCallTarget());
+  }
+
+  @Override
+  public final boolean isInstrumentable() {
+    return false;
+  }
+}

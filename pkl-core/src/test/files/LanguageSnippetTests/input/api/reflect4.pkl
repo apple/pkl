@@ -1,0 +1,88 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:reflect"
+
+local class MyAnn extends Annotation
+
+open local class A {
+  inheritedFromA: String
+  overriddenInBFromA: String
+  overriddenInCFromA: String
+  overriddenInBCFromA: String
+
+  fixed modA: String = ""
+  fixed modAOverrideB: String = ""
+  fixed modAOverrideC: String = ""
+  fixed modAOverrideBC: String = ""
+  fixed modAOverrideCB: String = ""
+
+  @Unlisted
+  annA: String
+  @Unlisted
+  annAOverrideB: String
+  @Unlisted
+  annAOverrideC: String
+  @Unlisted
+  annAOverrideBC: String
+}
+
+open local class B extends A {
+  inheritedFromB: String
+  overriddenInBFromA: Int
+  overriddenInCFromB: String
+  overriddenInBCFromA: Int
+
+  fixed modB: String = ""
+  hidden fixed modAOverrideB: Int = 0
+  hidden fixed modAOverrideBC: Int = 0
+  fixed modAOverrideCB: Int = 0
+
+  @Unlisted
+  annB: String
+  @MyAnn
+  annAOverrideB: String
+  @MyAnn
+  annAOverrideBC: String
+}
+
+local class C extends B {
+  fromC: String
+  overriddenInCFromA: Int
+  overriddenInCFromB: Int
+  overriddenInBCFromA: Boolean
+
+  fixed modC: String = ""
+  hidden fixed modAOverrideC: Int = 0
+  fixed modAOverrideBC: Boolean = false
+  hidden fixed modAOverrideCB: Boolean = false
+
+  @Unlisted
+  annC: String
+  @MyAnn
+  annAOverrideC: String
+  @AlsoKnownAs { names { "mergedAnnotations" } }
+  annAOverrideBC: String
+}
+
+local class DisplayProperty {
+  hidden property: reflect.Property
+  fixed name = property.name
+  fixed annotations = property.annotations.map((it) -> it.toString()).toListing()
+  fixed allAnnotations = property.allAnnotations.map((it) -> it.toString()).toListing()
+  fixed modifiers = property.modifiers.toListing()
+  fixed allModifiers = property.allModifiers.toListing()
+  fixed type = property.type.getPropertyOrNull("referent")?.getPropertyOrNull("name") ?? "unknown"
+}
+
+examples {
+  ["C"] {
+    reflect.Class(C).allProperties.mapValues((_, it) -> new DisplayProperty { property = it }).toMapping()
+  }
+  ["module"] {
+    new DisplayProperty { property = reflect.Class(module.getClass()).properties["output"] }
+  }
+}
+
+output { // override to test example "module", allModifiers should contain "hidden"
+  text = super.text + "\n// hello world"
+}

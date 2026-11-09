@@ -1,0 +1,7 @@
+prop = "hi"
+myself {
+  prop = "hi again"
+  myself = null
+  prop2 = 15
+}
+prop2 = 15

@@ -1,0 +1,7 @@
+class Person {
+  name: String
+  age: Int
+}
+
+ex1 = Pair(1, 3.s)
+ex2 = Pair(new Person { name = "pigeon"; age = 40 }, new Dynamic { name = "parrot"; age = 30 })

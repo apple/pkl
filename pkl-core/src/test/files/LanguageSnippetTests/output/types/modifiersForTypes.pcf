@@ -1,0 +1,4 @@
+res1 = "Foo"
+res2 = "modifiersForTypes#Bar"
+res3 = Set()
+res4 = Set()

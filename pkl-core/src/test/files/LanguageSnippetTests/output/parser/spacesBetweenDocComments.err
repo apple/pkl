@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Dangling documentation comment.
+
+Documentation comments must be attached to modules, classes, typealiases, methods, or properties.
+
+x | /// doc comment continuation
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at spacesBetweenDocComments (file:///$snippetsDir/input/parser/spacesBetweenDocComments.pkl)

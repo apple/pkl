@@ -1,0 +1,3 @@
+res: Listing<String(!isEmpty)> = new Listing<String(endsWith("ga"))> {
+  "hola"
+}

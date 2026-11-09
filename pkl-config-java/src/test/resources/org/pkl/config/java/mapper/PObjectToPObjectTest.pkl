@@ -1,0 +1,2 @@
+ex1 = new { name = "pigeon"; age = 40 }
+ex2 = List(new Dynamic { name = "pigeon"; age = 40 }, new Dynamic { name = "parrot"; age = 30 })

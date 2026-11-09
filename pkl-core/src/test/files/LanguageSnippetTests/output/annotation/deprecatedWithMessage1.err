@@ -1,0 +1,24 @@
+res1 = 100001
+res1b = List(1001, 2001, 3001)
+res2 = 200002
+res2b = List(4002, 5002, 6002)
+res3 = 300101
+res3b = List(7101, 8101, 9101)
+res4 = 400201
+res4b = List(10201, 11201, 12201)
+res5 = 500202
+res5b = List(13202, 14202, 15202)
+res6 = 600301
+res6b = List(16301, 17301, 18301)
+res7 = 700202
+res7b = List(19202, 20202, 21202)
+pkl: WARN: Method `deprecatedWithMessage1#f2` is deprecated: use f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#f2` is deprecated: use f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#A.f` is deprecated: use B.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#A.f` is deprecated: use B.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#B.f2` is deprecated: use this.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#B.f2` is deprecated: use this.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#C.f1` is deprecated: avoid using C.f1 (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#C.f1` is deprecated: avoid using C.f1 (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#B.f2` is deprecated: use this.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)
+pkl: WARN: Method `deprecatedWithMessage1#B.f2` is deprecated: use this.f1 instead (file:///$snippetsDir/input/annotation/deprecatedWithMessage1.pkl)

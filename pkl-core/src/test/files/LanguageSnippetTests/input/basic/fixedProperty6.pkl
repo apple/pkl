@@ -1,0 +1,1 @@
+fixed function foo() = 5

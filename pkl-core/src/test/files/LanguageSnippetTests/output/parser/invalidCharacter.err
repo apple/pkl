@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Invalid identifier `^`.
+
+x | foo = 1 ^ 1
+            ^
+at invalidCharacter (file:///$snippetsDir/input/parser/invalidCharacter.pkl)

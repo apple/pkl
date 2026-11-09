@@ -1,0 +1,118 @@
+amends "../snippetTest.pkl"
+
+local set1 = Set(1, 2, 3)
+
+local comparator = (x, y) -> if (x < y) -1 else if (x == y) 0 else 1
+
+examples {
+  ["firstOrNull"] {
+    set1.firstOrNull
+    Set().firstOrNull
+  }
+
+  ["restOrNull"] {
+    set1.restOrNull
+    Set().restOrNull
+  }
+
+  ["lastOrNull"] {
+    set1.lastOrNull
+    Set().lastOrNull
+  }
+
+  ["singleOrNull"] {
+    Set(1).singleOrNull
+    set1.singleOrNull
+    Set().singleOrNull
+  }
+
+  ["findOrNull()"] {
+    set1.findOrNull((x) -> x >= 2)
+    set1.findOrNull((x) -> false)
+    module.catch(() -> set1.findOrNull((x) -> "wrong type"))
+  }
+
+  ["findLastOrNull()"] {
+    set1.findLastOrNull((x) -> x >= 2)
+    set1.findLastOrNull((x) -> false)
+    module.catch(() -> set1.findLastOrNull((x) -> "wrong type"))
+  }
+
+  ["reduceOrNull()"] {
+    set1.reduceOrNull((x, y) -> x + y)
+    Set(1).reduceOrNull((x, y) -> x + y)
+    Set().reduceOrNull((x, y) -> x + y)
+  }
+
+  ["minWithOrNull()"] {
+    set1.minWithOrNull(comparator)
+    Set(1).minWithOrNull(comparator)
+    Set().minWithOrNull(comparator)
+  }
+
+  ["maxWithOrNull()"] {
+    set1.maxWithOrNull(comparator)
+    Set(1).maxWithOrNull(comparator)
+    Set().maxWithOrNull(comparator)
+  }
+
+  ["splitOrNull()"] {
+    set1.splitOrNull(0)
+    set1.splitOrNull(1)
+    set1.splitOrNull(2)
+    set1.splitOrNull(3)
+    Set().split(0)
+    set1.splitOrNull(-1)
+    set1.splitOrNull(4)
+  }
+
+  ["minOrNull"] {
+    set1.minOrNull
+    Set("Pigeon", "Barn Owl", "Parrot").minOrNull
+    Set(3.9, -8.4, 42, -99999).minOrNull
+    Set(42, 42.0).minOrNull
+    Set(42.0, 42).minOrNull
+    Set(11.gb, 100.mb, 12.tb).minOrNull
+    Set(11.s, 100.ms, 3.d).minOrNull
+    Set().minOrNull
+    module.catch(() -> Set(1, "Pigeon", 3.d).minOrNull)
+  }
+
+  ["maxOrNull"] {
+    set1.maxOrNull
+    Set("Pigeon", "Barn Owl", "Parrot").maxOrNull
+    Set(3.9, -8.4, 42, -99999).maxOrNull
+    Set(42, 42.0).maxOrNull
+    Set(42.0, 42).maxOrNull
+    Set(11.gb, 100.mb, 12.tb).maxOrNull
+    Set(11.s, 100.ms, 3.d).maxOrNull
+    Set().maxOrNull
+    module.catch(() -> Set(1, "Pigeon", 3.d).maxOrNull)
+  }
+
+  ["minByOrNull()"] {
+    set1.minByOrNull((it) -> it)
+    set1.minByOrNull((it) -> -it)
+    Set("Pigeon", "Barn Owl", "Parrot").minByOrNull((it) -> it.length)
+    Set("Pigeon", "Barn Owl", "Parrot").minByOrNull((it) -> it.reverse())
+    Set(11.gb, 100.mb, 12.tb).minByOrNull((it) -> it.value)
+    Set(11.gb, 100.mb, 12.tb).minByOrNull((it) -> it)
+    Set(11.s, 100.ms, 12.min).minByOrNull((it) -> it.value)
+    Set(11.s, 100.ms, 12.min).minByOrNull((it) -> it)
+    Set().minByOrNull((it) -> it)
+    module.catch(() -> Set(1, "Pigeon", 3.d).minByOrNull((it) -> it))
+  }
+
+  ["maxByOrNull()"] {
+    set1.maxByOrNull((it) -> it)
+    set1.maxByOrNull((it) -> -it)
+    Set("Pigeon", "Barn Owl", "Parrot").maxByOrNull((it) -> it.length)
+    Set("Pigeon", "Barn Owl", "Parrot").maxByOrNull((it) -> it.reverse())
+    Set(11.gb, 100.mb, 12.tb).maxByOrNull((it) -> it.value)
+    Set(11.gb, 100.mb, 12.tb).maxByOrNull((it) -> it)
+    Set(11.s, 100.ms, 12.min).maxByOrNull((it) -> it.value)
+    Set(11.s, 100.ms, 12.min).maxByOrNull((it) -> it)
+    Set().maxByOrNull((it) -> it)
+    module.catch(() -> Set(1, "Pigeon", 3.d).maxByOrNull((it) -> it))
+  }
+}

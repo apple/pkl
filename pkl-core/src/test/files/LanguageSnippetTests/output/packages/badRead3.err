@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Resource URI `package://localhost:0/bar/baz@1.0.0` has invalid syntax.
+
+x | res = read("package://localhost:0/bar/baz@1.0.0")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badRead3.error#res (file:///$snippetsDir/input/packages/badRead3.error.pkl)
+
+Expected URI to contain a fragment.
+
+The URI must end in `#`, followed by a path string. For example: `package://example.com/my/project@1.0.0#/path/to/file.pkl`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

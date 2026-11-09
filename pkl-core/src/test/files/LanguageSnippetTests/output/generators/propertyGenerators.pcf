@@ -1,0 +1,9 @@
+res1 {
+  x = "x"
+  foo = "foo"
+  y = "y"
+}
+res2 {
+  name = "Pigeon"
+  age = 21
+}

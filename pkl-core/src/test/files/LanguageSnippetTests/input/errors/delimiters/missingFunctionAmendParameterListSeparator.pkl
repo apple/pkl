@@ -1,0 +1,5 @@
+f { arg1, arg2 arg3 ->
+  x = arg1
+  y = arg2
+  z = arg3
+}

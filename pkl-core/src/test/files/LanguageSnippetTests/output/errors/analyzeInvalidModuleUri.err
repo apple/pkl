@@ -1,0 +1,27 @@
+–– Pkl Error ––
+Type constraint `isValidUrl` violated.
+Value: "foo <>"
+
+    isValidUrl
+    │
+    false
+
+xxxx | typealias Uri = String(isValidUrl)
+                              ^^^^^^^^^^
+at pkl.analyze#importGraph (pkl:base)
+
+xx | external function importGraph(moduleUris: Set<Uri>): ImportGraph
+                                                   ^^^
+at pkl.analyze#importGraph (pkl:analyze)
+
+x | result = analyze.importGraph(Set("foo <>"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at analyzeInvalidModuleUri#result (file:///$snippetsDir/input/errors/analyzeInvalidModuleUri.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

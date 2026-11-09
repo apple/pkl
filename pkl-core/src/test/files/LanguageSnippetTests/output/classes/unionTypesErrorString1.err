@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Expected value of type `"foo"|"bar"|"baz"`, but got `"foox"`.
+
+x | a: "foo" | "bar" | "baz"
+       ^^^^^^^^^^^^^^^^^^^^^
+at unionTypesErrorString1#X.a (file:///$snippetsDir/input/classes/unionTypesErrorString1.pkl)
+
+x | a = "foox"
+        ^^^^^^
+at unionTypesErrorString1#res1.a (file:///$snippetsDir/input/classes/unionTypesErrorString1.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Modifier `fixed` cannot be applied to property `name`.
+
+x | fixed name = "Spot"
+    ^^^^^
+at cannotChangeFixed2#Dog (file:///$snippetsDir/input/errors/cannotChangeFixed2.pkl)
+
+Property `name` cannot be declared fixed, because it overrides a non-fixed property on parent class `cannotChangeFixed2#Animal`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

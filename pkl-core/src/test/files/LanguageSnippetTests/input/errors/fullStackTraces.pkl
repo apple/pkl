@@ -1,0 +1,13 @@
+const local wrong = throw("fail")
+
+const hidden v1 = wrong
+
+const function f1() = v1
+
+const local function f2() = f1()
+
+class Foo {
+  foo = f2()
+}
+
+aFoo: Foo

@@ -1,0 +1,21 @@
+undefinedValue: String
+
+items = new Listing {
+  undefinedValue
+}
+
+lookup = new Mapping {
+  ["x"] = 1
+}
+
+result =
+  let (_ = trace(items))
+    new Listing {
+      for (item in items) {
+        lookup.containsKey(item)
+      }
+    }
+
+output {
+  value = result
+}

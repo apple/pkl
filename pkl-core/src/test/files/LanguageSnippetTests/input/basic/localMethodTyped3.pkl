@@ -1,0 +1,21 @@
+import "pkl:test"
+
+local function f1(): Int = "wrong type"
+local function f2(x: Int): Int = x
+local function f3(x: Int, y: Int): Int = x + y
+
+foo {
+  res1 = test.catch(() -> f1())
+  res2 = test.catch(() -> f2("wrong type"))
+  res3 = test.catch(() -> f3(42, "wrong type"))
+  bar {
+    res4 = test.catch(() -> f1())
+    res5 = test.catch(() -> f2("wrong type"))
+    res6 = test.catch(() -> f3(42, "wrong type"))
+    baz {
+      res7 = test.catch(() -> f1())
+      res8 = test.catch(() -> f2("wrong type"))
+      res9 = test.catch(() -> f3(42, "wrong type"))
+    }
+  }
+}

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>int</key>
+  <integer>123</integer>
+  <key>float</key>
+  <real>1.23</real>
+  <key>bool</key>
+  <true/>
+  <key>string</key>
+  <string>Pigeon</string>
+  <key>unicodeString</key>
+  <string>abc😀abc😎abc</string>
+  <key>multiLineString</key>
+  <string>have a
+great
+day</string>
+  <key>list</key>
+  <array>
+    <integer>123</integer>
+    <real>1.23</real>
+    <true/>
+    <string>Pigeon</string>
+    <string>abc😀abc😎abc</string>
+    <string>have a
+great
+day</string>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <dict>
+      <key>one</key>
+      <integer>1</integer>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Pigeon</string>
+    </dict>
+  </array>
+  <key>set</key>
+  <array>
+    <integer>123</integer>
+    <real>1.23</real>
+    <true/>
+    <string>Pigeon</string>
+    <string>abc😀abc😎abc</string>
+    <string>have a
+great
+day</string>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <dict>
+      <key>one</key>
+      <integer>1</integer>
+    </dict>
+    <dict>
+      <key>name</key>
+      <string>Pigeon</string>
+    </dict>
+  </array>
+  <key>map</key>
+  <dict>
+    <key>one</key>
+    <integer>123</integer>
+    <key>two</key>
+    <real>1.23</real>
+    <key>three</key>
+    <true/>
+    <key>four</key>
+    <string>Pigeon</string>
+    <key>five</key>
+    <string>abc😀abc😎abc</string>
+    <key>six</key>
+    <string>have a
+great
+day</string>
+    <key>seven</key>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <key>eight</key>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+    </array>
+    <key>nine</key>
+    <dict>
+      <key>one</key>
+      <integer>1</integer>
+    </dict>
+    <key>ten</key>
+    <dict>
+      <key>name</key>
+      <string>Pigeon</string>
+    </dict>
+  </dict>
+  <key>typedObject</key>
+  <dict>
+    <key>name</key>
+    <string>Pigeon</string>
+    <key>age</key>
+    <integer>30</integer>
+    <key>address</key>
+    <dict>
+      <key>street</key>
+      <string>Folsom St.</string>
+    </dict>
+    <key>hobbies</key>
+    <array>
+      <string>swimming</string>
+      <string>gardening</string>
+      <string>reading</string>
+    </array>
+  </dict>
+  <key>container</key>
+  <dict>
+    <key>name</key>
+    <string>Pigeon</string>
+    <key>age</key>
+    <integer>30</integer>
+    <key>address</key>
+    <dict>
+      <key>street</key>
+      <string>Folsom St.</string>
+      <key>hobbies</key>
+      <array>
+        <string>swimming</string>
+        <string>gardening</string>
+        <string>reading</string>
+      </array>
+    </dict>
+  </dict>
+</dict>
+</plist>

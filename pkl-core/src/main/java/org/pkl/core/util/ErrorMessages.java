@@ -1,0 +1,60 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.util;
+
+import java.text.MessageFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.stream.*;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.runtime.VmValue;
+import org.pkl.core.runtime.VmValueRenderer;
+
+public final class ErrorMessages {
+  private ErrorMessages() {}
+
+  private static final VmValueRenderer renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
+
+  public static String create(String messageName, @Nullable Object... args) {
+    var locale = Locale.getDefault();
+    String errorMessage =
+        ResourceBundle.getBundle("org.pkl.core.errorMessages", locale).getString(messageName);
+
+    // only format if `errorMessage` is a format string
+    if (args.length == 0) return errorMessage;
+
+    var formatter = new MessageFormat(errorMessage, locale);
+    // TODO: we render VmValues here with VmValueRenderer, but that's not enough to properly
+    //       render all kinds of values, like Pkl Strings, for example
+    @Nullable Object[] actualArgs = new @Nullable Object[args.length];
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      if (arg instanceof VmValue) {
+        actualArgs[i] = renderer.render(arg);
+      } else {
+        actualArgs[i] = arg;
+      }
+    }
+    return formatter.format(actualArgs);
+  }
+
+  public static String createIndented(String messageName, String indent, @Nullable Object... args) {
+    return create(messageName, args)
+        .lines()
+        .map((msg) -> indent + msg)
+        .collect(Collectors.joining("\n"));
+  }
+}

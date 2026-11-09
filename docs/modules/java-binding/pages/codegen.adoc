@@ -1,0 +1,219 @@
+= Java Code Generator
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-codegen-java-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-java
+
+:uri-pkl-codegen-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-java&e=jar
+
+ifdef::is-release-version[]
+:uri-pkl-codegen-java-download: {github-releases}/pkl-codegen-java
+endif::[]
+
+The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.
+
+The benefits of code generation are:
+
+* Configuration can be conveniently consumed as statically typed Java objects.
+* The entire configuration tree can be code-completed in Java IDEs.
+* Any drift between Java code and Pkl configuration structure is caught at compile time.
+
+The generated classes are immutable and have component-wise implementations of `equals()`, `hashCode()`, and `toString()`.
+
+== Installation
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#installation[Installation] in the Gradle plugin chapter.
+
+[[install-library]]
+=== Java Library
+
+The `pkl-codegen-java` library is available {uri-pkl-codegen-java-maven-module}[from Maven Central].
+It requires Java 17 or higher.
+
+ifndef::is-release-version[]
+NOTE: Snapshots are published to repository `{uri-snapshot-repo}`.
+endif::[]
+
+==== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+[tabs]
+====
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+dependencies {
+  implementation("org.pkl-lang:pkl-codegen-java:{pkl-artifact-version}")
+}
+
+repositories {
+ifdef::is-release-version[]
+  mavenCentral()
+endif::[]
+ifndef::is-release-version[]
+  maven(url = "{uri-snapshot-repo}")
+endif::[]
+}
+----
+
+Groovy::
++
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  implementation "org.pkl-lang:pkl-codegen-java:{pkl-artifact-version}"
+}
+
+repositories {
+ifdef::is-release-version[]
+  mavenCentral()
+endif::[]
+ifndef::is-release-version[]
+  maven { url "{uri-snapshot-repo}" }
+endif::[]
+}
+----
+====
+
+==== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<project>
+  <dependency>
+    <groupId>org.pkl-lang</groupId>
+    <artifactId>pkl-codegen-java</artifactId>
+    <version>{pkl-artifact-version}</version>
+  </dependency>
+ifndef::is-release-version[]
+  <repositories>
+    <repository>
+      <id>sonatype-s01</id>
+      <name>Sonatype S01</name>
+      <url>{uri-snapshot-repo}</url>
+    </repository>
+</repositories>
+endif::[]
+</project>
+----
+
+[[install-cli]]
+=== CLI
+
+The CLI is available as a Java executable.
+
+It works on multiple platforms, and requires a Java 17 (or higher) runtime on the system path.
+
+To download:
+
+[tabs]
+====
+macOS/Linux::
++
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl-codegen-java '{uri-pkl-codegen-java-download}'
+chmod +x pkl-codegen-java
+./pkl-codegen-java --version
+----
+
+Windows::
++
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-codegen-java-download}' -OutFile pkl-codegen-java.bat
+.\pkl-codegen-java --version
+----
+====
+
+This should print something similar to:
+
+[source,shell]
+[subs="+attributes"]
+----
+pkl-codegen-java {pkl-version} (macOS 14.2, Java 17.0.10)
+----
+
+[[codegen-java-usage]]
+== Usage
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#java-code-gen[Java Code Generation] in the Gradle plugin chapter.
+
+=== Java Library
+
+The Java library offers two APIs: a high-level API that corresponds to the CLI, and a lower-level API that provides additional features and control.
+The entry points for these APIs are `org.pkl.codegen.java.CliJavaCodeGenerator` and `org.pkl.codegen.java.JavaCodeGenerator`, respectively.
+For more information, refer to the Javadoc documentation.
+
+=== CLI
+
+*Synopsis:* `pkl-codegen-java [<options>] <modules>`
+
+`<modules>`::
+The absolute or relative URIs of the modules to generate classes for.
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+.--generate-getters
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to generate private final fields and public getter methods instead of public final fields.
+====
+
+.--generate-javadoc
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to preserve Pkl doc comments by generating corresponding Javadoc comments.
+====
+
+.--params-annotation
+[%collapsible]
+====
+Default: `none` if `--generate-spring-boot` is set, `org.pkl.config.java.mapper.Named` otherwise +
+Fully qualified name of the annotation type to use for annotating constructor parameters with their name. +
+The specified annotation type must have a `value` parameter of type `String` or the generated code may not compile.
+If set to `none`, constructor parameters are not annotated.
+Whether and how constructor parameters should be annotated depends on the library that instantiates the generated classes.
+For Spring Boot applications, and for users of `pkl-config-java` compiling the generated classes with `-parameters`, no annotation is required.
+====
+
+.--non-null-annotation
+[%collapsible]
+====
+Default: `org.jspecify.annotations.NonNull` +
+Fully qualified name of the annotation type to use for annotating non-null types. +
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+or the generated code may not compile.
+====
+
+Common code generator options:
+
+include::{partialsdir}/cli-codegen-options.adoc[]
+
+Common CLI options:
+
+include::../../pkl-cli/partials/cli-common-options.adoc[]
+
+[[full-example]]
+== Full Example
+
+For a ready-to-go example with full source code,
+see link:{uri-codegen-java-example}[codegen-java] in the _pkl-jvm-examples_ repository.
