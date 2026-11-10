@@ -77,7 +77,6 @@ endif::[]
 :uri-stdlib-netModule: {uri-pkl-stdlib-docs}/net
 :uri-stdlib-net-Url: {uri-stdlib-netModule}/Url
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
-:uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
 :uri-stdlib-yamlModule: {uri-pkl-stdlib-docs}/yaml
 :uri-stdlib-YamlParser: {uri-stdlib-yamlModule}/Parser

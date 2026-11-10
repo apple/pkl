@@ -79,22 +79,6 @@ examples {
     
     """
   }
-  ["textproto"] {
-    """
-    property: (value)
-    elements: (element1)
-    elements: (element2)
-    entries: {
-      key: (key1)
-      value: (value1)
-    }
-    entries: {
-      key: (key2)
-      value: (value2)
-    }
-    
-    """
-  }
   ["xml"] {
     """
     <?xml version="1.0" encoding="UTF-8"?>

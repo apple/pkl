@@ -176,37 +176,6 @@ examples {
     """
     "✅\\❌ /-#;)<>"
   }
-  ["textproto"] {
-    """
-    1"2
-    3\t4'
-    """
-    "+* /\\-;)❌#✅<>"
-    """
-    directiveProperty: ✅/&\\;)*❌
-    normalProperty: 42
-    listing: "foo"
-    listing: 💰
-    listing: "baz"
-    mapping: {
-      key: "key"
-      value: "value"
-    }
-    mapping: {
-      key: 🔑
-      value: 42
-    }
-    mapping: {
-      key: "other"
-      value: 💰
-    }
-    
-    """
-    """
-    ✅\\❌ /-#;)<>
-    
-    """
-  }
   ["xml"] {
     """
     1"2

@@ -52,7 +52,6 @@ data class CliEvaluatorOptions(
    * - `"pcf"` (default)
    * - `"plist"`
    * - `"properties"`
-   * - `"textproto"` (deprecated in Pkl 0.33)
    * - `"xml"`
    * - `"yaml"`
    */
