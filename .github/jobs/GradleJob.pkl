@@ -45,6 +45,9 @@ fixed job {
     when (os == "windows") {
       ["JAVA_HOME"] = "/jdk"
     }
+    when (os == "macOS") {
+      ["DEVELOPER_DIR"] = "/Applications/Xcode_swift_6.4.app"
+    }
   }
   when (os == "macOS") {
     `if` =
@@ -65,10 +68,7 @@ fixed job {
       new Listing {
         "self-hosted"
         "macos"
-        // Currently have a bug where macOS runners have `cc` from XCode 26 toolchain but have
-        // default SDK set to 27.
-        // TODO remove me once this issue is fixed.
-        "tahoe"
+        "goldengate"
         when (nightlyMacOS) {
           "nightly"
         }
