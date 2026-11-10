@@ -1,0 +1,6 @@
+@Baz { valid = true is module }
+class Bar
+
+class Baz extends Annotation {
+  valid: Boolean
+}

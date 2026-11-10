@@ -209,7 +209,6 @@ import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
 import org.pkl.core.stdlib.registry.MemberRegistryFactory;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 import org.pkl.parser.Span;
@@ -394,14 +393,20 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (currentScope.getConstLevel() == ConstLevel.MODULE) {
       for (var scope = currentScope; scope != null; scope = scope.getParent()) {
         if (scope.isAnnotationScope()) {
-          errorMessage = ErrorMessages.create("invalidModuleTypeInAnnotation");
-          break;
+          throw exceptionBuilder()
+              .withSourceSection(sourceSection)
+              .evalError("invalidModuleTypeInAnnotation")
+              .build();
         } else if (scope.isClassScope()) {
-          errorMessage = ErrorMessages.create("invalidModuleTypeInClass");
-          break;
+          throw exceptionBuilder()
+              .withSourceSection(sourceSection)
+              .evalError("invalidModuleTypeInClass")
+              .build();
         } else if (scope.isTypeAliasScope()) {
-          errorMessage = ErrorMessages.create("invalidModuleTypeInTypeAlias");
-          break;
+          throw exceptionBuilder()
+              .withSourceSection(sourceSection)
+              .evalError("invalidModuleTypeInTypeAlias")
+              .build();
         }
       }
     }
@@ -418,18 +423,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           }
           var message =
               scope.isPropertyScope() ? "invalidModuleTypeInProperty" : "invalidModuleTypeInMethod";
-          errorMessage = ErrorMessages.create(message, scope.getQualifiedName());
-          break;
+          throw exceptionBuilder()
+              .withSourceSection(sourceSection)
+              .evalError(message, scope.getQualifiedName())
+              .build();
         }
       }
     }
-    assert errorMessage != null;
-    // TODO: when making this an error, update comment on moduleClass in ReferenceTypeNode.eval
-    VmContext.get(null)
-        .getLogger()
-        .warn(
-            errorMessage + " This will be an error in a future release.",
-            VmUtils.createStackFrame(sourceSection, null));
+
+    // we should always throw a real exception before we get here!
+    throw PklBugException.unreachableCode();
   }
 
   @Override

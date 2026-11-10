@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type from const property `currentModuleType4d#qux`.
+
+x | const qux = true is module
+                        ^^^^^^
+at currentModuleType4d#qux (file:///$snippetsDir/input/types/currentModuleType4d.pkl)

@@ -29,9 +29,9 @@ class Foo {
 
   x5: String|moduleTypes1|Int
 
-  x6: module
+  x6: this
 
-  x7: List<module>
+  x7: List<this>
 
-  x8: String|module|Int
+  x8: String|this|Int
 }

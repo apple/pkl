@@ -18,25 +18,7 @@ res6a: module = res6[0]
 
 function fun(m: module): List<module> = List((m) { x = 2 })
 
-class Bad {
-  res7: module = "abc"
-
-  res8: module = new Person {}
-
-  res9: module? = new Person {}
-
-  res10: List<module> = List(new Person {})
-}
-
 class Person
-
-res7 = test.catch(() -> new Bad {}.res7)
-
-res8 = test.catch(() -> new Bad {}.res8)
-
-res9 = test.catch(() -> new Bad {}.res9)
-
-res10 = test.catch(() -> new Bad {}.res10)
 
 output {
   // force eval but don't render to prevent recursion
@@ -48,9 +30,5 @@ output {
     let (r5 = res5)
     let (r6 = res6)
     let (r6a = res6a)
-    let (r7 = res7)
-    let (r8 = res8)
-    let (r9 = res9)
-    let (r10 = res10)
       new Dynamic { result = "ok" }
 }

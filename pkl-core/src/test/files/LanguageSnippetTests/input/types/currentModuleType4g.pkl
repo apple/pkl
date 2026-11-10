@@ -1,0 +1,1 @@
+hidden const waldo = (x: module) -> true
