@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type within a type alias body.
+
+x | typealias Foo = module
+                    ^^^^^^
+at currentModuleType4a#Foo (file:///$snippetsDir/input/types/currentModuleType4a.pkl)

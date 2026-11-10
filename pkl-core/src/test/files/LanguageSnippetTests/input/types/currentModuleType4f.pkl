@@ -1,0 +1,5 @@
+const corge = new {
+  grault {
+    garply = true is module
+  }
+}
