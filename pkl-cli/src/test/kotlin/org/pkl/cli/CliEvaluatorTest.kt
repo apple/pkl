@@ -709,8 +709,7 @@ result = someLib.x
     assertThat(output).isEqualTo("x: 1\n---\nx: 3\n")
   }
 
-  // prototext can't render `Dynamic`.
-  @EnumSource(names = ["TEXTPROTO"], mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource
   @ParameterizedTest(name = "{0} console output ends with newline")
   fun `console output ends with newline`(outputFormat: OutputFormat) {
     val sourceFiles = listOf(writePklFile("test0.pkl", "foo = 0\nbar=\"Baz\""))

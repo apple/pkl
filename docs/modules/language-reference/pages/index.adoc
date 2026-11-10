@@ -2752,7 +2752,6 @@ The standard library provides these renderers:
 * link:{uri-stdlib-baseModule}/PcfRenderer[PcfRenderer]
 * link:{uri-stdlib-baseModule}/PListRenderer[PListRenderer]
 * link:{uri-stdlib-baseModule}/PropertiesRenderer[PropertiesRenderer]
-* link:{uri-stdlib-protobufModule}/Renderer[protobuf.Renderer]
 * link:{uri-stdlib-xmlModule}/Renderer[xml.Renderer]
 * link:{uri-stdlib-baseModule}/YamlRenderer[YamlRenderer]
 

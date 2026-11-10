@@ -2,7 +2,6 @@ amends ".../snippetTest.pkl"
 
 import "pkl:xml"
 import "pkl:jsonnet"
-import "pkl:protobuf"
 
 examples {
   for (format, renderer in new Mapping {
@@ -11,7 +10,6 @@ examples {
     ["jsonnet"] = new jsonnet.Renderer {} 
     ["plist"] = new PListRenderer {}
     ["properties"] = new PropertiesRenderer {}
-    ["textproto"] = new protobuf.Renderer {}
     ["xml"] = new xml.Renderer {}
     ["yaml"] = new YamlRenderer {}
   }) {
@@ -22,9 +20,6 @@ examples {
         when (format == "properties") {
           listing = null
           mapping = null
-        }
-        when (format == "textproto") {
-          dynamic = null
         }
       })
       renderer.renderDocument(new RenderDirective { text = #"✅\❌ /-#;)<>"# })
