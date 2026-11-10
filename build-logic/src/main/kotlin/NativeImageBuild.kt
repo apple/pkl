@@ -279,8 +279,12 @@ abstract class NativeImageBuild : DefaultTask() {
           add("--native-compiler-path=${nativeCompilerPath.get().asFile}")
         }
         // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed
-        // tools.
-        addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
+        // tools, and `DEVELOPER_DIR` so that `cc` on macOS uses the selected Xcode toolchain.
+        addAll(
+          environment.keys
+            .filter { it.startsWith("HOMEBREW_") || it == "DEVELOPER_DIR" }
+            .map { "-E$it" }
+        )
         addAll(extraNativeImageArgs.get())
         addAll(extraArgsFromProperties)
       }

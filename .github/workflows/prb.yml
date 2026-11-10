@@ -211,9 +211,10 @@ jobs:
     runs-on:
     - self-hosted
     - macos
-    - tahoe
+    - goldengate
     env:
       LANG: en_US.UTF-8
+      DEVELOPER_DIR: /Applications/Xcode_swift_6.4.app
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
@@ -559,9 +560,10 @@ jobs:
     runs-on:
     - self-hosted
     - macos
-    - tahoe
+    - goldengate
     env:
       LANG: en_US.UTF-8
+      DEVELOPER_DIR: /Applications/Xcode_swift_6.4.app
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
@@ -907,9 +909,10 @@ jobs:
     runs-on:
     - self-hosted
     - macos
-    - tahoe
+    - goldengate
     env:
       LANG: en_US.UTF-8
+      DEVELOPER_DIR: /Applications/Xcode_swift_6.4.app
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
