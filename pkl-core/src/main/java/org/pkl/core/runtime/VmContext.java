@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.EvaluationContext;
 import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
@@ -36,6 +37,13 @@ public final class VmContext {
   private static final ContextReference<VmContext> REFERENCE =
       ContextReference.create(VmLanguage.class);
   private final VmValueTrackerFactory valueTrackerFactory;
+  private volatile @Nullable EvaluationState evaluationState;
+
+  private record EvaluationState(
+      Map<String, String> externalProperties,
+      Map<String, String> environmentVariables,
+      ModuleCache moduleCache,
+      ResourceManager resourceManager) {}
 
   public VmContext(VmLanguage vmLanguage, Env env) {
     this.valueTrackerFactory =
@@ -112,7 +120,37 @@ public final class VmContext {
     this.holder = holder;
   }
 
+  public EvaluationScope enterEvaluationScope(EvaluationContext context) {
+    var previousState = evaluationState;
+
+    var properties = new HashMap<>(holder.externalProperties);
+    properties.putAll(context.externalProperties());
+
+    var variables = new HashMap<>(holder.environmentVariables);
+    variables.putAll(context.environmentVariables());
+
+    evaluationState =
+        new EvaluationState(
+            Map.copyOf(properties),
+            Map.copyOf(variables),
+            new ModuleCache(),
+            holder.resourceManager.withEmptyCache());
+
+    return () -> evaluationState = previousState;
+  }
+
+  public interface EvaluationScope extends AutoCloseable {
+    @Override
+    void close();
+  }
+
   public ModuleCache getModuleCache() {
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.moduleCache();
+    }
+
     return holder.moduleCache;
   }
 
@@ -137,6 +175,12 @@ public final class VmContext {
   }
 
   public ResourceManager getResourceManager() {
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.resourceManager();
+    }
+
     return holder.resourceManager;
   }
 
@@ -145,10 +189,22 @@ public final class VmContext {
   }
 
   public Map<String, String> getEnvironmentVariables() {
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.environmentVariables();
+    }
+
     return holder.environmentVariables;
   }
 
   public Map<String, String> getExternalProperties() {
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.externalProperties();
+    }
+
     return holder.externalProperties;
   }
 
