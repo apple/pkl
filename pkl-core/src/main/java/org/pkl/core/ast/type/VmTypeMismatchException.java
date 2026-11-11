@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ControlFlowException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -153,6 +154,28 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
         }
       }
 
+      // give better error than "expected foo.Bar, but got baz.Qux" in case the actual value's class
+      // extends a class with the same qualified name that is defined by a different module
+      var conflictingSuperclass = findConflictingSuperclass();
+      if (conflictingSuperclass != null) {
+        var actualClass = ((VmTyped) actualValue).getVmClass();
+        var expectedClass = (VmClass) expectedType;
+        builder
+            .append(
+                ErrorMessages.createIndented(
+                    "typeMismatchSuperclassConflict",
+                    indent,
+                    renderedType,
+                    moduleUriOf(expectedClass),
+                    actualClass,
+                    moduleUriOf(conflictingSuperclass)))
+            .append("\n")
+            .append(indent)
+            .append("Value: ")
+            .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
+        return;
+      }
+
       var valueType =
           actualValue instanceof VmReference ref ? ref.getType() : VmUtils.getClass(actualValue);
 
@@ -164,10 +187,85 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
     }
 
+    /**
+     * Tells if the expected type is a class, and the actual value's class or one of its
+     * superclasses has the same qualified name as that class but is defined by a different module.
+     * This happens, for example, if the same module is imported both as a project dependency and
+     * via an absolute `package:` URI.
+     */
+    @TruffleBoundary
+    boolean hasModuleConflict() {
+      return findConflictingClass() != null;
+    }
+
+    private @Nullable VmClass findConflictingSuperclass() {
+      if (!(actualValue instanceof VmTyped actualObj)
+          || !(expectedType instanceof VmClass expectedClass)) {
+        return null;
+      }
+      var qualifiedName = expectedClass.getQualifiedName();
+      for (var clazz = actualObj.getVmClass().getSuperclass();
+          clazz != null;
+          clazz = clazz.getSuperclass()) {
+        if (clazz != expectedClass && clazz.getQualifiedName().equals(qualifiedName)) {
+          return clazz;
+        }
+      }
+      return null;
+    }
+
+    private @Nullable VmClass findConflictingClass() {
+      if (!(actualValue instanceof VmTyped actualObj)
+          || !(expectedType instanceof VmClass expectedClass)) {
+        return null;
+      }
+      var actualClass = actualObj.getVmClass();
+      if (actualClass.getQualifiedName().equals(expectedClass.getQualifiedName())) {
+        return actualClass;
+      }
+      return findConflictingSuperclass();
+    }
+
     @Override
     protected Boolean hasHint() {
-      return false;
+      var conflictingClass = findConflictingClass();
+      return conflictingClass != null
+          && isProjectVsAbsolutePackageImport(
+              moduleUriOf((VmClass) expectedType), moduleUriOf(conflictingClass));
     }
+
+    @Override
+    @TruffleBoundary
+    public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      var conflictingClass = findConflictingClass();
+      if (conflictingClass == null) return;
+      var expectedModuleUri = moduleUriOf((VmClass) expectedType);
+      var actualModuleUri = moduleUriOf(conflictingClass);
+      if (!isProjectVsAbsolutePackageImport(expectedModuleUri, actualModuleUri)) return;
+      var projectPackageUri =
+          "projectpackage".equalsIgnoreCase(expectedModuleUri.getScheme())
+              ? expectedModuleUri
+              : actualModuleUri;
+      var packageUri = projectPackageUri == expectedModuleUri ? actualModuleUri : expectedModuleUri;
+      builder.append(
+          ErrorMessages.createIndented(
+              "typeMismatchProjectPackageHint", indent, projectPackageUri, packageUri));
+    }
+  }
+
+  private static URI moduleUriOf(VmClass clazz) {
+    return clazz.getModule().getModuleInfo().getModuleKey().getUri();
+  }
+
+  /**
+   * Tells if one of the given module URIs was imported as a project dependency (`@dep/...`, scheme
+   * `projectpackage:`) and the other one via an absolute `package:` URI.
+   */
+  private static boolean isProjectVsAbsolutePackageImport(URI uri1, URI uri2) {
+    var scheme1 = uri1.getScheme();
+    var scheme2 = uri2.getScheme();
+    return ("projectpackage".equalsIgnoreCase(scheme1) && "package".equalsIgnoreCase(scheme2))
+        || ("package".equalsIgnoreCase(scheme1) && "projectpackage".equalsIgnoreCase(scheme2));
   }
 
   public static final class ClassType extends VmTypeMismatchException {
@@ -365,7 +463,9 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var result = new ArrayList<Integer>();
       for (int idx = 0; idx < children.length; idx++) {
         VmTypeMismatchException child = children[idx];
-        if (!(child instanceof VmTypeMismatchException.Simple)
+        if (!(child instanceof VmTypeMismatchException.Simple simple)
+            // a module conflict deserves an explanation even for a plain class type
+            || simple.hasModuleConflict()
             // identity comparison is intentional
             || child.sourceSection != typeCheckNode.elementTypeNodes[idx].getSourceSection()) {
           result.add(idx);
