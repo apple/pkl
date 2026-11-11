@@ -93,6 +93,9 @@ class DurationTest {
     assertThat(duration3.toIsoString()).isEqualTo("PT0.3001S")
     assertThat(duration4.toIsoString()).isEqualTo("PT0S")
     assertThat(Duration(1.0, NANOS).toIsoString()).isEqualTo("PT0.000000001S")
+    assertThat(Duration(1.001, SECONDS).toIsoString()).isEqualTo("PT1.001S")
+    assertThat(Duration(1001.0, MILLIS).toIsoString()).isEqualTo("PT1.001S")
+    assertThat(Duration(59.9999999999, SECONDS).toIsoString()).isEqualTo("PT1M")
     // Although ISO8601 allows for durations (P) denoted in days, months and years, it is not
     // recommended.
     // The day notation can express an hour more or less, depending on whether it crosses a daylight
