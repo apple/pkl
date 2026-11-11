@@ -1,0 +1,48 @@
+facts {
+  ["fold counts nodes by class"] {
+    true
+    true
+    true
+  }
+  ["fold visits this node first, then descendants in source order"] {
+    true
+  }
+  ["children follow source order, not the order of derived views"] {
+    true
+  }
+  ["findChild returns the first match in source order"] {
+    true
+    true
+    true
+  }
+  ["findChild does not consider this node"] {
+    true
+  }
+  ["findChild throws when nothing matches"] {
+    true
+  }
+  ["findChildOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findChildren returns every match in source order"] {
+    true
+    true
+  }
+  ["findChildren searches matches for further matches"] {
+    true
+  }
+  ["findChildren returns an empty list when nothing matches"] {
+    true
+  }
+  ["expressions in string interpolations are children"] {
+    true
+    true
+  }
+  ["a node built from scratch is traversable"] {
+    true
+  }
+  ["an amended node is traversed with its overrides"] {
+    true
+  }
+}
