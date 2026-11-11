@@ -122,6 +122,19 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
 
+/// Feature flags controlling Pkl evaluation behavior.
+///
+/// Accepted flags and their default values may vary between Pkl releases.
+/// Unrecognized flags will result in a warning.
+@Since { version = "0.33.0" }
+featureFlags: Mapping<KnownFeatureFlags | String, Boolean>?
+
+/// Feature flag names known to the current version of Pkl.
+///
+/// Provided for informational purposes and enhanced editor completion for [featureFlags].
+@Since { version = "0.33.0" }
+typealias KnownFeatureFlags = nothing
+
 /// These evaluator settings, whose settings are resolved against [enclosingUri] using OS rules for
 /// [os].
 @Since { version = "0.32.0" }

@@ -72,6 +72,8 @@ public final class EvaluatorBuilder {
 
   private boolean powerAssertionsEnabled = false;
 
+  private final Map<FeatureFlag, Boolean> featureFlags = new HashMap<>();
+
   private EvaluatorBuilder() {}
 
   /**
@@ -481,12 +483,44 @@ public final class EvaluatorBuilder {
     return powerAssertionsEnabled;
   }
 
+  /** Adds the given feature flag, overriding any value previously set under the same flag. */
+  public EvaluatorBuilder addFeatureFlag(FeatureFlag flag, boolean value) {
+    featureFlags.put(flag, value);
+    return this;
+  }
+
+  /** Adds the given feature flags, overriding any value previously set under the same flags. */
+  public EvaluatorBuilder addFeatureFlags(Map<FeatureFlag, Boolean> flags) {
+    featureFlags.putAll(flags);
+    return this;
+  }
+
+  /** Removes any existing feature flags, then adds the given flags. */
+  public EvaluatorBuilder setFeatureFlags(Map<FeatureFlag, Boolean> flags) {
+    featureFlags.clear();
+    return addFeatureFlags(flags);
+  }
+
+  /** Returns the current configured feature flags */
+  public Map<FeatureFlag, Boolean> getFeatureFlags() {
+    return featureFlags;
+  }
+
   /**
    * Given a project, sets its dependencies, and also applies any evaluator settings if set.
    *
    * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
    */
   public EvaluatorBuilder applyFromProject(Project project) {
+    return applyFromProject(project, Loggers.noop());
+  }
+
+  /**
+   * Given a project, sets its dependencies, and also applies any evaluator settings if set.
+   *
+   * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
+   */
+  public EvaluatorBuilder applyFromProject(Project project, Logger logger) {
     this.dependencies = project.getDependencies();
     var settings = project.getResolvedEvaluatorSettings();
     if (securityManager != null) {
@@ -567,6 +601,19 @@ public final class EvaluatorBuilder {
       setTraceMode(settings.traceMode());
     }
 
+    if (settings.featureFlags() != null) {
+      for (var entry : settings.featureFlags().entrySet()) {
+        var flag = FeatureFlag.parse(entry.getKey());
+        if (flag == null) {
+          logger.warn(
+              String.format("Unrecognized feature flag named `%s`", entry.getKey()),
+              "pkl:#PklProject");
+          continue;
+        }
+        addFeatureFlag(flag, entry.getValue());
+      }
+    }
+
     return this;
   }
 
@@ -595,6 +642,7 @@ public final class EvaluatorBuilder {
         dependencies,
         outputFormat,
         traceMode,
-        powerAssertionsEnabled);
+        powerAssertionsEnabled,
+        featureFlags);
   }
 }

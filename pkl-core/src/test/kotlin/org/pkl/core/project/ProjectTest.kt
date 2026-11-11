@@ -76,6 +76,7 @@ class ProjectTest {
         null,
         null,
         null,
+        null,
       )
     val expectedAnnotations =
       listOf(
@@ -197,6 +198,7 @@ class ProjectTest {
           listOf(Path.of("/path/to/modulepath1/"), Path.of("/path/to/modulepath2/")),
           null,
           Path.of("/path/to"),
+          null,
           null,
           null,
           null,

@@ -126,6 +126,28 @@ project: Project?
 /// Added in Pkl 0.26.0.
 http: Http?
 
+/// Register external module readers.
+///
+/// Added in Pkl 0.27.0.
+externalModuleReaders: Mapping<String, ExternalReader>?
+
+/// Register external resource readers.
+///
+/// Added in Pkl 0.27.0.
+externalResourceReaders: Mapping<String, ExternalReader>?
+
+/// Dictates the rendering of calls to the trace() method within Pkl.
+///
+/// Added in Pkl 0.30.0.
+traceMode: ("compact" | "pretty")?
+
+/// Feature flags to enable or disable.
+///
+/// Specifying a feature flag unknown to the current version of Pkl will result in a warning.
+///
+/// Added in Pkl 0.33.0.
+featureFlags: Mapping<String, Boolean>?
+
 class ClientResourceReader {
   /// The URI scheme this reader is responsible for reading.
   scheme: String
@@ -177,7 +199,7 @@ class Project {
   projectFileUri: String
 
   /// The dependencies of this project.
-  dependencies: Mapping<String, Project|RemoteDependency>
+  dependencies: Mapping<String, Project | RemoteDependency>
 }
 
 class RemoteDependency {
@@ -255,6 +277,23 @@ class Proxy {
   /// }
   /// ```
   noProxy: Listing<String>(isDistinct)
+}
+
+class ExternalReader {
+  /// The executable to launch as the external reader process.
+  ///
+  /// Must be either an absolute path to the executable or an executable name to resolve against the operating system's `$PATH`.
+  executable: String
+
+  /// Arguments to pass to [executable].
+  arguments: Listing<String>?
+
+  /// External reader process working directory.
+  ///
+  /// Default value: the working directory of the Pkl process. 
+  ///
+  /// Added in Pkl 0.32.0.
+  workingDir: String?
 }
 ----
 <1> link:{uri-messagepack-bin}[bin format]
