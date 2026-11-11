@@ -88,6 +88,20 @@ for ((key, value) in relocations) {
 
 val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/", "org/jspecify/")
 
+// kotlin-reflect cannot be relocated: it resolves its implementation classes
+// (e.g. `ReflectionFactoryImpl`) and `kotlin.Metadata` annotations by name, and
+// declares services under its own name in META-INF/services.
+// `DefaultConstructorMarker` is loaded by name from `KDeclarationContainerImpl`.
+// https://github.com/apple/pkl/issues/794
+val kotlinUnrelocatedNames =
+  listOf("kotlin.reflect.", "kotlin.jvm.internal.DefaultConstructorMarker")
+
+// entry-path forms of `kotlinUnrelocatedNames`, e.g. `kotlin/reflect/`
+val kotlinUnrelocatedPaths = kotlinUnrelocatedNames.map { it.replace('.', '/') }
+
+fun relocatedName(name: String): String =
+  relocations.entries.first { name.startsWith(it.key) }.let { it.value + name.removePrefix(it.key) }
+
 tasks.shadowJar {
   inputs.property("relocations", relocations)
 
@@ -125,7 +139,22 @@ tasks.shadowJar {
   exclude("module-info.*")
 
   for ((from, to) in relocations) {
-    relocate(from, to)
+    relocate(from, to) {
+      if (from == "kotlin.") {
+        for (name in kotlinUnrelocatedNames) {
+          exclude(if (name.endsWith(".")) "$name**" else name)
+        }
+        // kotlin-reflect loads `.kotlin_builtins` resources by literal
+        // classpath path, so they must not be relocated.
+        exclude("kotlin/**/*.kotlin_builtins")
+        // kotlin-reflect stores platform `kotlin.*` names as string literals
+        // (e.g. the name tables in `JavaToKotlinClassMap`) and looks them up
+        // by their original values, so they must not be rewritten. This also
+        // preserves qualified names, serializer names, and `kotlin.Metadata`
+        // annotation descriptors used outside kotlin-reflect.
+        skipStringConstants = true
+      }
+    }
   }
 
   // necessary for service files to be adapted to relocation
@@ -166,6 +195,11 @@ val validateFatJar =
           !(fileDetails.isDirectory ||
             path.startsWith("org/pkl/") ||
             path.startsWith("META-INF/") ||
+            // kotlin-reflect entries and `.kotlin_builtins` resource files are
+            // deliberately not relocated; see the `exclude` calls in
+            // `tasks.shadowJar`.
+            (path.startsWith("kotlin/") && path.endsWith(".kotlin_builtins")) ||
+            kotlinUnrelocatedPaths.any { path.startsWith(it) } ||
             nonRelocations.any { path.startsWith(it) })
         ) {
           // don't throw exception inside `visit`
@@ -194,12 +228,71 @@ val fatSourcesJar =
 
     mergedBinaryJars.from(tasks.shadowJar)
     relocatedPackages.set(relocations)
+    excludedPackages.set(kotlinUnrelocatedNames)
     outputJar.fileProvider(
       provider {
         file(tasks.shadowJar.get().archiveFile.get().asFile.path.replace(".jar", "-sources.jar"))
       }
     )
   }
+
+val validateFatSourcesJar =
+  tasks.register("validateFatSourcesJar") {
+    val outputFile = layout.buildDirectory.file("validateFatSourcesJar/result.txt")
+    inputs.files(tasks.shadowJar, fatSourcesJar.flatMap { it.outputJar })
+    inputs.property("relocations", relocations)
+    inputs.property("kotlinUnrelocatedNames", kotlinUnrelocatedNames)
+    outputs.file(outputFile)
+
+    doLast {
+      val relocatedPaths = kotlinUnrelocatedNames.map { relocatedName(it).replace('.', '/') }
+
+      val binaryPaths = mutableListOf<String>()
+      zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
+        if (!isDirectory) binaryPaths.add(relativePath.pathString)
+      }
+
+      val sourcePaths = mutableListOf<String>()
+      val problems = mutableListOf<String>()
+      zipTree(fatSourcesJar.get().outputJar.get().asFile).visit {
+        if (!isDirectory) {
+          val path = relativePath.pathString
+          sourcePaths.add(path)
+          for (relocatedPath in relocatedPaths) {
+            if (path.startsWith(relocatedPath)) {
+              problems.add("source for unrelocated name was relocated: $path")
+            }
+          }
+          if (path.endsWith(".kt") || path.endsWith(".java")) {
+            val text = open().bufferedReader().use { it.readText() }
+            for (name in kotlinUnrelocatedNames) {
+              if (text.contains(relocatedName(name))) {
+                problems.add("unrelocated name $name was rewritten in $path")
+              }
+            }
+          }
+        }
+      }
+
+      for (unrelocatedPath in kotlinUnrelocatedPaths.filter { it.endsWith("/") }) {
+        if (
+          binaryPaths.any { it.startsWith(unrelocatedPath) } &&
+            sourcePaths.none { it.startsWith(unrelocatedPath) }
+        ) {
+          problems.add("sources missing for unrelocated package: $unrelocatedPath")
+        }
+      }
+
+      if (problems.isEmpty()) {
+        outputFile.get().asFile.writeText("SUCCESS")
+      } else {
+        outputFile.get().asFile.writeText("FAILURE")
+        throw GradleException("Found relocated or missing sources:\n" + problems.joinToString("\n"))
+      }
+    }
+  }
+
+tasks.check { dependsOn(validateFatSourcesJar) }
 
 artifacts { add("fatJar", tasks.shadowJar) }
 
