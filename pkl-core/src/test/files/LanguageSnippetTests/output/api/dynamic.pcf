@@ -57,5 +57,13 @@ examples {
     "Tried to read property `age` but its value is undefined."
     "Class `Pair` is not a subtype of `Typed`."
     "Cannot instantiate abstract class `ValueRenderer`."
+    new {
+      name = "Pigeon"
+      id = 1
+    }
+    new {
+      name = "Pigeon"
+      id = 1
+    }
   }
 }
