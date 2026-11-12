@@ -23,6 +23,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.validate
 import org.pkl.cli.CliEvaluator
 import org.pkl.cli.CliEvaluatorOptions
+import org.pkl.cli.closingEngineIfNative
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.ProfileOptions
 import org.pkl.commons.cli.commands.single
@@ -103,6 +104,6 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         expression = expression ?: CliEvaluatorOptions.defaults.expression,
         profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
       )
-    CliEvaluator(options).run()
+    closingEngineIfNative { CliEvaluator(options).run() }
   }
 }

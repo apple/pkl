@@ -24,6 +24,7 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import java.net.URI
 import org.pkl.cli.CliTestRunner
+import org.pkl.cli.closingEngineIfNative
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProfileOptions
@@ -62,11 +63,13 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
         projectOptions,
         powerAssertionsEnabled = powerAssertionsEnabled,
       )
-    CliTestRunner(
-        options = cliBaseOptions,
-        testOptions = testOptions.cliTestOptions,
-        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
-      )
-      .run()
+    closingEngineIfNative {
+      CliTestRunner(
+          options = cliBaseOptions,
+          testOptions = testOptions.cliTestOptions,
+          profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
+        )
+        .run()
+    }
   }
 }

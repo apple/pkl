@@ -15,10 +15,22 @@
  */
 package org.pkl.cli
 
+import com.oracle.truffle.api.TruffleOptions
 import org.pkl.core.ProfilerOptions
 import org.pkl.core.runtime.VmUtils
 import org.pkl.profiler.CpuProfiler
 import org.pkl.profiler.CpuProfilerInstrument
+
+/** Runs [body], then closes the shared Truffle engine if running as a native executable. */
+internal inline fun <T> closingEngineIfNative(body: () -> T): T {
+  try {
+    return body()
+  } finally {
+    if (TruffleOptions.AOT) {
+      VmUtils.closeEngine()
+    }
+  }
+}
 
 /**
  * Runs [body], sampling it with the CPU profiler if [options] enables CPU profiling.
