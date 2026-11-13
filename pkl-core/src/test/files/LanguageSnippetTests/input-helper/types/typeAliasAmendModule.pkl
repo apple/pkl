@@ -1,0 +1,9 @@
+amends "typeAliasAmendBase.pkl"
+
+local const function isValid(s: String): Boolean = s.startsWith("Bob")
+
+local typealias ValidString4 = String(isValid(this))
+
+local myProp: ValidString4 = "Bob Marley"
+
+name = myProp

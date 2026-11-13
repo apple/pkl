@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Cannot import dependency because there is no project found.
+Cannot resolve dependency because there is no project found.
 
 If you meant to import a path that starts with `@`, prefix the path with `./` (e.g. `import "./@myPath").
 If you meant to import a dependency, ensure that this file is within a directory that contains a PklProject module.

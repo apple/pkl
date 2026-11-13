@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,9 +89,10 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
    */
   override fun close() {
     transport.closeQuietly()
-    for ((_, evaluator) in evaluators) {
+    for ((evaluatorId, evaluator) in evaluators) {
       // if currently in use, blocks until cancellation complete
       evaluator.closeQuietly()
+      externalReaderProcesses[evaluatorId]?.values?.forEach { it.closeQuietly() }
     }
     executor.shutdown()
   }
@@ -145,7 +146,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     evaluator.close()
 
     // close any running ExternalProcess instances for the closed evaluator
-    externalReaderProcesses[message.evaluatorId]?.values?.forEach { it.close() }
+    externalReaderProcesses.remove(message.evaluatorId)?.values?.forEach { it.close() }
   }
 
   private fun buildDeclaredDependencies(
@@ -200,6 +201,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
             }
             message.http?.caCertificates?.let(::addCertificates)
             message.http?.rewrites?.let(::setRewrites)
+            message.http?.headers?.let(::setHeaders)
             buildLazily()
           }
         securityManager =
@@ -230,7 +232,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         build()
       }
     } catch (e: IllegalArgumentException) {
-      throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)
+      throw ProtocolException(e.message ?: "Failed to create an evaluator. $e", e)
+    } catch (e: IllegalStateException) {
+      throw ProtocolException(e.message ?: "Failed to create an evaluator. $e", e)
     }
   }
 
@@ -303,6 +307,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
       .computeIfAbsent(spec) {
-        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(it.executable, it.arguments))
+        ExternalReaderProcess.of(
+          PklEvaluatorSettings.ExternalReader(it.executable, it.arguments, it.workingDir)
+        )
       }
 }

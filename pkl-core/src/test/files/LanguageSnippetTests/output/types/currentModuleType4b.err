@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type within an annotation body.
+
+x | @Baz { valid = true is module }
+                           ^^^^^^
+at currentModuleType4b#Bar.valid (file:///$snippetsDir/input/types/currentModuleType4b.pkl)

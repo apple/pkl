@@ -35,6 +35,7 @@ import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
+import org.pkl.core.util.GlobResolver
 import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -54,7 +55,8 @@ class BaseOptions : OptionGroup() {
             if (IoUtils.isUriLike(moduleName)) URI(moduleName)
             // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
             // into `URI("C", null, "/foo/bar", null)`.
-            else if (IoUtils.isWindowsAbsolutePath(moduleName)) Path.of(moduleName).toUri()
+            else if (IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(moduleName))
+              Path.of(moduleName).toUri()
             else URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null)
           } catch (e: URISyntaxException) {
             val message = buildString {
@@ -90,25 +92,17 @@ class BaseOptions : OptionGroup() {
     > {
       return splitPair(delimiter).convert {
         val cmd = shlex(it.second)
-        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1), null))
       }
     }
+
+    private val headerRegex = Regex("""^(.+?):[ \t]*(.*)$""")
   }
 
   private val defaults = CliBaseOptions()
 
   private val output =
-    arrayOf(
-      "json",
-      "jsonnet",
-      "pcf",
-      "properties",
-      "plist",
-      "textproto",
-      "xml",
-      "yaml",
-      "pkl-binary",
-    )
+    arrayOf("json", "jsonnet", "pcf", "properties", "plist", "xml", "yaml", "pkl-binary")
 
   val allowedModules: List<Pattern> by
     option(
@@ -285,6 +279,37 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
+  val httpHeaders: Map<String, Map<String, List<String>>> by
+    option(
+        names = arrayOf("--http-header"),
+        metavar = "<url-pattern>=<header name>:<header value>",
+        help = "HTTP header to add to the request.",
+      )
+      .splitPair()
+      .transformAll { pairs ->
+        buildMap<String, MutableMap<String, MutableList<String>>> {
+          for ((pattern, headerNameAndValue) in pairs) {
+            try {
+              GlobResolver.toRegexPattern(pattern)
+            } catch (e: GlobResolver.InvalidGlobPatternException) {
+              fail(e.message!!)
+            }
+            val (headerName, headerValue) =
+              headerRegex.find(headerNameAndValue)?.destructured
+                ?: fail("Header '$headerNameAndValue' is not in 'name:value' format.")
+            try {
+              IoUtils.validateHeaderName(headerName)
+              IoUtils.validateHeaderValue(headerValue)
+            } catch (e: IllegalArgumentException) {
+              fail(e.message!!)
+            }
+            getOrPut(pattern) { mutableMapOf() }
+              .getOrPut(headerName) { mutableListOf() }
+              .add(headerValue)
+          }
+        }
+      }
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -351,8 +376,9 @@ class BaseOptions : OptionGroup() {
       httpProxy = proxy,
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
-      externalModuleReaders = externalModuleReaders,
-      externalResourceReaders = externalResourceReaders,
+      httpHeaders = httpHeaders.ifEmpty { null },
+      externalModuleReaders = externalModuleReaders.ifEmpty { null },
+      externalResourceReaders = externalResourceReaders.ifEmpty { null },
       traceMode = traceMode,
       powerAssertionsEnabled = powerAssertionsEnabled,
     )

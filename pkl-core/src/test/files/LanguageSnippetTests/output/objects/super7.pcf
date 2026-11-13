@@ -1,0 +1,10 @@
+res1 {
+  tag {
+    ["pigeon"] {
+      name = "Pigeon"
+    }
+    ["cormorant"] {
+      name = "Cormorant"
+    }
+  }
+}

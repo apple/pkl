@@ -175,7 +175,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
       .setHttpClient(
         HttpClient.builder()
           .setTestPort(packageServer.port)
-          .addCertificates(FileTestUtils.selfSignedCertificate)
+          .addCertificates(FileTestUtils.selfSignedCertificatePem)
           .buildLazily()
       )
       .setPowerAssertionsEnabled(true)
@@ -223,8 +223,11 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
 
     val stderr = logWriter.toString().withUnixLineEndings()
 
+    // match native CLI: if an error happens, any WARN or TRACE gets emitted first, then the
+    // error message
+    val effectiveOutput = if (success) output + stderr else stderr + output
     return (success && stderr.isBlank()) to
-      (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
+      effectiveOutput.stripFilePaths().stripWebsite().stripStdlibLocationSha()
   }
 }
 
@@ -287,7 +290,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       add("--settings")
       add("pkl:settings")
       add("--ca-certificates")
-      add(FileTestUtils.selfSignedCertificate.toString())
+      add(FileTestUtils.selfSignedCertificatePem.toString())
       add("--test-mode")
       add("--test-port")
       add(packageServer.port.toString())
@@ -313,11 +316,6 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       process.destroy()
     }
   }
-}
-
-class MacAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = Executables.pkl.macAmd64
-  override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
 class MacAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {

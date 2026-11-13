@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,20 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClass;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.runtime.TypeParameter;
+import org.pkl.core.util.LateInit;
 
-public final class ClassMethod extends ClassMember {
-  private final List<TypeParameter> typeParameters;
+public final class ClassMethod extends ClassMember implements Method {
+  private final TypeParameter[] typeParameters;
 
   // null = not deprecated, "" = no/empty message in the @Deprecated body
   private final @Nullable String deprecation;
 
-  @CompilationFinal private FunctionNode functionNode;
+  @CompilationFinal @LateInit private FunctionNode functionNode;
 
   public ClassMethod(
       SourceSection sourceSection,
@@ -44,7 +44,7 @@ public final class ClassMethod extends ClassMember {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       VmTyped owner,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       @Nullable String deprecation) {
 
     super(
@@ -61,8 +61,17 @@ public final class ClassMethod extends ClassMember {
   }
 
   public void initFunctionNode(FunctionNode functionNode) {
+    //noinspection ConstantValue
     assert this.functionNode == null;
     this.functionNode = functionNode;
+  }
+
+  @Override
+  public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
+    if (callSite != null && deprecation != null) {
+      reportDeprecation(callSite);
+    }
+    return functionNode;
   }
 
   public CallTarget getCallTarget() {
@@ -89,12 +98,23 @@ public final class ClassMethod extends ClassMember {
     return functionNode.getCallTarget();
   }
 
+  @Override
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    return getCallTarget(callSite);
+  }
+
   public int getParameterCount() {
     return functionNode.getParameterCount();
   }
 
-  public @Nullable TypeNode getReturnTypeNode() {
-    return functionNode.getReturnTypeNode();
+  @Override
+  public int getTypeParameterCount() {
+    return functionNode.getTypeParameterCount();
+  }
+
+  @Override
+  public void ensureInitialized(VmObjectLike owner) {
+    // do nothing; class methods are always initialized
   }
 
   @Override
@@ -127,6 +147,7 @@ public final class ClassMethod extends ClassMember {
   }
 
   public PClass.Method export(PClass owner) {
-    return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
+    return functionNode.export(
+        owner, docComment, annotations, modifiers, TypeParameter.export(typeParameters));
   }
 }

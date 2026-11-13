@@ -1,0 +1,1 @@
+res = read("file:///file.txt")

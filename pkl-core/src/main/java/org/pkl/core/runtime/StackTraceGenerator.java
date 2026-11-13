@@ -20,9 +20,9 @@ import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.ast.MemberNode;
-import org.pkl.core.util.Nullable;
 
 final class StackTraceGenerator {
   private final VmException exception;
@@ -38,6 +38,10 @@ final class StackTraceGenerator {
   }
 
   private List<StackFrame> capture() {
+    // frames that aren't part of the runtime call stack are
+    // shown ahead of the captured frames.
+    frames.addAll(exception.getLeadingStackFrames());
+
     var truffleElements = TruffleStackTrace.getStackTrace(exception);
     if (truffleElements.isEmpty()) {
       addFrame(exception.getSourceSection(), exception.getMemberName());

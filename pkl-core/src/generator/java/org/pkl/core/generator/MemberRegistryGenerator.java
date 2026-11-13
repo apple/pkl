@@ -39,6 +39,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Generates a subclass of {@code org.pkl.core.stdlib.registry.ExternalMemberRegistry} for each
@@ -114,6 +115,7 @@ public final class MemberRegistryGenerator extends AbstractProcessor {
         Comparator.comparing(
                 (TypeElement element) -> {
                   var enclosingElement = element.getEnclosingElement();
+                  assert enclosingElement != null;
                   return enclosingElement.getKind() == ElementKind.PACKAGE
                       ? ""
                       : enclosingElement.getSimpleName().toString();
@@ -155,6 +157,7 @@ public final class MemberRegistryGenerator extends AbstractProcessor {
 
     for (var nodeClass : nodeClasses) {
       var enclosingClass = nodeClass.getEnclosingElement();
+      assert enclosingClass != null;
 
       var pklClassName = getAnnotatedPklName(enclosingClass);
       if (pklClassName == null) {
@@ -226,7 +229,7 @@ public final class MemberRegistryGenerator extends AbstractProcessor {
     writeJavaFile(REGISTRY_PACKAGE_NAME, registryFactoryClass.build());
   }
 
-  private String getAnnotatedPklName(Element element) {
+  private @Nullable String getAnnotatedPklName(Element element) {
     for (var annotation : element.getAnnotationMirrors()) {
       var annotationName = annotation.getAnnotationType().asElement().getSimpleName().toString();
 

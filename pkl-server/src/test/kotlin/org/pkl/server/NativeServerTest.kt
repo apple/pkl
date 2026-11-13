@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@ package org.pkl.server
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.pkl.commons.test.Executables
+import org.pkl.commons.test.server.AbstractHttpServerTest
+import org.pkl.commons.test.server.TestTransport
 import org.pkl.core.messaging.MessageTransports
 
-class NativeServerTest : AbstractServerTest() {
+class NativeServerTest : AbstractHttpServerTest() {
   private lateinit var server: Process
   override lateinit var client: TestTransport
 

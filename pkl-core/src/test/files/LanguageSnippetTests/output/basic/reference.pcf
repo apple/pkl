@@ -1,0 +1,22 @@
+facts {
+  ["equality"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["equality -- constraint gets erased"] {
+    true
+  }
+  ["inequality"] {
+    true
+  }
+  ["set deduplication"] {
+    true
+    true
+    true
+  }
+}

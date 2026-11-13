@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.util;
 
 import com.oracle.truffle.api.TruffleOptions;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +35,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
@@ -44,13 +46,48 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 
 public final class IoUtils {
-
   // Don't match paths like `C:\`, which are drive letters on Windows.
   private static final Pattern uriLike = Pattern.compile("[\\w+.-]+:[^\\\\].*");
 
-  private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
+  public static final Pattern windowsDriveLetterLike = Pattern.compile("[a-zA-Z]:.*");
+
+  private static final Pattern headerNameLike = Pattern.compile("[a-zA-Z0-9!#$%&'*+-.^_`|~]+");
+
+  private static final Pattern headerValueLike =
+      Pattern.compile("[\\t\\u0020-\\u007E\\u0080-\\u00FF]*");
+
+  public static final Pattern doubleStarGlob;
+
+  static {
+    try {
+      doubleStarGlob = GlobResolver.toRegexPattern("**");
+    } catch (InvalidGlobPatternException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  // keep in sync with stdlib `EvaluatorSettings.ReservedHttpHeaderName`
+  private static final String[] reservedHeaderNames = {
+    "connection",
+    "keep-alive",
+    "content-length",
+    "expect",
+    "host",
+    "upgrade",
+    "te",
+    "transfer-encoding",
+    "trailer"
+  };
+
+  // keep in sync with stdlib `EvaluatorSettings.reservedHttpHeaderPrefix`
+  private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-"};
+
+  private static final Pattern DOT_SEGMENT = Pattern.compile("\\.|%2[eE]");
+  private static final Pattern DOT_DOT_SEGMENT = Pattern.compile("(?:\\.|%2[eE]){2}");
+  private static final Pattern PATH_SEPARATOR = Pattern.compile("/|%2[fF]");
 
   private IoUtils() {}
 
@@ -74,8 +111,7 @@ public final class IoUtils {
   }
 
   public static boolean isWindowsAbsolutePath(String str) {
-    if (!isWindows()) return false;
-    return windowsPathLike.matcher(str).matches();
+    return windowsDriveLetterLike.matcher(str).matches();
   }
 
   /**
@@ -195,13 +231,33 @@ public final class IoUtils {
   }
 
   // not stored to avoid build-time initialization by native-image
-  public static Path getPklHomeDir() {
+  public static Path getLegacyPklHomeDir() {
     return Path.of(System.getProperty("user.home"), ".pkl");
   }
 
+  public static @Nullable Path getSystemModuleCacheDir() {
+    return BaseDirectories.cache.getHome();
+  }
+
+  public static Path getSystemSettingsFile() {
+    var path = BaseDirectories.config.firstMatchingPath("settings.pkl", Files::exists);
+    if (path == null) {
+      return getLegacyPklHomeDir().resolve("settings.pkl");
+    }
+    return path;
+  }
+
+  public static Path getSystemCaCertsDir() {
+    var path = BaseDirectories.config.firstMatchingPath("cacerts", Files::isDirectory);
+    if (path == null) {
+      return getLegacyPklHomeDir().resolve("cacerts");
+    }
+    return path;
+  }
+
   // not stored to avoid build-time initialization by native-image
-  public static Path getDefaultModuleCacheDir() {
-    return getPklHomeDir().resolve("cache");
+  public static @Nullable Path getReplHistoryFile() {
+    return BaseDirectories.state.resolveHome("repl-history");
   }
 
   // not stored to avoid build-time initialization by native-image
@@ -387,6 +443,143 @@ public final class IoUtils {
   }
 
   /**
+   * Normalizes {@code uri} for the purpose of security checks.
+   *
+   * <p>In hierarchical URIs of any scheme, removes {@code .} and {@code ..} path segments, and
+   * treats {@code %2E} as equivalent to {@code .}. {@code .} is an unreserved character, so a
+   * percent-encoded {@code .} is equivalent to a literal one (RFC 3986, section 6.2.2.2). All other
+   * parts of the URI are left as is. In particular, {@code %2F} is not treated as a path separator,
+   * because it might be distinct from {@code /} (for example, in HTTP).
+   *
+   * <p>For {@code file:} URIs, also treats {@code %2F} as equivalent to {@code /}, because file
+   * systems do.
+   *
+   * <p>For {@code package:} and {@code projectpackage:} URIs, also normalizes the path of the asset
+   * in the fragment, treating {@code %2E} and {@code %2F} the same way as for {@code file:} URIs.
+   *
+   * <p>For {@code jar:} URIs, only the URI of the archive is normalized. The path within the
+   * archive is left as is, because zip file systems treat {@code ..} as a verbatim name.
+   */
+  public static URI normalizeUri(URI uri, boolean hasHierarchicalUris) {
+    var scheme = uri.getScheme();
+    if ("jar".equalsIgnoreCase(scheme)) {
+      return normalizeJarUri(uri);
+    }
+    if ("file".equalsIgnoreCase(scheme)) {
+      return normalizeUriPath(uri, true);
+    }
+    if ("package".equalsIgnoreCase(scheme) || "projectpackage".equalsIgnoreCase(scheme)) {
+      return normalizePackageUri(uri);
+    }
+    if (hasHierarchicalUris) {
+      return normalizeUriPath(uri, false);
+    }
+    return uri;
+  }
+
+  private static URI normalizePackageUri(URI uri) {
+    var assetPath = uri.getRawFragment();
+    if (assetPath == null || !assetPath.startsWith("/")) {
+      return uri;
+    }
+    var normalizedPath = normalizeRawPath(assetPath, true);
+    if (normalizedPath.equals(uri.getRawFragment())) {
+      return uri;
+    }
+    var uriString = uri.toString();
+    var hashIndex = uriString.indexOf('#');
+    return URI.create(uriString.substring(0, hashIndex) + "#" + normalizedPath);
+  }
+
+  /**
+   * Normalizes the path of {@code uri}.
+   *
+   * @param decodeSlash whether to treat {@code %2F} as a path separator
+   */
+  private static URI normalizeUriPath(URI uri, boolean decodeSlash) {
+    if (uri.isOpaque() || uri.getScheme() == null) {
+      return uri;
+    }
+    // Use string builder instead of component-wise accessors/constructors because component-wise
+    // will re-encode (e.g. turn %2F into `/`), and can fail for unusual authorities.
+    var uriString = uri.toString();
+    var rawPath = uri.getRawPath();
+    var pathStart = uriString.indexOf(':') + 1;
+    var hasAuthority = uriString.startsWith("//", pathStart);
+    if (hasAuthority) {
+      var rawAuthority = uri.getRawAuthority();
+      pathStart += 2 + (rawAuthority == null ? 0 : rawAuthority.length());
+    }
+    assert uriString.startsWith(rawPath, pathStart);
+    var normalizedPath = normalizeRawPath(rawPath, decodeSlash);
+    if (normalizedPath.equals(rawPath)) {
+      return uri;
+    }
+    var sb = new StringBuilder(uriString.substring(0, pathStart));
+    if (!hasAuthority && normalizedPath.startsWith("//")) {
+      // avoid the path being misinterpreted as an authority
+      sb.append("/.");
+    }
+    sb.append(normalizedPath);
+    var pathEnd = pathStart + rawPath.length();
+    sb.append(uriString, pathEnd, uriString.length());
+    return URI.create(sb.toString());
+  }
+
+  /** Normalizes the URI of the archive of {@code jar:<archive-uri>!/<path-in-archive>}. */
+  private static URI normalizeJarUri(URI uri) {
+    var uriString = uri.toString();
+    var index = uriString.indexOf('!');
+    if (index == -1) {
+      return uri;
+    }
+    var archiveUri = URI.create(uriString.substring(uri.getScheme().length() + 1, index));
+    var normalizedArchiveUri = normalizeUri(archiveUri, true);
+    if (normalizedArchiveUri.equals(archiveUri)) {
+      return uri;
+    }
+    return URI.create(uri.getScheme() + ":" + normalizedArchiveUri + uriString.substring(index));
+  }
+
+  /**
+   * Removes {@code .} and {@code ..} segments from a raw (percent-encoded) path.
+   *
+   * <p>Segments written as {@code %2e} are treated as dots, because readers decode the path before
+   * using it. All other segments are kept verbatim. A {@code ..} that cannot be resolved is kept,
+   * so the result does not match patterns it shouldn't.
+   *
+   * <p>If {@code decodeSlash} is true, treats either {@code /} or {@code %2F} as the path
+   * separator, and replaces {@code %2F} with {@code /}. Otherwise, {@code %2F} is kept as is.
+   *
+   * <p>Don't need to treat {@code %5F} ({@code \}) as a slash on Windows; we reject any {@code \}
+   * as a path separator (see {@code org.pkl.core.module.ModuleKeys.File#resolve}).
+   */
+  static String normalizeRawPath(String rawPath, boolean decodeSlash) {
+    var isAbsolute = rawPath.startsWith("/");
+    var rawSegments = (isAbsolute ? rawPath.substring(1) : rawPath);
+    var segments = decodeSlash ? PATH_SEPARATOR.split(rawSegments, -1) : rawSegments.split("/", -1);
+    var result = new ArrayList<String>(segments.length);
+    for (var i = 0; i < segments.length; i++) {
+      var segment = segments[i];
+      var isLast = i == segments.length - 1;
+      if (DOT_SEGMENT.matcher(segment).matches()) {
+        if (isLast) result.add("");
+      } else if (DOT_DOT_SEGMENT.matcher(segment).matches()) {
+        if (!result.isEmpty()
+            && !DOT_DOT_SEGMENT.matcher(result.get(result.size() - 1)).matches()) {
+          result.remove(result.size() - 1);
+        } else {
+          result.add(segment);
+        }
+        if (isLast) result.add("");
+      } else {
+        result.add(segment);
+      }
+    }
+    return (isAbsolute ? "/" : "") + String.join("/", result);
+  }
+
+  /**
    * Resolves {@code importUri} against the module key.
    *
    * <p>When {@code importUri} contains a triple-dot, it is resolved if the module key returns true
@@ -546,7 +739,7 @@ public final class IoUtils {
     }
 
     // don't use ServiceLoader.load(Class)
-    // because loading services from thread context class loader doesn't work inside gradle plugins
+    // because loading services from thread context class loader doesn't work inside Gradle plugins
     return ServiceLoader.load(serviceClass, IoUtils.class.getClassLoader());
   }
 
@@ -840,6 +1033,9 @@ public final class IoUtils {
     if (!uri.getSchemeSpecificPart().startsWith("/")) {
       throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidOpaqueFileUri"));
     }
+    if (uri.getRawAuthority() != null) {
+      throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidRemoteFileUri"));
+    }
   }
 
   public static void validateRewriteRule(URI rewrite) {
@@ -853,5 +1049,93 @@ public final class IoUtils {
       throw new IllegalArgumentException(
           "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));
     }
+  }
+
+  private static boolean isReservedHeaderName(String headerName) {
+    var normalizedHeader = headerName.toLowerCase(Locale.ROOT);
+    for (var reservedHeader : reservedHeaderNames) {
+      if (normalizedHeader.equals(reservedHeader)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasReservedHeaderPrefix(String headerName) {
+    var normalizedHeader = headerName.toLowerCase(Locale.ROOT);
+    for (var prefix : reservedHeaderPrefixes) {
+      if (normalizedHeader.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // keep in sync with stdlib EvaluatorSettings.HttpHeaderName
+  public static void validateHeaderName(String headerName) {
+    if (isReservedHeaderName(headerName)) {
+      throw new IllegalArgumentException(
+          ErrorMessages.create("invalidHttpHeaderReserved", headerName));
+    }
+
+    if (hasReservedHeaderPrefix(headerName)) {
+      throw new IllegalArgumentException(
+          ErrorMessages.create("invalidHttpHeaderReservedPrefix", headerName));
+    }
+
+    if (!headerNameLike.matcher(headerName).matches()) {
+      throw new IllegalArgumentException(ErrorMessages.create("invalidHttpHeaderName", headerName));
+    }
+  }
+
+  public static void validateHeaderValue(String headerValue) {
+    if (!headerValueLike.matcher(headerValue).matches()) {
+      throw new IllegalArgumentException(
+          ErrorMessages.create("invalidHttpHeaderValue", headerValue));
+    }
+    if (headerValue.length() > 4096) {
+      throw new IllegalArgumentException(
+          ErrorMessages.create("invalidHttpHeaderValueTooLong", headerValue));
+    }
+  }
+
+  private static @Nullable String getFilenameExtension(String fileName) {
+    var dotIndex = fileName.lastIndexOf('.');
+    // 0 if hidden file (e.g. `.gitignore`); not an extension
+    if (dotIndex == -1 || dotIndex == 0) {
+      return null;
+    }
+    return fileName.substring(dotIndex + 1);
+  }
+
+  public static @Nullable Path findExecutableOnPath(String executable) {
+    var pathEnvVar = System.getenv("PATH");
+    if (pathEnvVar == null) {
+      return null;
+    }
+    var executableExtension = getFilenameExtension(executable);
+    List<String> extensions;
+    if (executableExtension != null || !isWindows()) {
+      extensions = List.of("");
+    } else {
+      extensions = List.of(".exe", ".cmd", ".bat", ".com");
+    }
+    var pathDirs = pathEnvVar.split(File.pathSeparator);
+    for (var dir : pathDirs) {
+      for (var extension : extensions) {
+        var candidate = Path.of(dir, executable + extension);
+        if (Files.exists(candidate) && Files.isExecutable(candidate)) {
+          return candidate;
+        }
+      }
+    }
+    return null;
+  }
+
+  public static URI fixFileUri(URI uri) {
+    if ("file".equals(uri.getScheme()) && !uri.getSchemeSpecificPart().startsWith("//")) {
+      return URI.create("file://" + uri.getSchemeSpecificPart());
+    }
+    return uri;
   }
 }

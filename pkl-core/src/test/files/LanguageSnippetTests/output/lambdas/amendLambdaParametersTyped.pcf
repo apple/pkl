@@ -22,5 +22,5 @@ example5 {
   }
 }
 example6 {
-  result = "Expected value of type `amendLambdaParametersTyped#Baz`, but got type `amendLambdaParametersTyped#Foo`. Value: new Foo {}"
+  result = "Expected value of type `amendLambdaParametersTyped#Baz`, but got type `amendLambdaParametersTyped#Foo`. Value: new amendLambdaParametersTyped#Foo {}"
 }

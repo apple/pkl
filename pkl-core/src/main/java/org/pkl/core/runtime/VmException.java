@@ -23,33 +23,37 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 public abstract class VmException extends AbstractTruffleException {
   private final boolean isExternalMessage;
-  private final Object[] messageArguments;
+  private final @Nullable Object[] messageArguments;
   private final List<ProgramValue> programValues;
   private final @Nullable SourceSection sourceSection;
   private final @Nullable String memberName;
   private final Map<CallTarget, StackFrame> insertedStackFrames;
+  private final List<StackFrame> leadingStackFrames;
   @Nullable private final BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
   @Nullable protected BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
+  private boolean forExpressionInput = false;
 
   public VmException(
       @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
-      Object[] messageArguments,
+      @Nullable Object[] messageArguments,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames) {
     super(message, cause, UNLIMITED_STACK_TRACE, location);
+    assert message != null || messageBuilder != null;
     this.messageBuilder = messageBuilder;
     this.isExternalMessage = isExternalMessage;
     this.messageArguments = messageArguments;
@@ -57,6 +61,7 @@ public abstract class VmException extends AbstractTruffleException {
     this.sourceSection = sourceSection;
     this.memberName = memberName;
     this.insertedStackFrames = insertedStackFrames;
+    this.leadingStackFrames = leadingStackFrames;
     this.hintBuilder = hintBuilder;
   }
 
@@ -64,7 +69,7 @@ public abstract class VmException extends AbstractTruffleException {
     return isExternalMessage;
   }
 
-  public final Object[] getMessageArguments() {
+  public final @Nullable Object[] getMessageArguments() {
     return messageArguments;
   }
 
@@ -88,6 +93,14 @@ public abstract class VmException extends AbstractTruffleException {
     return insertedStackFrames;
   }
 
+  /**
+   * Stack frames to prepend to the rendered stack trace, ahead of the captured frames. Used to show
+   * source locations that aren't part of the runtime call stack.
+   */
+  public final List<StackFrame> getLeadingStackFrames() {
+    return leadingStackFrames;
+  }
+
   public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getMessageBuilder() {
     return messageBuilder;
   }
@@ -96,8 +109,20 @@ public abstract class VmException extends AbstractTruffleException {
     return hintBuilder;
   }
 
+  public void setHintBuilder(BiConsumer<AnsiStringBuilder, Boolean> hintBuilder) {
+    this.hintBuilder = hintBuilder;
+  }
+
   public void setHint(String hint) {
     this.hintBuilder = ((builder, aBoolean) -> builder.append(hint));
+  }
+
+  public void setForExpressionInput(boolean forExpressionInput) {
+    this.forExpressionInput = forExpressionInput;
+  }
+
+  public boolean isForExpressionInput() {
+    return forExpressionInput;
   }
 
   public enum Kind {

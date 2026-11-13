@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Cannot iterate over value of type `forGeneratorCannotIterateOverTyped#Person`.
-Value: new Person {}
+Value: new forGeneratorCannotIterateOverTyped#Person {}
 
 x | for (_ in new Person {}) { 42 }
               ^^^^^^^^^^^^^

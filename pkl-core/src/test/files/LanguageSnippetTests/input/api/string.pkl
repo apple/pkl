@@ -36,6 +36,30 @@ facts {
     !"hello there".isBase64
   }
 
+  ["isValidUrl"] {
+    "mailto:user@example.com".isValidUrl
+    "urn:isbn:0451450523".isValidUrl
+    "file:///a/b".isValidUrl
+    "foo:".isValidUrl
+    "http://[fe80::1%25eth0]:8080/a?q#f".isValidUrl
+    "http://user:pw@EXAMPLE.com/!$&'()*+,;=:@?!$&'()*+,;=:@/?#!$&'()*+,;=:@/?".isValidUrl
+
+    // only absolute URLs are valid
+    !"./foo".isValidUrl
+    !"/a/b?q#f".isValidUrl
+    !"//example.com/a".isValidUrl
+    !"".isValidUrl
+    !"not a url".isValidUrl
+
+    // nothing is encoded
+    !"http://example.com/some path".isValidUrl
+    !"https://example.com/münchen?q=café".isValidUrl
+    "https://example.com/m%C3%BCnchen?q=caf%C3%A9".isValidUrl
+
+    // whatever the parser of `pkl:net` rejects is rejected here too
+    !"https://example.com:port/".isValidUrl
+  }
+
   ["lastIndex"] {
     for (s in List(str1, str2, str3)) {
       s.length == s.lastIndex + 1
@@ -76,13 +100,24 @@ facts {
   ["endsWith()"] {
     str1.endsWith("")
     str1.endsWith("efg")
+    str1.endsWith(Regex(#"\w"#))
+    "aaa".endsWith(Regex("aa"))
     !str1.endsWith("efx")
+    !str1.endsWith(Regex(#"\d"#))
+    !str1.endsWith(Regex(#"\bfg"#))
+    !str1.endsWith(Regex("^fg"))
   }
 
   ["isRegex"] {
     str1.isRegex
     #"\w*[0-9]"#.isRegex
     !"(abc".isRegex
+  }
+
+  ["isGlobPattern"] {
+    "**".isGlobPattern
+    "hello".isGlobPattern
+    !"{{}}".isGlobPattern
   }
 
   ["toBoolean()"] {
@@ -144,6 +179,7 @@ examples {
     str3.lastIndexOf(Regex("ab"))
     str3.lastIndexOf(Regex(""))
     module.catch(() -> str3.lastIndexOf(Regex("b*c")))
+    str3.lastIndexOf(Regex("ab(?=y)"))
   }
 
   ["lastIndexOfOrNull()"] {
@@ -195,6 +231,7 @@ examples {
     str6.replaceLast(".", "x")
     str6.replaceLast(Regex("."), "x")
     module.catch(() -> str4.replaceLast(Regex("cc"), "$4; no such group"))
+    str3.replaceLast(Regex("(?<=x)ab"), "-")
   }
 
   ["replaceAllMapped()"] {
@@ -257,18 +294,80 @@ examples {
     str1.codePoints
   }
 
-  ["toInt()"] {
+  ["toInt() decimal"] {
     "123".toInt()
     "-123".toInt()
+    "- 123".toInt()
+    "+123".toInt()
+    "+ 123".toInt()
     "1_2__3___".toInt()
     "-1_2__3___".toInt()
+    "+1_2__3___".toInt()
     "0".toInt()
     "-0".toInt()
+    "+0".toInt()
+    "-9223372036854775808".toInt() // math.minInt
+    "9223372036854775807".toInt() // math.maxInt
+  }
+  
+  ["toInt() hex"] {
+    "0x123".toInt()
+    "0X123".toInt()
+    "-0x123".toInt()
+    "- 0x123".toInt()
+    "+0x123".toInt()
+    "+ 0x123".toInt()
+    "0x1_2__3___".toInt()
+    "-0x1_2__3___".toInt()
+    "+0x1_2__3___".toInt()
+    "0x0".toInt()
+    "-0x0".toInt()
+    "+0x0".toInt()
+    "0x1E_2".toInt() // test underscore removal after 'E' succeeds for toInt (fails for toFloat)
+  }
+
+  ["toInt() binary"] {
+    "0b101".toInt()
+    "0B101".toInt()
+    "-0b101".toInt()
+    "- 0b101".toInt()
+    "+0b101".toInt()
+    "+ 0b101".toInt()
+    "0b1_0__1___".toInt()
+    "-0b1_0__1___".toInt()
+    "+0b1_0__1___".toInt()
+    "0b0".toInt()
+    "-0b0".toInt()
+    "+0b0".toInt()
+  }
+
+  ["toInt() octal"] {
+    "0o123".toInt()
+    "0O123".toInt()
+    "-0o123".toInt()
+    "- 0o123".toInt()
+    "+0o123".toInt()
+    "+ 0o123".toInt()
+    "0o1_2__3___".toInt()
+    "-0o1_2__3___".toInt()
+    "+0o1_2__3___".toInt()
+    "0o0".toInt()
+    "-0o0".toInt()
+    "+0o0".toInt()
+  }
+   
+  ["toInt() error cases"] {
     module.catch(() -> "1.2".toInt())
     module.catch(() -> "9223372036854775808".toInt())
     module.catch(() -> "-9223372036854775809".toInt())
     module.catch(() -> "abc".toInt())
     module.catch(() -> "_1_000".toInt())
+    module.catch(() -> "0p0".toInt())
+    module.catch(() -> "0x-0".toInt())
+    module.catch(() -> "0x+0".toInt())
+    module.catch(() -> "0x0 + 0x1".toInt())
+    module.catch(() -> "".toInt())
+    module.catch(() -> "0o123e4".toInt())
   }
 
   ["toIntOrNull()"] {
@@ -283,6 +382,11 @@ examples {
     "-9223372036854775809".toIntOrNull()
     "abc".toIntOrNull()
     "_1_2__3___".toIntOrNull()
+    "0p0".toIntOrNull()
+    "0x-0".toIntOrNull()
+    "0x+0".toIntOrNull()
+    "0x0 + 0x1".toIntOrNull()
+    "".toIntOrNull()
   }
 
   ["toFloat()"] {
@@ -409,6 +513,7 @@ examples {
     str1.substring(2, 3)
     str1.substring(2, 4)
     str1.substring(0, 7)
+    "\u{D800}hello".substring(0, 2)
     module.catch(() -> str1.substring(-1, 4))
     module.catch(() -> str1.substring(1, 8))
     module.catch(() -> str1.substring(3, 2))
@@ -430,6 +535,15 @@ examples {
     str1.getOrNull(3)
     str1.getOrNull(6)
     str1.getOrNull(7)
+    "🏀".getOrNull(0)
+    "🏀".getOrNull(1)
+    "\u{D800}".getOrNull(0)
+    "\u{D800}".getOrNull(1)
+    "\u{D800}h".getOrNull(0)
+    "\u{D800}h".getOrNull(1)
+    "\u{D800}h".getOrNull(2)
+    "h\u{D800}".getOrNull(0)
+    "h\u{D800}".getOrNull(1)
   }
 
   ["toCodePoints()"] {
@@ -446,6 +560,9 @@ examples {
     str1.padStart(10, " ")
     module.catch(() -> str1.padStart(10, ""))
     module.catch(() -> str1.padStart(10, "aa"))
+    "🙃".padStart(5, "h")
+    "🙃".padStart(5, "🏀")
+    "hi".padStart(5, "🏀")
   }
 
   ["padEnd()"] {
@@ -457,6 +574,9 @@ examples {
     str1.padEnd(10, " ")
     module.catch(() -> str1.padEnd(10, ""))
     module.catch(() -> str1.padEnd(10, "aa"))
+    "🙃".padEnd(5, "h")
+    "🙃".padEnd(5, "🏀")
+    "hi".padEnd(5, "🏀")
   }
 
   ["toBooleanOrNull()"] {

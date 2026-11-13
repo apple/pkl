@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,19 @@
  */
 package org.pkl.core.module;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.Dependency;
+import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
@@ -38,9 +40,12 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.json.Json.JsonParseException;
 
+/** Resolves a project's declared package dependencies against its lock file. */
 public final class ProjectDependenciesManager {
+  /** The conventional name of a Pkl project file. */
   public static final String PKL_PROJECT_FILENAME = "PklProject";
 
+  /** The conventional name of a Pkl project's dependency lock file. */
   public static final String PKL_PROJECT_DEPS_FILENAME = "PklProject.deps.json";
 
   private final DeclaredDependencies declaredDependencies;
@@ -49,10 +54,10 @@ public final class ProjectDependenciesManager {
   private final SecurityManager securityManager;
 
   @GuardedBy("lock")
-  private ProjectDeps projectDeps;
+  private @Nullable ProjectDeps projectDeps;
 
   @GuardedBy("lock")
-  private Map<String, Dependency> myDependencies = null;
+  private @Nullable Map<String, Dependency> myDependencies;
 
   @GuardedBy("lock")
   private final EconomicMap<PackageUri, Map<String, Dependency>> localPackageDependencies =
@@ -64,6 +69,13 @@ public final class ProjectDependenciesManager {
 
   private final Object lock = new Object();
 
+  /**
+   * Creates a dependency manager for a project.
+   *
+   * @param declaredDependencies the dependencies declared by the project
+   * @param moduleResolver the resolver used to load the project's dependency lock file
+   * @param securityManager the security manager used when loading the dependency lock file
+   */
   public ProjectDependenciesManager(
       DeclaredDependencies declaredDependencies,
       ModuleResolver moduleResolver,
@@ -75,6 +87,7 @@ public final class ProjectDependenciesManager {
     this.securityManager = securityManager;
   }
 
+  /** Returns whether {@code uri} is located within this project. */
   public boolean hasUri(URI uri) {
     return projectBaseUri.getScheme().equals(uri.getScheme())
         && Objects.equals(projectBaseUri.getAuthority(), uri.getAuthority())
@@ -94,6 +107,7 @@ public final class ProjectDependenciesManager {
     }
   }
 
+  @GuardedBy("lock")
   private void ensureLocalProjectDependencyInitialized(
       DeclaredDependencies localProjectDependencies, ProjectDeps projectDeps) {
     // turn `package:` scheme into `projectpackage`: scheme
@@ -111,6 +125,15 @@ public final class ProjectDependenciesManager {
 
   private void checkProjectDependencyOutOfDate(
       URI projectFileUri, PackageUri declaredPackage, Dependency resolvedDependency) {
+    // local dependencies must match up exactly (they are expected to always stay in sync).
+    if (resolvedDependency instanceof LocalDependency localDependency
+        && !declaredPackage.getVersion().equals(localDependency.getVersion())) {
+      throw new PackageLoadError(
+          "projectDependenciesLocalDependencyOutOfSync",
+          projectFileUri,
+          declaredPackage.getDisplayName(),
+          resolvedDependency.getPackageUri().getDisplayName());
+    }
     if (resolvedDependency.getVersion().compareTo(declaredPackage.getVersion()) < 0) {
       throw new PackageLoadError(
           "projectDependenciesOutOfDateInProject",
@@ -129,8 +152,7 @@ public final class ProjectDependenciesManager {
       var localDeclaredDependencies = entry.getValue();
       var packageUri = localDeclaredDependencies.myPackageUri();
       assert packageUri != null;
-      var canonicalPackageUri =
-          CanonicalPackageUri.fromPackageUri(localDeclaredDependencies.myPackageUri());
+      var canonicalPackageUri = CanonicalPackageUri.fromPackageUri(packageUri);
       var resolvedDep = resolvedProjectDeps.get(canonicalPackageUri);
       if (resolvedDep == null) {
         throw new PackageLoadError("unresolvedProjectDependency", packageUri);
@@ -152,23 +174,41 @@ public final class ProjectDependenciesManager {
     return ret;
   }
 
+  // `ensureDependenciesInitialized` makes `myDependencies` safe to access
+  /** Returns the project's direct dependencies, keyed by their declared names. */
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public Map<String, Dependency> getDependencies() {
     ensureDependenciesInitialized();
+    assert myDependencies != null;
     return myDependencies;
   }
 
+  // `ensureDependenciesInitialized` makes `localPackageDependencies` safe to access
+  /** Returns whether {@code packageUri} identifies a local dependency of this project. */
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public boolean isLocalPackage(PackageUri packageUri) {
     ensureDependenciesInitialized();
     return localPackageDependencies.containsKey(packageUri);
   }
 
+  // `ensureDependenciesInitialized` makes `localPackageDependencies` safe to access
+  /** Returns the dependencies of the local package identified by {@code packageUri}. */
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public Map<String, Dependency> getLocalPackageDependencies(PackageUri packageUri) {
     ensureDependenciesInitialized();
     var dep = localPackageDependencies.get(packageUri);
+    //noinspection ConstantValue
     assert dep != null;
     return dep;
   }
 
+  /**
+   * Resolves a package's declared dependencies against this project's lock file.
+   *
+   * @param packageUri the package whose dependencies are being resolved
+   * @param dependencyMetadata the package's published dependency metadata
+   * @return dependencies keyed by their names in the package metadata
+   */
   public Map<String, Dependency> getResolvedDependenciesForPackage(
       PackageUri packageUri, DependencyMetadata dependencyMetadata) {
     synchronized (lock) {
@@ -179,7 +219,7 @@ public final class ProjectDependenciesManager {
           var packageDependency = entry.getValue();
           var canonicalPackage =
               CanonicalPackageUri.fromPackageUri(packageDependency.getPackageUri());
-          var resolvedDep = projectDeps.get(canonicalPackage);
+          var resolvedDep = getProjectDeps().get(canonicalPackage);
           if (resolvedDep == null) {
             throw new PackageLoadError("unresolvedProjectDependency", packageDependency);
           }
@@ -198,10 +238,12 @@ public final class ProjectDependenciesManager {
     }
   }
 
+  /** Returns this project's declared dependencies. */
   public DeclaredDependencies getDeclaredDependencies() {
     return declaredDependencies;
   }
 
+  /** Returns the locked dependency matching {@code packageUri}. */
   public Dependency getResolvedDependency(PackageUri packageUri) {
     var dep = getProjectDeps().get(CanonicalPackageUri.fromPackageUri(packageUri));
     if (dep == null) {
@@ -210,14 +252,17 @@ public final class ProjectDependenciesManager {
     return dep;
   }
 
+  /** Returns the base URI used to resolve paths within this project. */
   public URI getProjectBaseUri() {
     return projectBaseUri;
   }
 
+  /** Returns the URI of this project's dependency lock file. */
   public URI getProjectDepsFileUri() {
     return IoUtils.resolve(projectBaseUri, PKL_PROJECT_DEPS_FILENAME);
   }
 
+  /** Returns the URI of this project's project file. */
   public URI getProjectFileUri() {
     return declaredDependencies.projectFileUri();
   }

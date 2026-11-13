@@ -77,8 +77,9 @@ data class CliBaseOptions(
 
   /**
    * The Pkl settings file to use. A settings file is a Pkl module amending the `pkl.settings`
-   * standard library module. If `null`, `~/.pkl/settings.pkl` (if present) or the defaults
-   * specified in the `pkl:settings` standard library module are used.
+   * standard library module. If `null`, `~/.config/pkl/settings.pkl` (falling back to the legacy
+   * `~/.pkl/settings.pkl`), or the defaults specified in the `pkl:settings` standard library
+   * module, are used.
    */
   private val settings: URI? = null,
 
@@ -130,8 +131,9 @@ data class CliBaseOptions(
    * The given files must contain [X.509](https://en.wikipedia.org/wiki/X.509) certificates in PEM
    * format.
    *
-   * If [caCertificates] is the empty list, the certificate files in `~/.pkl/cacerts/` are used. If
-   * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
+   * If [caCertificates] is the empty list, the certificate files in `~/.config/pkl/cacerts/` (or
+   * the legacy `~/.pkl/cacerts/`) are used. If that directory does not exist or is empty, Pkl's
+   * built-in CA certificates are used.
    */
   val caCertificates: List<Path> = listOf(),
 
@@ -144,11 +146,14 @@ data class CliBaseOptions(
   /** URL prefixes to rewrite. */
   val httpRewrites: Map<URI, URI>? = null,
 
+  /** HTTP headers to add to the request. */
+  val httpHeaders: Map<String, Map<String, List<String>>>? = null,
+
   /** External module reader process specs */
-  val externalModuleReaders: Map<String, ExternalReader> = mapOf(),
+  val externalModuleReaders: Map<String, ExternalReader>? = null,
 
   /** External resource reader process specs */
-  val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+  val externalResourceReaders: Map<String, ExternalReader>? = null,
 
   /** Defines options for the formatting of calls to the trace() method. */
   val traceMode: TraceMode? = null,
@@ -186,7 +191,7 @@ data class CliBaseOptions(
     sourceModules
       .map { uri ->
         if (uri.isAbsolute) uri
-        else if (uri.path.startsWith("@") && !noProject && normalizedProjectFile != null) uri
+        else if (uri.path.startsWith("@")) uri
         else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
       }
       // sort modules to make cli output independent of source module order

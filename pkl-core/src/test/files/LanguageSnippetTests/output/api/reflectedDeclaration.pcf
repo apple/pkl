@@ -889,7 +889,7 @@ alias {
             ```
             !"".isNotBlank
             !"   ".isNotBlank
-            "\\t\\n\\r".isNotBlank
+            !"\\t\\n\\r".isNotBlank
             "abc".isNotBlank
             ```
             """
@@ -914,6 +914,27 @@ alias {
           name = "isRegex"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isGlobPattern", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this string is a valid glob pattern.
+            
+            For reference, see
+            <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+            """
+          annotations = List(new {
+            version = "0.32.0"
+          })
+          modifiers = Set()
+          name = "isGlobPattern"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.32.0"
+          })
         }, "isBase64", new {
           location {
             line = XXXX
@@ -937,6 +958,36 @@ alias {
           allModifiers = Set()
           allAnnotations = List(new {
             version = "0.29.0"
+          })
+        }, "isValidUrl", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this is a valid absolute URL according to
+            [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+            
+            Stricter than [net.Url()], which also parses a relative reference, and which percent-encodes
+            whatever cannot appear literally in a URL component.
+            
+            Facts:
+            ```
+            "https://example.com/a?q=1#f".isValidUrl
+            "mailto:user@example.com".isValidUrl
+            !"./foo".isValidUrl
+            !"http://example.com/some path".isValidUrl
+            ```
+            """
+          annotations = List(new {
+            version = "0.33.0"
+          })
+          modifiers = Set()
+          name = "isValidUrl"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.33.0"
           })
         }, "md5", new {
           location {
@@ -1233,7 +1284,7 @@ alias {
             ```
             !"".isNotBlank
             !"   ".isNotBlank
-            "\\t\\n\\r".isNotBlank
+            !"\\t\\n\\r".isNotBlank
             "abc".isNotBlank
             ```
             """
@@ -1258,6 +1309,27 @@ alias {
           name = "isRegex"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isGlobPattern", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this string is a valid glob pattern.
+            
+            For reference, see
+            <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+            """
+          annotations = List(new {
+            version = "0.32.0"
+          })
+          modifiers = Set()
+          name = "isGlobPattern"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.32.0"
+          })
         }, "isBase64", new {
           location {
             line = XXXX
@@ -1281,6 +1353,36 @@ alias {
           allModifiers = Set()
           allAnnotations = List(new {
             version = "0.29.0"
+          })
+        }, "isValidUrl", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this is a valid absolute URL according to
+            [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+            
+            Stricter than [net.Url()], which also parses a relative reference, and which percent-encodes
+            whatever cannot appear literally in a URL component.
+            
+            Facts:
+            ```
+            "https://example.com/a?q=1#f".isValidUrl
+            "mailto:user@example.com".isValidUrl
+            !"./foo".isValidUrl
+            !"http://example.com/some path".isValidUrl
+            ```
+            """
+          annotations = List(new {
+            version = "0.33.0"
+          })
+          modifiers = Set()
+          name = "isValidUrl"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.33.0"
           })
         }, "md5", new {
           location {
@@ -2213,9 +2315,15 @@ alias {
             displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
           }
           docComment = """
-            Parses this string as a signed decimal (base 10) integer.
+            Parses this string as a signed integer.
             
-            Throws if this string cannot be parsed as a signed decimal integer,
+            Supports integer formats supported by Pkl:
+            * Decimal (base 10)
+            * Hexadecimal (base 16) with prefix `0x`
+            * Binary (base 2) with prefix `0b`
+            * Octal (base 8) with prefix `0o`
+            
+            Throws if this string cannot be parsed,
             or if the integer is too large to fit into [Int].
             """
           annotations = List()
@@ -2230,9 +2338,15 @@ alias {
             displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
           }
           docComment = """
-            Parses this string as a signed decimal (base 10) integer.
+            Parses this string as a signed integer.
             
-            Returns [null] if this string cannot be parsed as a signed decimal integer,
+            Supports integer formats supported by Pkl:
+            * Decimal (base 10)
+            * Hexadecimal (base 16) with prefix `0x`
+            * Binary (base 2) with prefix `0b`
+            * Octal (base 8) with prefix `0o`
+            
+            Returns [null] if this string cannot be parsed,
             or if the integer is too large to fit into [Int].
             """
           annotations = List()
@@ -3150,9 +3264,15 @@ alias {
             displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
           }
           docComment = """
-            Parses this string as a signed decimal (base 10) integer.
+            Parses this string as a signed integer.
             
-            Throws if this string cannot be parsed as a signed decimal integer,
+            Supports integer formats supported by Pkl:
+            * Decimal (base 10)
+            * Hexadecimal (base 16) with prefix `0x`
+            * Binary (base 2) with prefix `0b`
+            * Octal (base 8) with prefix `0o`
+            
+            Throws if this string cannot be parsed,
             or if the integer is too large to fit into [Int].
             """
           annotations = List()
@@ -3167,9 +3287,15 @@ alias {
             displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
           }
           docComment = """
-            Parses this string as a signed decimal (base 10) integer.
+            Parses this string as a signed integer.
             
-            Returns [null] if this string cannot be parsed as a signed decimal integer,
+            Supports integer formats supported by Pkl:
+            * Decimal (base 10)
+            * Hexadecimal (base 16) with prefix `0x`
+            * Binary (base 2) with prefix `0b`
+            * Octal (base 8) with prefix `0o`
+            
+            Returns [null] if this string cannot be parsed,
             or if the integer is too large to fit into [Int].
             """
           annotations = List()

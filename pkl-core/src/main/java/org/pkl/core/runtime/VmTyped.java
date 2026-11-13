@@ -19,29 +19,39 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import java.util.EnumSet;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
+import org.pkl.core.runtime.VmTypedCursors.PropertyCursor;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 public final class VmTyped extends VmObject {
-  @CompilationFinal @LateInit private VmClass clazz;
+  @CompilationFinal private @Nullable VmClass clazz;
 
   public VmTyped(
       MaterializedFrame enclosingFrame,
       @Nullable VmTyped parent,
-      // null -> will be initialized using lateInitVmClass() later
-      @Nullable VmClass clazz,
+      VmClass clazz,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);
     this.clazz = clazz;
+  }
+
+  /** Constructs a VmTyped whose clazz will be initialized using lateInitVmClass() later. */
+  public VmTyped(
+      MaterializedFrame enclosingFrame,
+      @Nullable VmTyped parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    super(enclosingFrame, parent, members);
   }
 
   public void lateInitVmClass(VmClass clazz) {
@@ -109,7 +119,11 @@ public final class VmTyped extends VmObject {
         if (bodyNode instanceof WrapperNode wrapper) {
           bodyNode = (ExpressionNode) wrapper.getDelegateNode();
         }
-        builder.add(member.getName().toString(), ((ImportNode) bodyNode).getImportUri().toString());
+        // Glob imports (`import*`) don't import a type; they resolve to a mapping.
+        // Exclude them here, consistent with `imports` also not covering import expressions.
+        if (bodyNode instanceof ImportNode importNode) {
+          builder.add(member.getName().toString(), importNode.getImportUri().toString());
+        }
       }
     }
     return builder.build();
@@ -155,6 +169,8 @@ public final class VmTyped extends VmObject {
   @Override
   @TruffleBoundary
   public Composite export() {
+    assert isDeepForced() : "Value was not forced prior to export";
+    assert clazz != null;
     if (!isModuleObject()) {
       return new PObject(clazz.getPClassInfo(), exportMembers());
     }
@@ -178,11 +194,69 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
+  public VmObjectCursor properties() {
+    return new PropertyCursor(this, true);
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    // don't force module objects to avoid forcing types (too conservative?)
+    if (option == CursorOption.ALL_VALUES && !isModuleObject()) {
+      force(false, false);
+    }
+    return new PropertyCursor(this, true);
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return new PropertyCursor(this, false);
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    if (option == CursorOption.ANY_ORDER) {
+      force(false, false);
+    }
+    return new PropertyCursor(this, false);
+  }
+
+  @Override
   @TruffleBoundary
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
     if (!(obj instanceof VmTyped other)) return false;
 
+    assert clazz != null;
     if (clazz != other.clazz) return false;
     // could use shallow force, but deep force is cached
     force(false);
@@ -203,6 +277,7 @@ public final class VmTyped extends VmObject {
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
 
+    assert clazz != null;
     force(false);
     var result = 0;
 

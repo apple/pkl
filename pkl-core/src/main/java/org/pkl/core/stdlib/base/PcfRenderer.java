@@ -92,17 +92,17 @@ public final class PcfRenderer extends AbstractStringRenderer {
 
   @Override
   public void visitDuration(VmDuration value) {
-    builder.append(value);
+    builder.append(value.toPklString());
   }
 
   @Override
   public void visitDataSize(VmDataSize value) {
-    builder.append(value);
+    builder.append(value.toPklString());
   }
 
   @Override
   public void visitBytes(VmBytes value) {
-    builder.append(value);
+    builder.append(value.toPklString());
   }
 
   @Override
@@ -116,12 +116,12 @@ public final class PcfRenderer extends AbstractStringRenderer {
 
   @Override
   public void visitRegex(VmRegex value) {
-    builder.append(value);
+    builder.append(value.toPklString());
   }
 
   @Override
   public void visitIntSeq(VmIntSeq value) {
-    builder.append(value);
+    builder.append(value.toPklString());
   }
 
   @Override

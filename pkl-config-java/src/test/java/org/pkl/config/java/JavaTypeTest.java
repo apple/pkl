@@ -17,15 +17,25 @@ package org.pkl.config.java;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.pkl.config.java.mapper.Reflection;
 import org.pkl.config.java.mapper.Types;
+import org.pkl.core.Pair;
 
 public final class JavaTypeTest {
+  @Test
+  public void constructSimpleType() {
+    assertThat(JavaType.of(String.class)).isEqualTo(new JavaType<String>() {});
+    //noinspection AssertBetweenInconvertibleTypes
+    assertThat(JavaType.of((Type) String.class)).isEqualTo(new JavaType<String>() {});
+  }
+
   @Test
   public void constructOptionalType() {
     var type = JavaType.optionalOf(String.class);
@@ -35,10 +45,26 @@ public final class JavaTypeTest {
   }
 
   @Test
+  public void constructPairType() {
+    var type = JavaType.pairOf(String.class, Integer.class);
+    assertThat(type).isEqualTo(new JavaType<Pair<String, Integer>>() {});
+    assertThat(type)
+        .isEqualTo(JavaType.pairOf(JavaType.of(String.class), JavaType.of(Integer.class)));
+  }
+
+  @Test
   public void constructArrayType() {
     var type = JavaType.arrayOf(String.class);
     assertThat(type).isEqualTo(new JavaType<String[]>() {});
     assertThat(type).isEqualTo(JavaType.arrayOf(JavaType.of(String.class)));
+    assertThat(Reflection.toRawType(type.getType()).isArray()).isTrue();
+  }
+
+  @Test
+  public void constructArrayOfNullableType() {
+    var type = JavaType.arrayOfNullable(String.class);
+    assertThat(type).isEqualTo(new JavaType<@Nullable String[]>() {});
+    assertThat(type).isEqualTo(JavaType.arrayOfNullable(JavaType.of(String.class)));
     assertThat(Reflection.toRawType(type.getType()).isArray()).isTrue();
   }
 
@@ -51,10 +77,26 @@ public final class JavaTypeTest {
   }
 
   @Test
+  public void constructIterableOfNullableType() {
+    var type = JavaType.iterableOfNullable(String.class);
+    assertThat(type).isEqualTo(new JavaType<Iterable<@Nullable String>>() {});
+    assertThat(type).isEqualTo(JavaType.iterableOfNullable(JavaType.of(String.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Iterable.class);
+  }
+
+  @Test
   public void constructCollectionType() {
     var type = JavaType.collectionOf(String.class);
     assertThat(type).isEqualTo(new JavaType<Collection<String>>() {});
     assertThat(type).isEqualTo(JavaType.collectionOf(JavaType.of(String.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Collection.class);
+  }
+
+  @Test
+  public void constructCollectionOfNullableType() {
+    var type = JavaType.collectionOfNullable(String.class);
+    assertThat(type).isEqualTo(new JavaType<Collection<@Nullable String>>() {});
+    assertThat(type).isEqualTo(JavaType.collectionOfNullable(JavaType.of(String.class)));
     assertThat(Reflection.toRawType(type.getType())).isEqualTo(Collection.class);
   }
 
@@ -67,10 +109,26 @@ public final class JavaTypeTest {
   }
 
   @Test
+  public void constructListOfNullableType() {
+    var type = JavaType.listOfNullable(String.class);
+    assertThat(type).isEqualTo(new JavaType<List<@Nullable String>>() {});
+    assertThat(type).isEqualTo(JavaType.listOfNullable(JavaType.of(String.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(List.class);
+  }
+
+  @Test
   public void constructSetType() {
     var type = JavaType.setOf(String.class);
     assertThat(type).isEqualTo(new JavaType<Set<String>>() {});
     assertThat(type).isEqualTo(JavaType.setOf(JavaType.of(String.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Set.class);
+  }
+
+  @Test
+  public void constructSetOfNullableType() {
+    var type = JavaType.setOfNullable(String.class);
+    assertThat(type).isEqualTo(new JavaType<Set<@Nullable String>>() {});
+    assertThat(type).isEqualTo(JavaType.setOfNullable(JavaType.of(String.class)));
     assertThat(Reflection.toRawType(type.getType())).isEqualTo(Set.class);
   }
 
@@ -83,7 +141,63 @@ public final class JavaTypeTest {
   }
 
   @Test
-  public void usageAsTypeToken() {
+  public void constructPairOfNullableFirstType() {
+    var type = JavaType.pairOfNullableFirst(String.class, Integer.class);
+    assertThat(type).isEqualTo(new JavaType<Pair<@Nullable String, Integer>>() {});
+    assertThat(type)
+        .isEqualTo(
+            JavaType.pairOfNullableFirst(JavaType.of(String.class), JavaType.of(Integer.class)));
+  }
+
+  @Test
+  public void constructPairOfNullableSecondType() {
+    var type = JavaType.pairOfNullableSecond(String.class, Integer.class);
+    assertThat(type).isEqualTo(new JavaType<Pair<String, @Nullable Integer>>() {});
+    assertThat(type)
+        .isEqualTo(
+            JavaType.pairOfNullableSecond(JavaType.of(String.class), JavaType.of(Integer.class)));
+  }
+
+  @Test
+  public void constructPairOfNullableFirstAndSecondType() {
+    var type = JavaType.pairOfNullableFirstAndSecond(String.class, Integer.class);
+    assertThat(type).isEqualTo(new JavaType<Pair<@Nullable String, @Nullable Integer>>() {});
+    assertThat(type)
+        .isEqualTo(
+            JavaType.pairOfNullableFirstAndSecond(
+                JavaType.of(String.class), JavaType.of(Integer.class)));
+  }
+
+  @Test
+  public void constructMapOfNullableKeysType() {
+    var type = JavaType.mapOfNullableKeys(String.class, URI.class);
+    assertThat(type).isEqualTo(new JavaType<Map<@Nullable String, URI>>() {});
+    assertThat(type)
+        .isEqualTo(JavaType.mapOfNullableKeys(JavaType.of(String.class), JavaType.of(URI.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Map.class);
+  }
+
+  @Test
+  public void constructMapOfNullableValuesType() {
+    var type = JavaType.mapOfNullableValues(String.class, URI.class);
+    assertThat(type).isEqualTo(new JavaType<Map<String, @Nullable URI>>() {});
+    assertThat(type)
+        .isEqualTo(JavaType.mapOfNullableValues(JavaType.of(String.class), JavaType.of(URI.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Map.class);
+  }
+
+  @Test
+  public void constructMapOfNullableKeysAndValuesType() {
+    var type = JavaType.mapOfNullableKeysAndValues(String.class, URI.class);
+    assertThat(type).isEqualTo(new JavaType<Map<@Nullable String, @Nullable URI>>() {});
+    assertThat(type)
+        .isEqualTo(
+            JavaType.mapOfNullableKeysAndValues(JavaType.of(String.class), JavaType.of(URI.class)));
+    assertThat(Reflection.toRawType(type.getType())).isEqualTo(Map.class);
+  }
+
+  @Test
+  public void constructTypeToken() {
     var javaType = new JavaType<Map<String, List<URI>>>() {};
 
     assertThat(javaType.getType()).isEqualTo(Types.mapOf(String.class, Types.listOf(URI.class)));
@@ -110,6 +224,7 @@ public final class JavaTypeTest {
     var type2 = new JavaType<Map<String, List<URL>>>() {};
     var type3 = JavaType.of(Types.mapOf(String.class, Types.listOf(Path.class)));
 
+    //noinspection AssertBetweenInconvertibleTypes
     assertThat(type2).isNotEqualTo(type1);
     assertThat(type3).isNotEqualTo(type1);
     assertThat(type2).isNotEqualTo(type3);

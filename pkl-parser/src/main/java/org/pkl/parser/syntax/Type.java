@@ -61,14 +61,25 @@ public abstract sealed class Type extends AbstractNode {
     }
   }
 
-  public static final class StringConstantType extends Type {
-    public StringConstantType(StringConstant str, Span span) {
+  public static final class ThisType extends Type {
+    public ThisType(Span span) {
+      super(span, List.of());
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitThisType(this);
+    }
+  }
+
+  public static final class StringLiteralType extends Type {
+    public StringLiteralType(StringConstant str, Span span) {
       super(span, List.of(str));
     }
 
     @Override
     public <T> T accept(ParserVisitor<T> visitor) {
-      return visitor.visitStringConstantType(this);
+      return visitor.visitStringLiteralType(this);
     }
 
     public StringConstant getStr() {

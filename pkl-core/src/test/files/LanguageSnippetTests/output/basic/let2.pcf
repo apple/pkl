@@ -1,0 +1,17 @@
+res1 {
+  new {
+    name = "bob"
+  }
+  new {
+    name = "bob"
+  }
+}
+res2 {
+  new {
+    name = "bob"
+  }
+  new {
+    name = "quxxey"
+  }
+}
+res3 = 5

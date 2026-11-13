@@ -15,8 +15,13 @@
  */
 package org.pkl.parser;
 
+import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
@@ -24,6 +29,7 @@ import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 import org.pkl.parser.util.ErrorMessages;
+import org.pkl.parser.util.SortedIntArray;
 
 @SuppressWarnings("DuplicatedCode")
 class GenericParserImpl {
@@ -34,13 +40,22 @@ class GenericParserImpl {
   private FullToken _lookahead;
   private int cursor = 0;
   private final List<FullToken> tokens = new ArrayList<>();
+  private int speculativeTokenCount = 0;
+  private boolean isSpeculativeParse = false;
+  private final Set<Integer> failedTypeArgAttempts = new HashSet<>();
+  // char indices of `<` that might start a type argument list
+  private @Nullable SortedIntArray typeArgCandidates;
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
-    while (true) {
-      var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
-      tokens.add(ft);
-      if (ft.token == Token.EOF) break;
+    try {
+      while (true) {
+        var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
+        tokens.add(ft);
+        if (ft.token == Token.EOF) break;
+      }
+    } catch (ParserError e) {
+      throw parserError(Objects.requireNonNull(e.getMessage()), lexer.fullSpan());
     }
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -102,6 +117,16 @@ class GenericParserImpl {
     return new Node(NodeType.MODULE, nodes);
   }
 
+  Node parseExpressionInput() {
+    ff();
+    var expr = parseExpr();
+    ff();
+    if (lookahead != Token.EOF) {
+      throw parserError("unexpectedToken", _lookahead.text(lexer), "end of file");
+    }
+    return expr;
+  }
+
   private Node parseModuleDecl(List<Node> preChildren) {
     var headerParts = getHeaderParts(preChildren);
     var children = new ArrayList<>(headerParts.preffixes);
@@ -139,7 +164,7 @@ class GenericParserImpl {
     children.add(parseIdentifier());
     while (lookahead() == Token.DOT) {
       ff(children);
-      children.add(new Node(NodeType.TERMINAL, next().span));
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseIdentifier());
     }
@@ -224,11 +249,12 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     ff(headers);
     if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(true));
       ff(headers);
     }
-    expect(Token.ASSIGN, headers, "unexpectedToken", "=");
     children.add(new Node(NodeType.TYPEALIAS_HEADER, headers));
+    ff(children);
+    expect(Token.ASSIGN, children, "unexpectedToken", "=");
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseType());
@@ -249,7 +275,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     if (lookahead() == Token.LT) {
       ff(headers);
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(true));
     }
     if (lookahead() == Token.EXTENDS) {
       var extend = new ArrayList<Node>();
@@ -307,13 +333,13 @@ class GenericParserImpl {
     }
     headerBegin.add(parseIdentifier());
     header.add(new Node(NodeType.CLASS_PROPERTY_HEADER_BEGIN, headerBegin));
+    children.add(new Node(NodeType.CLASS_PROPERTY_HEADER, header));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
-      ff(header);
-      header.add(parseTypeAnnotation());
+      ff(children);
+      children.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
-    children.add(new Node(NodeType.CLASS_PROPERTY_HEADER, header));
     if (lookahead() == Token.ASSIGN) {
       ff(children);
       children.add(makeTerminal(next()));
@@ -343,10 +369,10 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -360,7 +386,7 @@ class GenericParserImpl {
       var body = new ArrayList<Node>();
       ff(body);
       body.add(parseExpr());
-      children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+      children.add(new Node(NodeType.METHOD_BODY, body));
     }
     return new Node(NodeType.CLASS_METHOD, children);
   }
@@ -391,7 +417,7 @@ class GenericParserImpl {
       ff(members);
     }
     if (!members.isEmpty()) {
-      children.add(new Node(NodeType.OBJECT_MEMBER_LIST, members));
+      children.add(new Node(NodeType.OBJECT_MEMBER_ELEMENTS, members));
     }
     children.add(makeTerminal(next())); // RBRACE
     return new Node(NodeType.OBJECT_BODY, children);
@@ -484,13 +510,13 @@ class GenericParserImpl {
     }
     headerBegin.add(parseIdentifier());
     header.add(new Node(NodeType.OBJECT_PROPERTY_HEADER_BEGIN, headerBegin));
+    children.add(new Node(NodeType.OBJECT_PROPERTY_HEADER, header));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
-      ff(header);
-      header.add(parseTypeAnnotation());
+      ff(children);
+      children.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
-    children.add(new Node(NodeType.OBJECT_PROPERTY_HEADER, header));
     if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
       ff(children);
       expect(Token.ASSIGN, children, "unexpectedToken", "=");
@@ -515,10 +541,10 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -531,20 +557,22 @@ class GenericParserImpl {
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseExpr());
-    children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+    children.add(new Node(NodeType.METHOD_BODY, body));
     return new Node(NodeType.OBJECT_METHOD, children);
   }
 
   private Node parseMemberPredicate() {
     var children = new ArrayList<Node>();
-    children.add(makeTerminal(next()));
-    ff(children);
-    children.add(parseExpr());
-    ff(children);
+    var header = new ArrayList<Node>();
+    header.add(makeTerminal(next()));
+    ff(header);
+    header.add(parseExpr());
+    ff(header);
     var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]");
-    children.add(makeTerminal(firstBrack));
+    header.add(makeTerminal(firstBrack));
     var secondbrack = expect(Token.RBRACK, "unexpectedToken", "]]");
-    children.add(makeTerminal(secondbrack));
+    header.add(makeTerminal(secondbrack));
+    children.add(new Node(NodeType.MEMBER_PREDICATE_HEADER, header));
     if (firstBrack.span.charIndex() != secondbrack.span.charIndex() - 1) {
       // There shouldn't be any whitespace between the first and second ']'.
       var span = firstBrack.span.endWith(secondbrack.span);
@@ -569,16 +597,14 @@ class GenericParserImpl {
     ff(header);
     header.add(parseExpr());
     expect(Token.RBRACK, header, "unexpectedToken", "]");
-    if (lookahead() == Token.ASSIGN) {
-      ff(header);
-      header.add(makeTerminal(next()));
-      children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    ff(children);
+    if (lookahead == Token.ASSIGN) {
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseExpr());
       return new Node(NodeType.OBJECT_ENTRY, children);
     }
-    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
-    ff(children);
     children.addAll(parseBodyList());
     return new Node(NodeType.OBJECT_ENTRY, children);
   }
@@ -723,12 +749,72 @@ class GenericParserImpl {
 
   private Node parseUnqualifiedAccessExpr() {
     var children = new ArrayList<Node>();
+    parseAccess(children);
+    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
+  }
+
+  private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    if (lookahead() == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+    var typeArgs = tryParseTypeArgumentList(children);
+    if (typeArgs != null) {
+      // `tryParseTypeArgumentList` guarantees that an argument list follows
+      children.add(typeArgs);
       ff(children);
       children.add(parseArgumentList());
+    } else {
+      var fullLookahead = fullLookahead();
+      if (fullLookahead.tk.token == Token.LPAREN
+          && !fullLookahead.hasSemicolon
+          && fullLookahead.tk.newLinesBetween == 0) {
+        ff(children);
+        children.add(parseArgumentList());
+      }
     }
-    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
+  }
+
+  private @Nullable Node tryParseTypeArgumentList(List<Node> children) {
+    var fullLookahead = fullLookahead();
+    if (fullLookahead.tk.token != Token.LT
+        || fullLookahead.hasSemicolon
+        || fullLookahead.tk.newLinesBetween != 0
+        || failedTypeArgAttempts.contains(fullLookahead.tk.span.charIndex())
+        || !isTypeArgCandidate(fullLookahead.tk.span.charIndex())) {
+      return null;
+    }
+    var savedCursor = cursor;
+    var savedCharIndex = fullLookahead.tk.span.charIndex();
+    var savedIsSpeculativeParse = isSpeculativeParse;
+    isSpeculativeParse = true;
+    try {
+      var affixes = new ArrayList<Node>();
+      ff(affixes);
+      var typeArgs = parseTypeArgumentList();
+      var fla = fullLookahead();
+      if (fla.tk.token == Token.LPAREN && !fla.hasSemicolon && fla.tk.newLinesBetween == 0) {
+        children.addAll(affixes);
+        return typeArgs;
+      }
+    } catch (GenericParserError ignored) {
+      // not a type argument list
+    } finally {
+      isSpeculativeParse = savedIsSpeculativeParse;
+    }
+    failedTypeArgAttempts.add(savedCharIndex);
+    backtrackTo(savedCursor);
+    return null;
+  }
+
+  private boolean isTypeArgCandidate(int charIndex) {
+    if (typeArgCandidates == null) {
+      var scanner = new TypeArgumentCandidatesScanner();
+      scanner.addPending(charIndex);
+      for (var i = cursor + 1; i < tokens.size(); i++) {
+        var tk = tokens.get(i);
+        scanner.accept(tk.token, tk.span.charIndex());
+      }
+      typeArgCandidates = scanner.candidates();
+    }
+    return typeArgCandidates.contains(charIndex);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -828,11 +914,7 @@ class GenericParserImpl {
             if (lookahead == Token.DOT) {
               children.add(makeTerminal(next()));
               ff(children);
-              children.add(parseIdentifier());
-              if (lookahead() == Token.LPAREN) {
-                ff(children);
-                children.add(parseArgumentList());
-              }
+              parseAccess(children);
               yield new Node(NodeType.SUPER_ACCESS_EXPR, children);
             } else {
               expect(Token.LBRACK, children, "unexpectedToken", "[");
@@ -888,7 +970,7 @@ class GenericParserImpl {
             expect(Token.RPAREN, paramDef, "unexpectedToken", ")");
             children.add(new Node(NodeType.LET_PARAMETER_DEFINITION, paramDef));
             ff(children);
-            children.add(parseExpr(expectation));
+            children.add(parseExpr());
             yield new Node(NodeType.LET_EXPR, children);
           }
           case TRUE, FALSE -> new Node(NodeType.BOOL_LITERAL_EXPR, next().span);
@@ -914,7 +996,7 @@ class GenericParserImpl {
   @SuppressWarnings("DuplicatedCode")
   private Node parseExprRest(Node expr) {
     // amends
-    if (lookahead() == Token.LBRACE) {
+    while (lookahead() == Token.LBRACE) {
       var children = new ArrayList<Node>();
       children.add(expr);
       ff(children);
@@ -922,7 +1004,8 @@ class GenericParserImpl {
           || expr.type == NodeType.AMENDS_EXPR
           || expr.type == NodeType.NEW_EXPR) {
         children.add(parseObjectBody());
-        return parseExprRest(new Node(NodeType.AMENDS_EXPR, children));
+        expr = new Node(NodeType.AMENDS_EXPR, children);
+        continue;
       }
       throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
     }
@@ -937,7 +1020,9 @@ class GenericParserImpl {
       var token = next().token;
       ff();
       if (token == Token.RPAREN) {
-        return lookahead == Token.ARROW;
+        // `()` is only valid as an empty parameter list
+        // let `parseFunctionLiteral` report the missing `->`
+        return true;
       }
       if (token == Token.UNDERSCORE) {
         return true;
@@ -1072,16 +1157,9 @@ class GenericParserImpl {
   private Node parseParenthesizedExpr() {
     var children = new ArrayList<Node>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    if (lookahead() == Token.RPAREN) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      return new Node(NodeType.PARENTHESIZED_EXPR, children);
-    }
-    var elements = new ArrayList<Node>();
-    ff(elements);
-    elements.add(parseExpr(")"));
-    ff(elements);
-    children.add(new Node(NodeType.PARENTHESIZED_EXPR_ELEMENTS, elements));
+    ff(children);
+    children.add(parseExpr(")"));
+    ff(children);
     expect(Token.RPAREN, children, "unexpectedToken", ")");
     return new Node(NodeType.PARENTHESIZED_EXPR, children);
   }
@@ -1161,6 +1239,7 @@ class GenericParserImpl {
           case UNKNOWN -> make(NodeType.UNKNOWN_TYPE, next().span);
           case NOTHING -> make(NodeType.NOTHING_TYPE, next().span);
           case MODULE -> make(NodeType.MODULE_TYPE, next().span);
+          case THIS -> make(NodeType.THIS_TYPE, next().span);
           case LPAREN -> {
             var children = new ArrayList<Node>();
             children.add(makeTerminal(next()));
@@ -1210,7 +1289,7 @@ class GenericParserImpl {
             yield new Node(NodeType.DECLARED_TYPE, children);
           }
           case STRING_START ->
-              new Node(NodeType.STRING_CONSTANT_TYPE, List.of(parseStringConstant()));
+              new Node(NodeType.STRING_LITERAL_TYPE, List.of(parseStringConstant()));
           default -> {
             var text = _lookahead.text(lexer);
             if (expectation != null) {
@@ -1225,31 +1304,33 @@ class GenericParserImpl {
   }
 
   private Node parseTypeEnd(Node type) {
-    var children = new ArrayList<Node>();
-    children.add(type);
-    // nullable types
-    if (lookahead() == Token.QUESTION) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      var res = new Node(NodeType.NULLABLE_TYPE, children);
-      return parseTypeEnd(res);
+    while (true) {
+      var children = new ArrayList<Node>();
+      children.add(type);
+      // nullable types
+      if (lookahead() == Token.QUESTION) {
+        ff(children);
+        children.add(makeTerminal(next()));
+        type = new Node(NodeType.NULLABLE_TYPE, children);
+        continue;
+      }
+      // constrained types: have to start in the same line as the type
+      var fla = fullLookahead();
+      if (fla.tk.token == Token.LPAREN && !fla.hasSemicolon && fla.tk.newLinesBetween == 0) {
+        ff(children);
+        var constraint = new ArrayList<Node>();
+        constraint.add(makeTerminal(next()));
+        var elements = new ArrayList<Node>();
+        ff(elements);
+        parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
+        constraint.add(new Node(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
+        expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
+        children.add(new Node(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
+        type = new Node(NodeType.CONSTRAINED_TYPE, children);
+        continue;
+      }
+      return type;
     }
-    // constrained types: have to start in the same line as the type
-    var fla = fullLookahead();
-    if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
-      ff(children);
-      var constraint = new ArrayList<Node>();
-      constraint.add(makeTerminal(next()));
-      var elements = new ArrayList<Node>();
-      ff(elements);
-      parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
-      constraint.add(new Node(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
-      expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
-      children.add(new Node(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
-      var res = new Node(NodeType.CONSTRAINED_TYPE, children);
-      return parseTypeEnd(res);
-    }
-    return type;
   }
 
   private Node parseAnnotation() {
@@ -1306,12 +1387,12 @@ class GenericParserImpl {
     return bodies;
   }
 
-  private Node parseTypeParameterList() {
+  private Node parseTypeParameterList(boolean allowVarianceModifiers) {
     var children = new ArrayList<Node>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<Node>();
-    parseListOf(Token.GT, elements, this::parseTypeParameter);
+    parseListOf(Token.GT, elements, () -> parseTypeParameter(allowVarianceModifiers));
     children.add(new Node(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new Node(NodeType.TYPE_PARAMETER_LIST, children);
@@ -1345,11 +1426,17 @@ class GenericParserImpl {
     return new Node(NodeType.ARGUMENT_LIST, children);
   }
 
-  private Node parseTypeParameter() {
+  private Node parseTypeParameter(boolean allowVarianceModifier) {
     var children = new ArrayList<Node>();
     if (lookahead == Token.IN) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
       children.add(makeTerminal(next()));
     } else if (lookahead == Token.OUT) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
       children.add(makeTerminal(next()));
     }
     children.add(parseIdentifier());
@@ -1380,14 +1467,14 @@ class GenericParserImpl {
     children.add(makeTerminal(startTk));
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
-        case STRING_PART,
-            STRING_ESCAPE_NEWLINE,
+        case STRING_PART -> children.add(make(NodeType.STRING_CHARS, next().span));
+        case STRING_ESCAPE_NEWLINE,
             STRING_ESCAPE_TAB,
             STRING_ESCAPE_QUOTE,
             STRING_ESCAPE_BACKSLASH,
             STRING_ESCAPE_RETURN,
             STRING_ESCAPE_UNICODE ->
-            children.add(makeTerminal(next()));
+            children.add(make(NodeType.STRING_ESCAPE, next().span));
         case EOF -> {
           var delimiter = new StringBuilder(startTk.text(lexer)).reverse().toString();
           throw parserError("missingDelimiter", delimiter);
@@ -1398,7 +1485,7 @@ class GenericParserImpl {
       }
     }
     children.add(makeTerminal(next())); // string end
-    return new Node(NodeType.STRING_CHARS, children);
+    return new Node(NodeType.STRING_CONSTANT, children);
   }
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {
@@ -1438,6 +1525,10 @@ class GenericParserImpl {
     }
   }
 
+  GenericParserError tooDeeplyNested() {
+    return parserError("tooDeeplyNested");
+  }
+
   private GenericParserError parserError(String messageKey, Object... args) {
     return new GenericParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
@@ -1467,6 +1558,12 @@ class GenericParserImpl {
   }
 
   private FullToken next() {
+    if (isSpeculativeParse) {
+      if (speculativeTokenCount > MAX_SPECULATIVE_TOKEN_COUNT) {
+        throw new MaxBacktrackCountError(spanLookahead);
+      }
+      speculativeTokenCount++;
+    }
     var tmp = tokens.get(cursor++);
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -1474,19 +1571,10 @@ class GenericParserImpl {
     return tmp;
   }
 
-  private boolean noSemicolonInbetween() {
-    return tokens.get(cursor - 1).token != Token.SEMICOLON;
-  }
-
-  private void backtrack() {
-    var tmp = tokens.get(--cursor);
-    lookahead = tmp.token;
-    spanLookahead = tmp.span;
-  }
-
   private void backtrackTo(int point) {
     cursor = point;
     var tmp = tokens.get(cursor);
+    _lookahead = tmp;
     lookahead = tmp.token;
     spanLookahead = tmp.span;
   }
@@ -1541,7 +1629,64 @@ class GenericParserImpl {
   }
 
   private Node makeTerminal(FullToken tk) {
-    return new Node(NodeType.TERMINAL, tk.span);
+    var nodeType =
+        switch (tk.token) {
+          // keywords
+          case AMENDS -> NodeType.AMENDS_KEYWORD;
+          case AS -> NodeType.AS_KEYWORD;
+          case CLASS -> NodeType.CLASS_KEYWORD;
+          case ELSE -> NodeType.ELSE_KEYWORD;
+          case EXTENDS -> NodeType.EXTENDS_KEYWORD;
+          case FOR -> NodeType.FOR_KEYWORD;
+          case FUNCTION -> NodeType.FUNCTION_KEYWORD;
+          case IF -> NodeType.IF_KEYWORD;
+          case IMPORT -> NodeType.IMPORT_KEYWORD;
+          case IMPORT_STAR -> NodeType.IMPORT_STAR_KEYWORD;
+          case IN -> NodeType.IN_KEYWORD;
+          case LET -> NodeType.LET_KEYWORD;
+          case MODULE -> NodeType.MODULE_KEYWORD;
+          case NEW -> NodeType.NEW_KEYWORD;
+          case OUT -> NodeType.OUT_KEYWORD;
+          case READ -> NodeType.READ_KEYWORD;
+          case READ_QUESTION -> NodeType.READ_QUESTION_KEYWORD;
+          case READ_STAR -> NodeType.READ_STAR_KEYWORD;
+          case SUPER -> NodeType.SUPER_KEYWORD;
+          case THROW -> NodeType.THROW_KEYWORD;
+          case TRACE -> NodeType.TRACE_KEYWORD;
+          case TYPE_ALIAS -> NodeType.TYPEALIAS_KEYWORD;
+          case WHEN -> NodeType.WHEN_KEYWORD;
+          // punctuation
+          case ARROW -> NodeType.ARROW;
+          case ASSIGN -> NodeType.ASSIGN;
+          case AT -> NodeType.AT;
+          case COLON -> NodeType.COLON;
+          case COMMA -> NodeType.COMMA;
+          case DOT -> NodeType.DOT;
+          case GT -> NodeType.GT;
+          case LBRACE -> NodeType.LBRACE;
+          case LBRACK -> NodeType.LBRACK;
+          case LPAREN -> NodeType.LPAREN;
+          case LPRED -> NodeType.LPRED;
+          case LT -> NodeType.LT;
+          case MINUS -> NodeType.MINUS;
+          case NOT -> NodeType.NOT;
+          case QSPREAD -> NodeType.QSPREAD;
+          case QUESTION -> NodeType.QUESTION;
+          case RBRACE -> NodeType.RBRACE;
+          case RBRACK -> NodeType.RBRACK;
+          case RPAREN -> NodeType.RPAREN;
+          case SPREAD -> NodeType.SPREAD;
+          case STAR -> NodeType.STAR;
+          case UNDERSCORE -> NodeType.UNDERSCORE;
+          case UNION -> NodeType.UNION;
+          // string delimiters
+          case INTERPOLATION_START -> NodeType.INTERPOLATION_START;
+          case STRING_START -> NodeType.STRING_START;
+          case STRING_MULTI_START -> NodeType.STRING_MULTI_START;
+          case STRING_END -> NodeType.STRING_END;
+          default -> throw new RuntimeException("Unreacheable code");
+        };
+    return new Node(nodeType, tk.span);
   }
 
   // fast-forward over affix tokens

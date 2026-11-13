@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -285,5 +285,24 @@ class DurationTest {
 
     assertThat(duration3.hashCode()).isNotEqualTo(duration1.hashCode())
     assertThat(duration2.hashCode()).isNotEqualTo(duration3.hashCode())
+
+    // -0.0 == 0.0, so equal durations must have equal hash codes
+    assertThat(Duration(0.0, MILLIS)).isEqualTo(Duration(-0.0, MILLIS))
+    assertThat(Duration(0.0, MILLIS).hashCode()).isEqualTo(Duration(-0.0, MILLIS).hashCode())
+    assertThat(Duration(0.0, NANOS).hashCode()).isEqualTo(Duration(-0.0, DAYS).hashCode())
+  }
+
+  @Test
+  fun `toString()`() {
+    assertThat(Duration(3.0, DAYS).toString()).isEqualTo("3.d")
+    assertThat(Duration(1.5, DAYS).toString()).isEqualTo("1.5.d")
+    assertThat(Duration(1e18, DAYS).toString()).isEqualTo("1000000000000000000.d")
+    // -2^63 still fits into a `long`
+    assertThat(Duration(-9.223372036854776E18, DAYS).toString()).isEqualTo("-9223372036854775808.d")
+    // values too large to fit into a `long` are printed in their `double` form,
+    // instead of saturating to 9223372036854775807
+    assertThat(Duration(9.223372036854776E18, DAYS).toString()).isEqualTo("9.223372036854776E18.d")
+    assertThat(Duration(1e300, DAYS).toString()).isEqualTo("1.0E300.d")
+    assertThat(Duration(-1e300, DAYS).toString()).isEqualTo("-1.0E300.d")
   }
 }

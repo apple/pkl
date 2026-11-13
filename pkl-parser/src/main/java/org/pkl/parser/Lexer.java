@@ -85,6 +85,49 @@ public final class Lexer {
     return new String(source, offset, size);
   }
 
+  /** Captures the lexer's current state so that it can later be rewound via {@link #restore}. */
+  public Snapshot snapshot() {
+    var scopes = new ArrayDeque<InterpolationScope>();
+    // `ArrayDeque.push` adds to the front, so iterate in reverse to preserve order.
+    var it = interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      scopes.push(it.next().copy());
+    }
+    return new Snapshot(
+        cursor,
+        sCursor,
+        line,
+        sLine,
+        col,
+        sCol,
+        lookahead,
+        state,
+        scopes,
+        stringEnded,
+        isEscape,
+        newLinesBetween);
+  }
+
+  public void restore(Snapshot snapshot) {
+    cursor = snapshot.cursor;
+    sCursor = snapshot.sCursor;
+    line = snapshot.line;
+    sLine = snapshot.sLine;
+    col = snapshot.col;
+    sCol = snapshot.sCol;
+    lookahead = snapshot.lookahead;
+    state = snapshot.state;
+    interpolationStack.clear();
+    // copy again so that the snapshot can be restored more than once
+    var it = snapshot.interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      interpolationStack.push(it.next().copy());
+    }
+    stringEnded = snapshot.stringEnded;
+    isEscape = snapshot.isEscape;
+    newLinesBetween = snapshot.newLinesBetween;
+  }
+
   public Token next() {
     sCursor = cursor;
     sLine = line;
@@ -236,7 +279,7 @@ public final class Lexer {
           } else {
             throw unexpectedChar("..", ".", "...", "...?");
           }
-        } else if (lookahead >= 48 && lookahead <= 57) {
+        } else if (lookahead >= '0' && lookahead <= '9') {
           yield lexNumber(ch);
         } else {
           yield Token.DOT;
@@ -574,7 +617,7 @@ public final class Lexer {
       return Token.FLOAT;
     }
 
-    while ((lookahead >= 48 && lookahead <= 57) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
 
@@ -587,7 +630,7 @@ public final class Lexer {
       if (lookahead == '_') {
         throw lexError("invalidSeparatorPosition");
       }
-      if (lookahead < 48 || lookahead > 57) {
+      if (lookahead < '0' || lookahead > '9') {
         backup();
         return Token.INT;
       }
@@ -625,11 +668,11 @@ public final class Lexer {
     while (lookahead != EOF) {
       if (prev == '*' && lookahead == '/') {
         nextChar();
-        break;
+        return;
       }
       prev = nextChar();
     }
-    if (lookahead == EOF) throw unexpectedEndOfFile();
+    throw unexpectedEndOfFile();
   }
 
   private void lexHexNumber() {
@@ -661,10 +704,10 @@ public final class Lexer {
       throw lexError("invalidSeparatorPosition");
     }
     var ch = lookahead;
-    if (!(ch >= 48 && ch <= 55)) {
+    if (!(ch >= '0' && ch <= '7')) {
       throw unexpectedChar(ch, "octal number");
     }
-    while ((ch >= 48 && ch <= 55) || ch == '_') {
+    while ((ch >= '0' && ch <= '7') || ch == '_') {
       nextChar();
       ch = lookahead;
     }
@@ -677,10 +720,10 @@ public final class Lexer {
     if (lookahead == '_') {
       throw lexError("invalidSeparatorPosition");
     }
-    if (lookahead < 48 || lookahead > 57) {
+    if (lookahead < '0' || lookahead > '9') {
       throw unexpectedChar(lookahead, "number");
     }
-    while ((lookahead >= 48 && lookahead <= 57) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
   }
@@ -689,7 +732,7 @@ public final class Lexer {
     if (lookahead == '_') {
       throw lexError("invalidSeparatorPosition");
     }
-    while ((lookahead >= 48 && lookahead <= 57) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
     if (lookahead == 'e' || lookahead == 'E') {
@@ -706,7 +749,9 @@ public final class Lexer {
   }
 
   private boolean isHex(int code) {
-    return (code >= 48 && code <= 57) || (code >= 97 && code <= 102) || (code >= 65 && code <= 70);
+    return (code >= '0' && code <= '9')
+        || (code >= 'a' && code <= 'f')
+        || (code >= 'A' && code <= 'F');
   }
 
   private static boolean isIdentifierStart(int c) {
@@ -857,7 +902,27 @@ public final class Lexer {
       this.quotes = quotes;
       this.pounds = pounds;
     }
+
+    InterpolationScope copy() {
+      var res = new InterpolationScope(quotes, pounds);
+      res.parens = parens;
+      return res;
+    }
   }
+
+  public record Snapshot(
+      int cursor,
+      int sCursor,
+      int line,
+      int sLine,
+      int col,
+      int sCol,
+      int lookahead,
+      State state,
+      Deque<InterpolationScope> interpolationStack,
+      boolean stringEnded,
+      boolean isEscape,
+      int newLinesBetween) {}
 
   private enum State {
     DEFAULT,

@@ -23,9 +23,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 import org.pkl.parser.Lexer;
 
 public final class VmUndefinedValueException extends VmEvalException {
@@ -35,7 +35,7 @@ public final class VmUndefinedValueException extends VmEvalException {
       @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
-      Object[] messageArguments,
+      @Nullable Object[] messageArguments,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
@@ -43,7 +43,8 @@ public final class VmUndefinedValueException extends VmEvalException {
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       @Nullable Object receiver,
-      @Nullable Map<CallTarget, StackFrame> insertedStackFrames) {
+      @Nullable Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames) {
 
     super(
         message,
@@ -56,7 +57,8 @@ public final class VmUndefinedValueException extends VmEvalException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames == null ? Collections.emptyMap() : insertedStackFrames);
+        insertedStackFrames == null ? Collections.emptyMap() : insertedStackFrames,
+        leadingStackFrames);
 
     this.receiver = receiver;
   }
@@ -65,6 +67,7 @@ public final class VmUndefinedValueException extends VmEvalException {
     if (hintBuilder != null) return this;
     var builder = new StringBuilder();
     var memberKey = getMessageArguments()[0];
+    assert memberKey != null;
     path.push(memberKey);
     builder.append("The above error occurred when rendering path `");
     renderPath(builder, path);
@@ -73,7 +76,7 @@ public final class VmUndefinedValueException extends VmEvalException {
     if (topLevelValue instanceof VmTyped typed && typed.isModuleObject()) {
       builder
           .append(" of module `")
-          .append(typed.getModuleInfo().getModuleSchema(typed).getModuleUri())
+          .append(typed.getModuleInfo().getModuleKey().getUri())
           .append('`');
     }
     builder.append('.');
@@ -95,7 +98,7 @@ public final class VmUndefinedValueException extends VmEvalException {
         }
         builder.append(Lexer.maybeQuoteIdentifier(pathPart.toString()));
       } else {
-        builder.append('[').append(pathPart).append(']');
+        builder.append('[').append(VmUtils.toPklString(pathPart)).append(']');
       }
     }
   }

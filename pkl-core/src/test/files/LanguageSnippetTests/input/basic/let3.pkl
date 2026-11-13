@@ -1,0 +1,53 @@
+res =
+  let (
+    x = new Listing {
+      for (elem in List(1, 2)) {
+        elem + 5
+      }
+    }
+  )
+    x
+
+res2 =
+  let (qux = 1)
+  let (
+    x = new Listing {
+      for (num in List(1, 2)) {
+        qux + num
+      }
+    }
+  )
+    x
+
+res3 =
+  let (qux = 1)
+  let (
+    x = new Listing {
+      for (num in List(1, 2)) {
+        qux + num
+      }
+    }
+  )
+  let (y = 5)
+  let (
+    z = new Listing {
+      for (nummm in List(1, 2)) {
+        when (qux + y == nummm) {
+          nummm + y
+        }
+      }
+    }
+  )
+    new { ...x; ...z }
+
+res4 = 
+  let (m: Mapping<String, String> = new Mapping {
+    ["foo"] = "bar"
+  })
+    new Mapping {
+      for (k, _ in Map("foo", "bar")) {
+        [k] {
+          m[k]
+        }
+      }
+    }

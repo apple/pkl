@@ -1,0 +1,11 @@
+prop = "qux"
+
+res =
+  new Mapping {
+    default {
+      when (module.prop == "qux") {
+        myProp = "qux"
+      }
+    }
+    ["bar"] {}
+  }

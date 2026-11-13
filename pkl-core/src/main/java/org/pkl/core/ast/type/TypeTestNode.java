@@ -19,21 +19,24 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "is")
 public final class TypeTestNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
+  private final VmLanguage language;
 
   public TypeTestNode(
       SourceSection sourceSection,
+      VmLanguage language,
       ExpressionNode valueNode,
       UnresolvedTypeNode unresolvedTypeNode) {
     super(sourceSection);
+    this.language = language;
     this.valueNode = valueNode;
     this.unresolvedTypeNode = unresolvedTypeNode;
   }
@@ -49,6 +52,7 @@ public final class TypeTestNode extends ExpressionNode {
       // don't compile unresolvedTypeNode.execute()
       // invalidation is done by insert()
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }
@@ -56,8 +60,8 @@ public final class TypeTestNode extends ExpressionNode {
     // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
     // https://github.com/apple/pkl/issues/639
     Object value = valueNode.executeGeneric(frame);
-    var localContext = VmLanguage.get(this).localContext.get();
-    boolean wasInTypeTest = localContext.isInTypeTest();
+    var localContext = language.localContext.get();
+    var wasInTypeTest = localContext.isInTypeTest();
     localContext.setInTypeTest(true);
     try {
       typeNode.executeEagerly(frame, value);

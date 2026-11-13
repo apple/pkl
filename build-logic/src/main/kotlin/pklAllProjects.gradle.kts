@@ -58,6 +58,7 @@ configurations {
 tasks.withType<JavaCompile>().configureEach {
   javaCompiler = buildInfo.javaCompiler
   options.release = buildInfo.jvmTarget
+  options.compilerArgs.add("-Xlint:unchecked")
 }
 
 plugins.withType(IdeaPlugin::class).configureEach {
@@ -92,7 +93,7 @@ plugins.withType(MavenPublishPlugin::class).configureEach {
   }
 }
 
-val allDependencies by tasks.registering(DependencyReportTask::class)
+val allDependencies = tasks.register<DependencyReportTask>("allDependencies")
 
 tasks.withType(Test::class).configureEach {
   System.getProperty("testReportsDir")?.let { reportsDir ->

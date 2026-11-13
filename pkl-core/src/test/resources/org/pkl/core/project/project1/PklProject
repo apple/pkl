@@ -41,4 +41,20 @@ evaluatorSettings {
       arguments { "with"; "args" }
     }
   }
+  http {
+    headers {
+      ["**"] {
+        ["X-Foo"] = "Foo"
+      }
+    }
+    rewrites {
+      ["https://foo.com/"] = "https://bar.com/"
+    }
+    proxy {
+      noProxy {
+        "my-no-proxy"
+      }
+      address = "http://localhost:5619"
+    }
+  }
 }

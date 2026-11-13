@@ -1,0 +1,3 @@
+const name = "Bob"
+
+typealias Inner = String(startsWith(name))

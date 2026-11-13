@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@ package org.pkl.core;
 
 import java.util.*;
 import java.util.regex.*;
-import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A <a href="https://semver.org/spec/v2.0.0.html">semantic version</a>.
@@ -59,7 +58,7 @@ public final class Version implements Comparable<Version> {
   private final @Nullable String preRelease;
   private final @Nullable String build;
 
-  @LateInit private volatile Identifier[] __preReleaseIdentifiers;
+  private volatile Identifier @Nullable [] __preReleaseIdentifiers;
 
   /** Constructs a semantic version. */
   public Version(
@@ -230,6 +229,7 @@ public final class Version implements Comparable<Version> {
                               : new Identifier(-1, str))
                   .toArray(Identifier[]::new);
     }
+    //noinspection DataFlowIssue
     return __preReleaseIdentifiers;
   }
 

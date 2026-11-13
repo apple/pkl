@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Idempotent;
@@ -26,15 +28,15 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.literal.AmendFunctionNode;
 import org.pkl.core.ast.expression.literal.ObjectLiteralNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 /** An object literal node that contains at least one for- or when-expression. */
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Children private final GeneratorMemberNode[] memberNodes;
 
@@ -80,15 +82,37 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     return data.storeGeneratorFrames(result);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isDynamicClass()", "checkObjectCannotHaveParameters()"})
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    var parentDynamic = (VmDynamic) defaultValue;
+    var data = executeChildren(frame, parentDynamic, parentDynamic.getLength());
+    if (data.hasNoMembers()) {
+      return parentDynamic;
+    }
+    var result = new VmDynamic(frame.materialize(), parentDynamic, data.members(), data.length());
+    return data.storeGeneratorFrames(result);
+  }
+
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmTyped evalTyped(VirtualFrame frame, VmTyped parent) {
-    VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode());
+    VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode(), this);
     var data = executeChildren(frame, parent, 0);
     if (data.hasNoMembers()) {
       return parent;
     }
     assert data.hasNoGeneratorFrames();
     return new VmTyped(frame.materialize(), parent, parent.getVmClass(), data.members());
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isTypedObjectClass(getClass(defaultValue))", "checkObjectCannotHaveParameters()"})
+  protected Object evalNullWithTypedDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalTyped(frame, (VmTyped) defaultValue);
   }
 
   @Specialization(guards = "checkListingCannotHaveParameters()")
@@ -101,6 +125,14 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     return data.storeGeneratorFrames(result);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkListingCannotHaveParameters()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListing(frame, (VmListing) defaultValue);
+  }
+
   @Specialization(guards = "checkMappingCannotHaveParameters()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
     var data = executeChildren(frame, parent, 0);
@@ -111,10 +143,12 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     return data.storeGeneratorFrames(result);
   }
 
-  @Specialization(guards = "checkObjectCannotHaveParameters()")
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isMappingClass()", "checkMappingCannotHaveParameters()"})
+  protected Object evalNullWithMappingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalMapping(frame, (VmMapping) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidFunctionAmendment(parent)")
@@ -125,6 +159,18 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(guards = {"parent == getDynamicClass()", "checkObjectCannotHaveParameters()"})
@@ -161,7 +207,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
 
   @Specialization(guards = {"isTypedObjectClass(parent)", "checkObjectCannotHaveParameters()"})
   protected VmTyped evalTypedObjectClass(VirtualFrame frame, VmClass parent) {
-    VmUtils.checkIsInstantiable(parent, getParentNode());
+    VmUtils.checkIsInstantiable(parent, getParentNode(), this);
     var data = executeChildren(frame, parent, 0);
     if (data.hasNoMembers()) {
       return parent.getPrototype();
@@ -173,8 +219,15 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Fallback
   @TruffleBoundary
   protected void fallback(Object parent) {
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
     VmUtils.checkIsInstantiable(
-        parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent), getParentNode());
+        value instanceof VmClass vmClass ? vmClass : VmUtils.getClass(value),
+        getParentNode(),
+        this);
 
     throw exceptionBuilder().unreachableCode().build();
   }
@@ -186,7 +239,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder()
         .evalError("objectAmendmentCannotHaveParameters")
-        .withLocation(parameterTypes[0])
+        .withLocation(getParentNode())
         .build();
   }
 
@@ -197,7 +250,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder()
         .evalError("listingAmendmentCannotHaveParameters")
-        .withLocation(parameterTypes[0])
+        .withLocation(getParentNode())
         .build();
   }
 
@@ -208,7 +261,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder()
         .evalError("mappingAmendmentCannotHaveParameters")
-        .withLocation(parameterTypes[0])
+        .withLocation(getParentNode())
         .build();
   }
 
@@ -216,6 +269,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   private ObjectData executeChildren(VirtualFrame frame, Object parent, int parentLength) {
     var data = new ObjectData(parentLength);
     for (var memberNode : memberNodes) {
+      TruffleSafepoint.poll(this);
       memberNode.execute(frame, parent, data);
     }
     return data;

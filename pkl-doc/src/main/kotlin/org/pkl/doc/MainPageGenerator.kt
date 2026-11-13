@@ -17,53 +17,81 @@ package org.pkl.doc
 
 import java.io.OutputStream
 import kotlinx.html.*
+import kotlinx.serialization.json.Json
 
 internal class MainPageGenerator(
   docsiteInfo: DocsiteInfo,
   private val packagesData: List<PackageData>,
   pageScope: SiteScope,
+  private val isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
-) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, consoleOut) {
+) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, false, consoleOut) {
   override val html: HTML.() -> Unit = {
-    renderHtmlHead()
+    if (isSinglePackageSite) {
+      renderRedirectPage()
+    } else {
+      renderHtmlHead()
+      body {
+        onLoad = "onLoad()"
 
-    body {
-      onLoad = "onLoad()"
+        renderPageHeader(null, null, null, null)
 
-      renderPageHeader(null, null, null, null)
+        main {
+          h1 {
+            id = "declaration-title"
 
-      main {
-        h1 {
-          id = "declaration-title"
-
-          +(docsiteInfo.title ?: "")
-        }
-
-        val memberDocs = MemberDocs(docsiteInfo.overview, pageScope, listOf(), isDeclaration = true)
-
-        renderMemberGroupLinks(
-          Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Packages", "#_packages", packagesData.isNotEmpty()),
-        )
-
-        if (docsiteInfo.overview != null) {
-          renderAnchor("_overview")
-          div {
-            id = "_declaration"
-            classes = setOf("member")
-
-            memberDocs.renderExpandIcon(this)
-            memberDocs.renderDocComment(this)
+            +(docsiteInfo.title ?: "")
           }
-        }
 
-        renderPackages()
+          val memberDocs =
+            MemberDocs(docsiteInfo.overview, pageScope, listOf(), isDeclaration = true)
+
+          renderMemberGroupLinks(
+            Triple("Overview", "#_overview", memberDocs.isExpandable),
+            Triple("Packages", "#_packages", packagesData.isNotEmpty()),
+          )
+
+          if (docsiteInfo.overview != null) {
+            renderAnchor("_overview")
+            div {
+              id = "_declaration"
+              classes = setOf("member")
+
+              memberDocs.renderExpandIcon(this)
+              memberDocs.renderDocComment(this)
+            }
+          }
+
+          renderPackages()
+        }
       }
     }
   }
 
   override fun HTMLTag.renderPageTitle() {
     +(docsiteInfo.title ?: "Pkldoc")
+  }
+
+  private fun HTML.renderRedirectPage() {
+    val packagePageUrl = "${packagesData.single().ref.basePath}/current/index.html"
+
+    lang = "en-US"
+
+    head {
+      meta { charset = "UTF-8" }
+      title { renderPageTitle() }
+      script { unsafe { raw("window.location.replace(${Json.encodeToString(packagePageUrl)});") } }
+    }
+    body {
+      main {
+        p {
+          a {
+            href = packagePageUrl
+            +packagePageUrl
+          }
+        }
+      }
+    }
   }
 
   private fun HtmlBlockTag.renderPackages() {

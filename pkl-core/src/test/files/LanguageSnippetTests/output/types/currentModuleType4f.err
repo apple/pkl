@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type from const property `currentModuleType4f#corge`.
+
+x | garply = true is module
+                     ^^^^^^
+at currentModuleType4f#corge.grault.garply (file:///$snippetsDir/input/types/currentModuleType4f.pkl)

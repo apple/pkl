@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -41,7 +42,6 @@ public final class GeneratorWhenNode extends GeneratorMemberNode {
   }
 
   @Override
-  @ExplodeLoop
   public void execute(VirtualFrame frame, Object parent, ObjectData data) {
     boolean condition;
     try {
@@ -53,7 +53,18 @@ public final class GeneratorWhenNode extends GeneratorMemberNode {
           .withSourceSection(conditionNode.getSourceSection())
           .build();
     }
-    for (var node : condition ? thenNodes : elseNodes) {
+    if (condition) {
+      executeNodes(thenNodes, frame, parent, data);
+    } else {
+      executeNodes(elseNodes, frame, parent, data);
+    }
+  }
+
+  @ExplodeLoop
+  private void executeNodes(
+      GeneratorMemberNode[] nodes, VirtualFrame frame, Object parent, ObjectData data) {
+    for (var node : nodes) {
+      TruffleSafepoint.poll(this);
       node.execute(frame, parent, data);
     }
   }

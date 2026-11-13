@@ -3,11 +3,11 @@ ouch
 
 x | let (y = throw("ouch"))
              ^^^^^^^^^^^^^
-at letExpressionError2#res1.<function#1> (file:///$snippetsDir/input/errors/letExpressionError2.pkl)
+at letExpressionError2#res1 (file:///$snippetsDir/input/errors/letExpressionError2.pkl)
 
 x | let (x = 1)
     ^^^^^^^^^^^
-at letExpressionError2#res1 (file:///$snippetsDir/input/errors/letExpressionError2.pkl)
+at letExpressionError2#res1.<let expr> (file:///$snippetsDir/input/errors/letExpressionError2.pkl)
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

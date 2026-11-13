@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,22 +19,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.DebugLogger;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Java representation of a Pkl settings file. A Pkl settings file is a Pkl module amending the
  * {@literal pkl.settings} standard library module. To load a settings file, use one of the static
  * {@code load} methods.
  */
-// keep in sync with stdlib/settings.pkl
-public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http http) {
+public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http http) {
+  // keep in sync with stdlib/settings.pkl
+  public static final PklSettings defaultInstance = new PklSettings(Editor.SYSTEM, null);
+
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 
@@ -42,16 +45,53 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
       List.of(Pattern.compile("env:"), Pattern.compile("file:"));
 
   /**
-   * Loads the user settings file ({@literal ~/.pkl/settings.pkl}). If this file does not exist,
-   * returns default settings defined by module {@literal pkl.settings}.
+   * Loads the user settings file.
+   *
+   * <p>Prefers XDG_CONFIG_HOME (e.g. {@code ~/.config/pkl/settings.pkl}), falling back to the
+   * legacy {@code ~/.pkl/settings.pkl}.
+   *
+   * <p>If neither file exists, returns default settings defined by module {@code pkl.settings}.
    */
+  public static PklSettings loadFromSystem() throws VmEvalException {
+    return loadFromSystem(IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads the user settings file, using the given module cache directory.
+   *
+   * @param moduleCacheDir the directory where packages are cached; {@code null} disables caching
+   * @see #loadFromSystem()
+   */
+  public static PklSettings loadFromSystem(@Nullable Path moduleCacheDir) throws VmEvalException {
+    var file = IoUtils.getSystemSettingsFile();
+    if (Files.exists(file)) {
+      DebugLogger.log("Loading settings file from " + file.normalize().toAbsolutePath());
+      return load(ModuleSource.path(file), moduleCacheDir);
+    }
+    return defaultInstance;
+  }
+
+  /**
+   * Loads the user settings file.
+   *
+   * @deprecated As of 0.33.0, use {@link #loadFromSystem()}, which now prefers {@code
+   *     ~/.config/pkl/settings.pkl} over the legacy {@code ~/.pkl/settings.pkl}.
+   */
+  @Deprecated(since = "0.33.0", forRemoval = true)
   public static PklSettings loadFromPklHomeDir() throws VmEvalException {
-    return loadFromPklHomeDir(IoUtils.getPklHomeDir());
+    var candidate = IoUtils.getLegacyPklHomeDir().resolve("settings.pkl");
+    if (Files.exists(candidate)) {
+      return load(ModuleSource.path(candidate));
+    }
+    return defaultInstance;
   }
 
   /** For testing only. */
-  static PklSettings loadFromPklHomeDir(Path pklHomeDir) throws VmEvalException {
-    var path = pklHomeDir.resolve("settings.pkl");
+  static PklSettings loadFromSettingsDir(Path settingsDir) throws VmEvalException {
+    return loadFromSettingsFile(settingsDir.resolve("settings.pkl"));
+  }
+
+  private static PklSettings loadFromSettingsFile(Path path) throws VmEvalException {
     return Files.exists(path)
         ? load(ModuleSource.path(path))
         : new PklSettings(Editor.SYSTEM, null);
@@ -59,6 +99,16 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
 
   /** Loads a settings file from the given path. */
   public static PklSettings load(ModuleSource moduleSource) throws VmEvalException {
+    return load(moduleSource, IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads a settings file from the given path, using the given module cache directory.
+   *
+   * @param moduleCacheDir the directory where packages are cached; {@code null} disables caching
+   */
+  public static PklSettings load(ModuleSource moduleSource, @Nullable Path moduleCacheDir)
+      throws VmEvalException {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(
@@ -68,7 +118,9 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(System.getenv())
+            .setModuleCacheDir(moduleCacheDir)
             .build()) {
       var module = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Settings);
       return parseSettings(module, moduleSource);

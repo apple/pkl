@@ -147,6 +147,15 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
+  // members of pkl.net
+  public static final Identifier RAW_USER_INFO = get("rawUserInfo");
+  public static final Identifier RAW_PATH = get("rawPath");
+  public static final Identifier RAW_QUERY = get("rawQuery");
+  public static final Identifier SCHEME = get("scheme");
+  public static final Identifier RAW_HOST = get("rawHost");
+  public static final Identifier RAW_PORT = get("rawPort");
+  public static final Identifier RAW_FRAGMENT = get("rawFragment");
+
   // members of pkl.Command
   public static final Identifier OPTIONS = get("options");
   public static final Identifier PARENT = get("parent");
@@ -163,8 +172,26 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier GLOB = get("glob");
   public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
 
+  public static final Identifier ILLEGAL = get("`");
+
+  // members of pkl.ref
+  public static final Identifier PROPERTY = get("property");
+  public static final Identifier KEY = get("key");
+
   // common in lambdas etc
   public static final Identifier IT = get("it");
+
+  // members of pkl.syntax#Node, pkl.syntax#Span and pkl.syntax#SourceLocation
+  public static final Identifier TYPE = get("type");
+  public static final Identifier CHILDREN = get("children");
+  public static final Identifier SPAN = get("span");
+  public static final Identifier START = get("start");
+  public static final Identifier END = get("end");
+  public static final Identifier LINE = get("line");
+  public static final Identifier COLUMN = get("column");
+
+  // members of pkl.syntax#FormattingRenderer
+  public static final Identifier GRAMMAR_VERSION = get("grammarVersion");
 
   private final String name;
 

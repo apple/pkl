@@ -1,0 +1,19 @@
+amends "../snippetTest.pkl"
+
+facts {
+  ["value"] {
+    1e300.d.value == 1e300
+    1e300.b.value == 1e300
+    1.0E18.d.value == 1000000000000000000
+    7.d.value == 7
+    2.2.h.value == 2.2
+  }
+}
+
+examples {
+  ["display"] {
+    1e300.d
+    1e300.b
+    7.d
+  }
+}

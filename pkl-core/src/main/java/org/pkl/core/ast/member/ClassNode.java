@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
-import java.util.List;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "class")
 public final class ClassNode extends ExpressionNode {
@@ -39,7 +38,7 @@ public final class ClassNode extends ExpressionNode {
   @Children private final ExpressionNode[] annotationNodes;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final @Nullable ModuleInfo moduleInfo;
   // null iff this class is pkl.base#Any
   @Child private @Nullable UnresolvedTypeNode unresolvedSupertypeNode;
@@ -48,6 +47,7 @@ public final class ClassNode extends ExpressionNode {
   @Children private final UnresolvedMethodNode[] unresolvedMethodNodes;
 
   @CompilationFinal @LateInit private VmClass cachedClass;
+  private final VmLanguage language;
 
   public ClassNode(
       SourceSection section,
@@ -56,12 +56,13 @@ public final class ClassNode extends ExpressionNode {
       ExpressionNode[] annotationNodes,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       @Nullable ModuleInfo moduleInfo,
       @Nullable UnresolvedTypeNode unresolvedSupertypeNode,
       EconomicMap<Object, ObjectMember> prototypeMembers,
       UnresolvedPropertyNode[] unresolvedPropertyNodes,
-      UnresolvedMethodNode[] unresolvedMethodNodes) {
+      UnresolvedMethodNode[] unresolvedMethodNodes,
+      VmLanguage language) {
 
     super(section);
     this.headerSection = headerSection;
@@ -75,6 +76,7 @@ public final class ClassNode extends ExpressionNode {
     this.prototypeMembers = prototypeMembers;
     this.unresolvedPropertyNodes = unresolvedPropertyNodes;
     this.unresolvedMethodNodes = unresolvedMethodNodes;
+    this.language = language;
   }
 
   @Override
@@ -84,10 +86,10 @@ public final class ClassNode extends ExpressionNode {
     // Caching of classes also guarantees that classes are singletons and can be compared by
     // identity,
     // which improves efficiency and performance (for example in shape checks).
+    //noinspection ConstantValue
     if (cachedClass != null) return cachedClass;
 
     CompilerDirectives.transferToInterpreter();
-
     var module = VmUtils.getTypedObjectReceiver(frame);
 
     VmTyped prototype;
@@ -102,12 +104,8 @@ public final class ClassNode extends ExpressionNode {
       prototype.setExtraStorage(moduleInfo);
       prototype.addProperties(prototypeMembers);
     } else {
-      prototype =
-          new VmTyped(
-              frame.materialize(),
-              null, // initialized later by VmClass
-              null, // initialized later by VmClass
-              prototypeMembers);
+      // parent and clazz will be initialized later by VmClass
+      prototype = new VmTyped(frame.materialize(), null, prototypeMembers);
     }
 
     var annotations = new ArrayList<VmTyped>(annotationNodes.length);
@@ -126,37 +124,45 @@ public final class ClassNode extends ExpressionNode {
             typeParameters,
             prototype);
 
-    if (unresolvedSupertypeNode != null) {
-      var supertypeNode = unresolvedSupertypeNode.execute(frame);
-      var superclass = supertypeNode.getVmClass();
+    var localContext = language.localContext.get();
+    localContext.beginClassInit(cachedClass);
 
-      checkSupertype(supertypeNode, superclass);
-      cachedClass.initSupertype(supertypeNode, superclass);
+    try {
+      if (unresolvedSupertypeNode != null) {
+        var supertypeNode = insert(unresolvedSupertypeNode.execute(frame));
+        var superclass = supertypeNode.getType().getVmClass();
+
+        checkSupertype(supertypeNode, superclass);
+        cachedClass.initSupertype(supertypeNode, superclass);
+      }
+
+      // The superclass resolved above may not itself have completed the below initializations yet.
+      // That's because these initializations may have indirectly or directly triggered
+      // resolution of this class, in which case the `resolveSuperclass()` call above
+      // will have returned the partially initialized `cachedClass` of the superclass.
+      // As a consequence, initializations that require a fully initialized class hierarchy
+      // are done lazily in VmClass rather than here.
+      // A fully initialized class hierarchy is only required for initialization of internal caches,
+      // which is guaranteed to succeed (no impact on eager vs. lazy error reporting) and easy to
+      // defer.
+
+      VmUtils.evaluateAnnotations(frame, this, annotationNodes, annotations);
+
+      for (var node : unresolvedPropertyNodes) {
+        cachedClass.addProperty(node.execute(frame, cachedClass));
+      }
+
+      for (var node : unresolvedMethodNodes) {
+        cachedClass.addMethod(node.execute(frame, cachedClass));
+      }
+
+      cachedClass.onOwnClassInitialized();
+      localContext.endClassInit();
+      return cachedClass;
+    } catch (Throwable e) {
+      localContext.clearClassInitState();
+      throw e;
     }
-
-    // The superclass resolved above may not itself have completed the below initializations yet.
-    // That's because these initializations may have indirectly or directly triggered
-    // resolution of this class, in which case the `resolveSuperclass()` call above
-    // will have returned the partially initialized `cachedClass` of the superclass.
-    // As a consequence, initializations that require a fully initialized class hierarchy
-    // are done lazily in VmClass rather than here.
-    // A fully initialized class hierarchy is only required for initialization of internal caches,
-    // which is guaranteed to succeed (no impact on eager vs. lazy error reporting) and easy to
-    // defer.
-
-    VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
-
-    for (var node : unresolvedPropertyNodes) {
-      cachedClass.addProperty(node.execute(frame, cachedClass));
-    }
-
-    for (var node : unresolvedMethodNodes) {
-      cachedClass.addMethod(node.execute(frame, cachedClass));
-    }
-
-    cachedClass.notifyInitialized();
-
-    return cachedClass;
   }
 
   private void checkSupertype(TypeNode supertypeNode, @Nullable VmClass superclass) {

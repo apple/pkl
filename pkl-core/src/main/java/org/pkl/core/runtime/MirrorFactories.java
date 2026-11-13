@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.type.TypeNode;
@@ -97,6 +96,9 @@ public final class MirrorFactories {
   public static final VmObjectFactory<Void> moduleTypeFactory =
       new VmObjectFactory<>(ReflectModule::getModuleTypeClass);
 
+  public static final VmObjectFactory<Void> thisTypeFactory =
+      new VmObjectFactory<>(ReflectModule::getThisTypeClass);
+
   public static final VmObjectFactory<Void> unknownTypeFactory =
       new VmObjectFactory<>(ReflectModule::getUnknownTypeClass);
 
@@ -104,7 +106,7 @@ public final class MirrorFactories {
       new VmObjectFactory<>(ReflectModule::getNothingTypeClass);
 
   public static final VmObjectFactory<SourceSection> sourceLocationFactory =
-      new VmObjectFactory<>(ReflectModule::getSourceLocationClass);
+      new VmObjectFactory<>(SyntaxModule::getSourceLocationClass);
 
   static {
     moduleFactory
@@ -180,8 +182,7 @@ public final class MirrorFactories {
         .addProperty(
             "defaultValue",
             property ->
-                property.isAbstract()
-                        || property.isExternal()
+                property.isExternal()
                         || property
                             .getInitializer()
                             .isUndefined(VmUtils.createEmptyMaterializedFrame())
@@ -207,11 +208,11 @@ public final class MirrorFactories {
         .addTypedProperty("type", Pair::getSecond);
 
     typeParameterFactory
-        .addStringProperty("name", TypeParameter::getName)
+        .addStringProperty("name", TypeParameter::name)
         .addProperty(
             "variance",
             typeParameter ->
-                switch (typeParameter.getVariance()) {
+                switch (typeParameter.variance()) {
                   case COVARIANT -> "out";
                   case CONTRAVARIANT -> "in";
                   default -> VmNull.withoutDefault();
@@ -221,7 +222,7 @@ public final class MirrorFactories {
         .addTypedProperty(
             "referent",
             typeNode -> {
-              var clazz = typeNode.getVmClass();
+              var clazz = typeNode.getType().getVmClass();
               assert clazz != null;
               return clazz.getMirror();
             })
@@ -230,11 +231,7 @@ public final class MirrorFactories {
     typeAliasTypeFactory
         .addTypedProperty(
             "referent",
-            typeNode -> {
-              var alias = typeNode.getVmTypeAlias();
-              assert alias != null;
-              return alias.getMirror();
-            })
+            typeNode -> ((VmType.AliasType) typeNode.getType()).getVmTypeAlias().getMirror())
         .addListProperty("typeArguments", TypeNode::getTypeArgumentMirrors);
 
     declaredTypeFactory
@@ -249,7 +246,8 @@ public final class MirrorFactories {
         .addListProperty("parameterTypes", Pair::getFirst)
         .addTypedProperty("returnType", Pair::getSecond);
 
-    stringLiteralTypeFactory.addStringProperty("value", StringLiteralTypeNode::getLiteral);
+    stringLiteralTypeFactory.addStringProperty(
+        "value", typeNode -> ((VmType.StringLiteralType) typeNode.getType()).getLiteral());
 
     stringLiteralTypeFactory2.addStringProperty("value", Property.identity());
 

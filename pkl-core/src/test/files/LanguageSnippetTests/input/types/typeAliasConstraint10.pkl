@@ -1,0 +1,8 @@
+import "../../input-helper/types/typeAliasConstraint2.pkl"
+import "../../input-helper/types/typeAliasConstraint3.pkl"
+
+res: typeAliasConstraint2.MyTypeAlias2 = new typeAliasConstraint2.MyClass {}
+
+res2: typeAliasConstraint3.MyTypeAlias = new typeAliasConstraint2.MyClass {}
+
+res3: typeAliasConstraint2.MyTypeAlias3 = new typeAliasConstraint2.MyClass {}

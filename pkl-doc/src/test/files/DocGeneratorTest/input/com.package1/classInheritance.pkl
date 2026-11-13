@@ -3,7 +3,7 @@ module com.package1.classInheritance
 
 abstract class MyClass1 {
   /// Inherited property comment.
-  abstract property1: Boolean
+  property1: Boolean
 
   /// function method1 in class MyClass1.
   abstract function method1(arg: String): Boolean

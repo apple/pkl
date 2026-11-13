@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Only standard library members can have type parameters.
+Only standard library classes can have type parameters.
 
 x | class Box<A> {
               ^

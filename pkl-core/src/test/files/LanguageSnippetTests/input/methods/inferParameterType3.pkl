@@ -1,0 +1,10 @@
+class Foo {
+  bar: Int
+}
+
+const function isOk(f: Foo): Boolean = f.bar > 0
+const function isPos(i: Int): Boolean = i > 0
+
+typealias T = Int(isOk(new { bar = 1 }), isPos(this), isOk(new { bar = 2 }))
+
+x: T = 5

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -27,11 +28,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.concurrent.GuardedBy;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.module.PathElement.TreePathElement;
 import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.LateInit;
 
 /**
  * Resolves {@code modulepath} URIs from ZIP or JAR files, or from directory paths.
@@ -44,30 +44,37 @@ public final class ModulePathResolver implements AutoCloseable {
 
   private final Object lock = new Object();
 
-  @LateInit
   @GuardedBy("lock")
-  private Map<String, Path> fileCache;
+  private @Nullable Map<String, Path> fileCache;
 
-  @LateInit
   @GuardedBy("lock")
-  private List<FileSystem> zipFileSystems;
+  private @Nullable List<FileSystem> zipFileSystems;
 
-  @LateInit
   @GuardedBy("lock")
-  private TreePathElement cachedPathElementRoot;
+  private @Nullable TreePathElement cachedPathElementRoot;
 
   private @GuardedBy("lock") boolean isClosed = false;
 
   private static final ModulePathResolver EMPTY = new ModulePathResolver(Collections.emptyList());
 
+  /** Returns a resolver whose module path contains no entries. */
   public static ModulePathResolver empty() {
     return EMPTY;
   }
 
+  /**
+   * Creates a resolver for the given module path entries.
+   *
+   * <p>Each entry can be a directory, JAR file, or ZIP file. Entries are searched in iteration
+   * order; if more than one entry contains the same path, the first entry wins.
+   *
+   * @param modulePath the module path entries to search
+   */
   public ModulePathResolver(Iterable<Path> modulePath) {
     this.modulePath = modulePath;
   }
 
+  @GuardedBy("lock")
   private void populateCaches() throws IOException {
     fileCache = new HashMap<>();
     zipFileSystems = new ArrayList<>();
@@ -100,10 +107,18 @@ public final class ModulePathResolver implements AutoCloseable {
         populateCaches();
       }
 
+      assert fileCache != null;
       return fileCache;
     }
   }
 
+  /**
+   * Resolves a {@code modulepath:} URI to the path containing its source.
+   *
+   * @throws FileNotFoundException if the module path contains no matching file
+   * @throws IOException if a module path entry cannot be read
+   * @throws IllegalStateException if this resolver has been closed
+   */
   public Path resolve(URI uri) throws IOException {
     var modulePath = getModulePath(uri);
     var result = getFileCache().get(modulePath);
@@ -112,6 +127,12 @@ public final class ModulePathResolver implements AutoCloseable {
     throw new FileNotFoundException();
   }
 
+  /**
+   * Returns whether the module path contains the element identified by {@code elementUri}.
+   *
+   * @throws UncheckedIOException if a module path entry cannot be read
+   * @throws IllegalStateException if this resolver has been closed
+   */
   public boolean hasElement(URI elementUri) {
     var path = elementUri.getPath();
     try {
@@ -122,11 +143,17 @@ public final class ModulePathResolver implements AutoCloseable {
     }
   }
 
+  /**
+   * Closes file systems opened for JAR and ZIP entries.
+   *
+   * <p>Calling this method more than once has no effect.
+   */
   @Override
   public void close() {
     synchronized (lock) {
       if (isClosed || fileCache == null) return;
 
+      assert zipFileSystems != null;
       for (var fileSystem : zipFileSystems) {
         try {
           fileSystem.close();
@@ -140,28 +167,29 @@ public final class ModulePathResolver implements AutoCloseable {
     }
   }
 
+  @GuardedBy("lock")
   private void populateFileCache(Path basePath) throws IOException {
     try (var stream =
         Files.find(
             basePath,
             Integer.MAX_VALUE,
             // reduce file cache size by filtering out .class files
-            // (currently `read()` only supports text resources, no known use case for accessing
-            // .class files from Pkl code)
+            // (no known use case for accessing .class files from Pkl code)
             (path, attributes) ->
                 attributes.isRegularFile() && !path.toString().endsWith(".class"))) {
       // in case of duplicate path, first entry wins (cf. class loader)
-      stream.forEach(
-          (path) -> {
-            var relativized = IoUtils.relativize(path, basePath);
-            fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
-            var element = cachedPathElementRoot;
-            for (var i = 0; i < relativized.getNameCount(); i++) {
-              var name = relativized.getName(i).toString();
-              var isDirectory = i < (relativized.getNameCount() - 1);
-              element = element.putIfAbsent(name, new TreePathElement(name, isDirectory));
-            }
-          });
+      for (var path : stream.toList()) {
+        var relativized = IoUtils.relativize(path, basePath);
+        assert fileCache != null;
+        fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
+        assert cachedPathElementRoot != null;
+        var element = cachedPathElementRoot;
+        for (var i = 0; i < relativized.getNameCount(); i++) {
+          var name = relativized.getName(i).toString();
+          var isDirectory = i < (relativized.getNameCount() - 1);
+          element = element.putIfAbsent(name, new TreePathElement(name, isDirectory));
+        }
+      }
     }
   }
 

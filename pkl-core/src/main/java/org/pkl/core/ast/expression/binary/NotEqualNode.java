@@ -21,9 +21,9 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmValue;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "!=")
 @NodeChild(value = "leftNode", type = ExpressionNode.class)

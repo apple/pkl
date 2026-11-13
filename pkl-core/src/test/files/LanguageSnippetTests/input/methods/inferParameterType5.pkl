@@ -1,0 +1,17 @@
+class Foo {
+  bar: Int
+}
+const function isOk(f: Foo): Boolean = f.bar > 0
+const function isPos(num: Int) = num > 0
+
+foo {
+  new {
+    prop = 1
+  }
+}
+
+res = (foo) {
+  [[this.prop is Int(isOk(new { bar = 1 }), isPos(this), isOk(new { bar = 2 }))]] {
+    prop = 2
+  }
+}

@@ -43,7 +43,8 @@ res5 = new {
 
 // nested predicate
 res6 = (people) {
-  [[(people) { [[name == "Barn Owl"]] { age = 99 } }.toList().find((it) -> it.age == 99).name == name]] {
+  [[(people) { [[name == "Barn Owl"]] { age = 99 } }.toList().find((it) -> it.age == 99).name
+    == name]] {
     age = 55
   }
 }
@@ -86,3 +87,28 @@ res12 = (people) {
     [[name == "Pigeon"]] { age = 122 }
   }
 }
+
+res13 = (people) {
+  [[(() -> this.name == "Pigeon").apply()]] {
+    age = 99
+  }
+}
+
+res14 = (people) {
+  for (foo in List(1, 2)) {
+    [[foo == 1]] {
+      age = foo
+    }
+  }
+}
+
+res15 =
+  (
+    (it) -> (people) {
+      for (foo in List(1, 2)) {
+        [[foo == 1]] {
+          age = foo
+        }
+      }
+    }
+  ).apply("hi")

@@ -1,0 +1,11 @@
+amends "pkl:Project"
+
+projectFileUri = "modulepath:/foo/bar/PklProject"
+
+evaluatorSettings {
+  externalModuleReaders {
+    ["foo"] {
+      executable = "foo/bar"
+    }
+  }
+}

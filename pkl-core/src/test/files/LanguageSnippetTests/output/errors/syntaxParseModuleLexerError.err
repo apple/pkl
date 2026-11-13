@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Could not parse Pkl source.
+
+x | new syntax.Parser {}.parseModule(
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at syntaxParseModuleLexerError#mod (file:///$snippetsDir/input/errors/syntaxParseModuleLexerError.pkl)
+
+Missing `"` delimiter. at (1:9 - 2:1)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

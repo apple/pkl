@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 package org.pkl.core.packages;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.Version;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public abstract class Dependency {
 
@@ -51,13 +53,23 @@ public abstract class Dependency {
     }
 
     public URI resolveAssetUri(URI projectBaseUri, PackageAssetUri packageAssetUri) {
-      // drop 1 to remove leading `/`
-      var assetPath = packageAssetUri.getAssetPath().substring(1);
-      return projectBaseUri.resolve(IoUtils.toNormalizedPathString(path.resolve(assetPath)));
+      // copy how remote dependencies work; the `..` segment at the root just normalizes to the
+      // root.
+      var assetPath = Path.of(packageAssetUri.getAssetPath()).normalize();
+      var relativePath = Path.of("/").relativize(assetPath);
+      var resolvedPath = path.resolve(relativePath);
+      var normalized = IoUtils.toNormalizedPathString(resolvedPath);
+      try {
+        var relativeUri = new URI(null, null, normalized, null);
+        return projectBaseUri.resolve(relativeUri);
+      } catch (URISyntaxException e) {
+        // impossible; we started from valid URIs to begin with.
+        throw PklBugException.unreachableCode();
+      }
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) {
         return true;
       }
@@ -97,7 +109,7 @@ public abstract class Dependency {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) {
         return true;
       }

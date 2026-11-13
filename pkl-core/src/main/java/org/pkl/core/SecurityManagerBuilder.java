@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parent interface to builder classes for configuring a {@link SecurityManager}.
@@ -45,8 +45,7 @@ public interface SecurityManagerBuilder<B extends SecurityManagerBuilder<B>> {
 
   B setRootDir(@Nullable Path rootDir);
 
-  @Nullable
-  Path getRootDir();
+  @Nullable Path getRootDir();
 
   SecurityManager build();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.SecurityManagerException;
 
 /**
  * An HTTP client.
@@ -45,6 +47,9 @@ public interface HttpClient extends AutoCloseable {
      * Sets the {@code User-Agent} header.
      *
      * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
+     *
+     * <p>An existing "User-Agent" from {@link Builder#setHeaders} and {@link Builder#addHeaders}
+     * takes precedence over this field.
      */
     Builder setUserAgent(String userAgent);
 
@@ -144,16 +149,50 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Adds a rewrite rule.
      *
-     * @see Builder#setRewrites(Map)
      * @throws IllegalArgumentException if {@code sourcePrefix} or {@code targetPrefix} is invalid.
      * @since 0.29.0
      */
     Builder addRewrite(URI sourcePrefix, URI targetPrefix);
 
     /**
+     * Sets the HTTP headers for the request, replacing any previously configured headers.
+     *
+     * <p>This method clears all existing headers and replaces them with the contents of the
+     * provided map.
+     *
+     * <p>{@code headerRules} is a map whose keys are <a
+     * href="https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns">glob
+     * patterns</a>, and values is a map of header names and values. Multiple header values turn
+     * into multiple individual headers in the HTTP request.
+     *
+     * <p>To add headers to all requests, use {@code **} as the glob pattern.
+     *
+     * <p>To describe a prefix match, add {@code **} to the glob pattern (e.g. {@code
+     * https://example.com/**}).
+     *
+     * <p>Before an HTTP request is made, each key is matched against the request URL. If any
+     * matches are found, each of their headers are added to the request.
+     *
+     * @throws IllegalArgumentException if any of the keys are invalid glob patterns, or if any of
+     *     the header names or values are invalid.
+     * @since 0.32.0
+     */
+    Builder setHeaders(Map<String, Map<String, List<String>>> headerRules);
+
+    /**
+     * Adds HTTP headers for URL requests that match {@code globPattern}.
+     *
+     * @throws IllegalArgumentException if {@code globPattern} is an invalid glob pattern, or if any
+     *     of the header names or values are invalid.
+     * @since 0.32.0
+     * @see Builder#setHeaders
+     */
+    Builder addHeaders(String globPattern, Map<String, List<String>> headers);
+
+    /**
      * Creates a new {@code HttpClient} from the current state of this builder.
      *
-     * @throws HttpClientInitException if an error occurs while initializing the client
+     * @throws HttpClientException if an error occurs while initializing the client
      */
     HttpClient build();
 
@@ -205,11 +244,14 @@ public interface HttpClient extends AutoCloseable {
    * java.net.http.HttpClient#send}.
    *
    * @throws IOException if an I/O error occurs when sending or receiving
-   * @throws HttpClientInitException if an error occurs while initializing a {@linkplain
-   *     Builder#buildLazily lazy} client
+   * @throws HttpClientException if a known (user-presentable) error occurs.
+   * @throws SecurityManagerException based on {@code httpRequestChecker}
    */
-  <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-      throws IOException;
+  <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException;
 
   /**
    * Closes this client.
@@ -221,4 +263,9 @@ public interface HttpClient extends AutoCloseable {
    * {@link IllegalStateException}.
    */
   void close();
+
+  @FunctionalInterface
+  interface HttpRequestChecker {
+    void check(URI uri) throws SecurityManagerException;
+  }
 }

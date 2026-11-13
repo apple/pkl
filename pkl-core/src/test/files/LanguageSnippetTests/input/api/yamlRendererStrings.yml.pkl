@@ -39,6 +39,17 @@ h4 = "one\rtwo"
 h5 = "\u{7}"
 h6 = "one\u{7}two"
 
+// characters outside `c-printable` (YAML 1.2 spec 5.1), and YAML 1.1 line breaks
+h7 = "\u{7f}"
+h8 = "one\u{7f}two"
+h9 = "one\u{80}two"
+h10 = "one\u{85}two"
+h11 = "one\u{9f}two"
+h12 = "one\u{2028}two"
+h13 = "one\u{2029}two"
+h14 = "one\u{fffe}two"
+h15 = "one\u{ffff}two"
+
 // control characters in multiline strings
 i1 = "one\ttwo\nthree"
 i2 = "one\rtwo\nthree"

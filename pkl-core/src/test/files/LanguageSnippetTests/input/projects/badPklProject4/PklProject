@@ -1,0 +1,7 @@
+amends "pkl:Project"
+
+projectFileUri = "file:///not a valid uri"
+
+evaluatorSettings {
+  moduleCacheDir = "foo"
+}

@@ -25,13 +25,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Function;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
+import org.jspecify.annotations.Nullable;
+import org.pkl.commons.cli.TestReporter;
 import org.pkl.core.ImportGraph;
 import org.pkl.core.util.IoUtils;
 
-public class PluginUtils {
+public final class PluginUtils {
   private PluginUtils() {}
 
   /**
@@ -158,6 +163,45 @@ public class PluginUtils {
     } catch (Exception e) {
       throw new RuntimeException(
           "Failed to parse transitive imports from " + outputFile.getAsFile(), e);
+    }
+  }
+
+  /**
+   * Equivalent to {@code provider.map(it -> f.apply(it)).getOrNull()}.
+   *
+   * <p>This function is necessary because in some cases doing {@code
+   * someProvider.map(...).getOrNull()} may trigger validation errors inside Gradle, when {@code
+   * someProvider} is derived from a property.
+   */
+  public static <T, U> @Nullable U mapAndGetOrNull(Provider<T> provider, Function<T, U> f) {
+    @Nullable T value = provider.getOrNull();
+    return value == null ? null : f.apply(value);
+  }
+
+  public static TestReporter toTestReporter(Provider<String> input) {
+    var inputStr = input.getOrNull();
+    if (inputStr == null) {
+      return TestReporter.getDefault();
+    }
+    try {
+      return TestReporter.valueOf(inputStr.toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException e) {
+      var sb = new StringBuilder("Invalid test reporter: '");
+      sb.append(inputStr).append("'. ");
+      sb.append("Valid reporters: ");
+      var isFirst = true;
+      // `enumEntries()` is not available in Kotlin versions below 1.8
+      //noinspection EnumValuesSoftDeprecateInJava
+      for (var value : TestReporter.values()) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          sb.append(", ");
+        }
+        sb.append('\'').append(value.toString().toLowerCase(Locale.ROOT)).append('\'');
+      }
+      sb.append(".");
+      throw new InvalidUserDataException(sb.toString());
     }
   }
 }

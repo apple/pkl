@@ -1,0 +1,19 @@
+class Foo {
+  bar: Int
+}
+const function isOk2(f: Foo, n: Int): Boolean = f.bar > 0 && n > 0
+local f = (a, b) -> new Dynamic { y = a; w = b }
+
+res =
+  (f) { p, q ->
+    when (isOk2(new { bar = 1 }, p)) {
+      z = p
+    }
+  }.apply(1, 2)
+
+res2 =
+  (f) {
+    when (isOk2(new { bar = 1 }, 2)) {
+      z = 2
+    }
+  }.apply(1, 2)

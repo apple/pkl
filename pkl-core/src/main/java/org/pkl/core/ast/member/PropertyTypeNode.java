@@ -19,15 +19,16 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 public final class PropertyTypeNode extends PklRootNode {
   private final String qualifiedPropertyName;
+  private final VmLanguage language;
   @Child private TypeNode typeNode;
 
   private @Nullable Object defaultValue;
@@ -43,6 +44,7 @@ public final class PropertyTypeNode extends PklRootNode {
     super(language, descriptor);
     this.qualifiedPropertyName = qualifiedPropertyName;
     this.typeNode = childNode;
+    this.language = language;
   }
 
   public TypeNode getTypeNode() {
@@ -66,9 +68,12 @@ public final class PropertyTypeNode extends PklRootNode {
 
   public @Nullable Object getDefaultValue(VirtualFrame frame) {
     if (!defaultValueInitialized) {
+      // typeNode.createDefaultValue() is a regular polymorphic call rather than a child node.
+      // passing a non-materialized frame will cause GraalVM to emit diagnostics that it failed
+      // to compile this call.
       defaultValue =
           typeNode.createDefaultValue(
-              frame, VmLanguage.get(this), getSourceSection(), qualifiedPropertyName);
+              frame.materialize(), language, getSourceSection(), qualifiedPropertyName);
       // can't cache default value for `module` type in a non-final module because it's a self-type
       // (the default value changes when inherited).
       if (typeNode.isFinalType()) {

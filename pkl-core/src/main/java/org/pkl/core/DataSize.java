@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import static org.pkl.core.DataSizeUnit.*;
 
 import java.io.Serial;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.MathUtils;
-import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#DataSize} value. */
 public final class DataSize implements Value {
@@ -247,11 +247,14 @@ public final class DataSize implements Value {
 
   @Override
   public int hashCode() {
-    return Double.hashCode(convertValueTo(DataSizeUnit.BYTES));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(convertValueTo(DataSizeUnit.BYTES) + 0.0);
   }
 
   @Override
   public String toString() {
-    return MathUtils.isMathematicalInteger(value) ? (long) value + "." + unit : value + "." + unit;
+    return MathUtils.isMathematicalIntegerFittingLong(value)
+        ? (long) value + "." + unit
+        : value + "." + unit;
   }
 }

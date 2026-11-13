@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,8 +51,12 @@ public final class FileSystemManager {
 
   public static synchronized FileSystem getFileSystem(URI uri) throws IOException {
     var fs = fileSystems.get(uri);
+    // incorrect nullability for `org.graalvm.collections.UnmodifiableEconomicMap`
+    //noinspection ConstantValue
     if (fs != null) {
-      counts.put(fs, counts.get(fs) + 1);
+      var count = counts.get(fs);
+      assert count != null;
+      counts.put(fs, count + 1);
       return fs;
     }
     try {
@@ -76,9 +80,11 @@ public final class FileSystemManager {
    * to Pkl.
    */
   private static synchronized void close(Handle fs) throws IOException {
-    var count = counts.get(fs) - 1;
-    if (count > 0) {
-      counts.put(fs, count);
+    var count = counts.get(fs);
+    assert count != null;
+    var newCount = count - 1;
+    if (newCount > 0) {
+      counts.put(fs, newCount);
       return;
     }
     counts.remove(fs);

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type within a class body.
+
+x | baz: module
+         ^^^^^^
+at currentModuleType4c#Bar.baz (file:///$snippetsDir/input/types/currentModuleType4c.pkl)

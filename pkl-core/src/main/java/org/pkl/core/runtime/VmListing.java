@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,18 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmListingCursors.CachedElementCursor;
+import org.pkl.core.runtime.VmListingCursors.ElementCursor;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
+import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 
 public final class VmListing extends VmListingOrMapping {
   private static final class EmptyHolder {
@@ -62,10 +68,6 @@ public final class VmListing extends VmListingOrMapping {
     this.length = length;
   }
 
-  public static boolean isDefaultProperty(Object propertyKey) {
-    return propertyKey == Identifier.DEFAULT;
-  }
-
   public int getLength() {
     return length;
   }
@@ -87,17 +89,13 @@ public final class VmListing extends VmListingOrMapping {
   @Override
   @TruffleBoundary
   public List<Object> export() {
-    var properties = new ArrayList<>(EconomicMaps.size(cachedValues));
+    assert isDeepForced() : "Value was not forced prior to export";
 
-    iterateMemberValues(
-        (key, prop, value) -> {
-          if (isDefaultProperty(key)) return true;
-
-          properties.add(VmValue.exportNullable(value));
-          return true;
-        });
-
-    return properties;
+    var elements = new ArrayList<>(EconomicMaps.size(cachedValues));
+    for (var cursor = elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      elements.add(VmValue.export(cursor.cachedValue()));
+    }
+    return elements;
   }
 
   @Override
@@ -108,6 +106,77 @@ public final class VmListing extends VmListingOrMapping {
   @Override
   public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
     return converter.convertListing(this, path);
+  }
+
+  @Override
+  @TruffleBoundary
+  public VmObjectCursor elements() {
+    return new ElementCursor(this);
+  }
+
+  @Override
+  @TruffleBoundary
+  public VmObjectCursor elements(CursorOption option) {
+    if (option == CursorOption.ANY_ORDER) {
+      return isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
+    }
+    if (option == CursorOption.ALL_VALUES) {
+      force(false, false);
+      return new ElementCursor(this);
+    }
+    return new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    var allValues = CollectionUtils.contains(options, CursorOption.ALL_VALUES);
+    var lazyRequired = CollectionUtils.contains(options, CursorOption.LAZY_REQUIRED);
+    if (anyOrder) {
+      if (isShallowForced()) {
+        return new CachedElementCursor(this);
+      }
+      if (allValues && !lazyRequired) {
+        force(false, false);
+        return new CachedElementCursor(this);
+      }
+    }
+    return new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return elements();
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    return elements(option);
   }
 
   @Override
@@ -127,6 +196,7 @@ public final class VmListing extends VmListingOrMapping {
       if (key instanceof Identifier) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -142,17 +212,10 @@ public final class VmListing extends VmListingOrMapping {
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
-
-    while (cursor.advance()) {
-      var key = cursor.getKey();
-      if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
-      assert value != null;
+    for (var cursor = elements(); cursor.advance(); ) {
+      var value = cursor.cachedValue();
       result = 31 * result + value.hashCode();
     }
-
     cachedHash = result;
     return result;
   }

@@ -709,8 +709,7 @@ result = someLib.x
     assertThat(output).isEqualTo("x: 1\n---\nx: 3\n")
   }
 
-  // prototext can't render `Dynamic`.
-  @EnumSource(names = ["TEXTPROTO"], mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource
   @ParameterizedTest(name = "{0} console output ends with newline")
   fun `console output ends with newline`(outputFormat: OutputFormat) {
     val sourceFiles = listOf(writePklFile("test0.pkl", "foo = 0\nbar=\"Baz\""))
@@ -1295,7 +1294,7 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
         )
       )
     val buffer = ByteArrayOutputStream()
@@ -1337,7 +1336,7 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           settings = settingsFile,
         )
       )
@@ -1367,7 +1366,7 @@ result = someLib.x
           workingDir = tempDir,
           moduleCacheDir = tempDir,
           noCache = true,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
         )
       )
@@ -1473,7 +1472,7 @@ result = someLib.x
           sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostrich.pkl")),
           noCache = true,
           httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
         )
       )
@@ -1615,6 +1614,24 @@ result = someLib.x
   }
 
   @Test
+  fun `eval configured http headers`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(ok("result = 1")))
+    val file = URI("${wwRuntimeInfo.httpBaseUrl}/foo.pkl")
+    val output =
+      evalToConsole(
+        CliEvaluatorOptions(
+          CliBaseOptions(
+            sourceModules = listOf(file),
+            httpHeaders = mapOf("**" to mapOf("X-Foo" to listOf("Foo"))),
+            allowedModules =
+              listOf(Pattern.compile("http:"), Pattern.compile("file:"), Pattern.compile("pkl:")),
+          )
+        )
+      )
+    verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
+  }
+
+  @Test
   fun `eval file with non-ASCII name`() {
     val tempDirUri = tempDir.toUri()
     val dir = tempDir.resolve("🤬").createDirectory()
@@ -1752,6 +1769,57 @@ result = someLib.x
       """
         .trimIndent(),
     )
+  }
+
+  @Test
+  fun `eval dependency notation source`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    val projectPath =
+      FileTestUtils.rootProjectDir.resolve(
+        "pkl-commons-cli/src/test/resources/org/pkl/commons/cli/project1/"
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("@fruit/catalog/apple.pkl")),
+          projectDir = projectPath,
+          moduleCacheDir = tempDir,
+        )
+      )
+    val output = evalToConsole(options)
+    assertThat(output)
+      .isEqualTo(
+        """
+        name = "Apple 🍎"
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `eval dependency notation source with multiple file output`(
+    @TempDir tempDir: Path,
+    @TempDir cacheDir: Path,
+  ) {
+    PackageServer.populateCacheDir(cacheDir)
+    val projectPath =
+      FileTestUtils.rootProjectDir.resolve(
+        "pkl-commons-cli/src/test/resources/org/pkl/commons/cli/project1/"
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("@fruit/catalog/basket.pkl")),
+          projectDir = projectPath,
+          moduleCacheDir = cacheDir,
+          workingDir = tempDir,
+        ),
+        multipleFileOutputPath = "output",
+      )
+    val output = evalToConsole(options)
+    assertThat(output.split('\n')).hasSize(3)
+    assertThat(tempDir.resolve("output").listDirectoryEntries()).hasSize(2)
   }
 
   private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {

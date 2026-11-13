@@ -223,6 +223,24 @@ class ReplServerTest {
     assertThat((response as ReplResponse.EvalSuccess).result).isEqualTo("\u001B[32m5\u001B[0m.ms")
   }
 
+  @Test
+  fun `strip expression preamble in error message`() {
+    val result = makeFailingEvalRequest("foo")
+    assertThat(result)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        Cannot find property `foo`.
+
+        1 | foo
+            ^^^
+        at  (repl:id)
+
+        """
+          .trimIndent()
+      )
+  }
+
   private fun makeEvalRequest(text: String): String {
     val responses = server.handleRequest(ReplRequest.Eval("id", text, false, false))
 

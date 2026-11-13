@@ -17,26 +17,24 @@ package org.pkl.commons.cli
 
 import com.github.ajalt.clikt.core.parse
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
-import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.DisabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
+import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.util.IoUtils
 
 @OptIn(ExperimentalPathApi::class)
 class CliCommandTest {
-
   private val cmd =
     object : BaseCommand("test", "") {
       val projectOptions: ProjectOptions by ProjectOptions()
@@ -49,7 +47,6 @@ class CliCommandTest {
   class CliTest(options: CliBaseOptions) : CliCommand(options) {
     override fun doRun() = Unit
 
-    val myResolvedSourceModules = resolvedSourceModules
     val myAllowedModules = allowedModules
     val myAllowedResources = allowedResources
     val myRootDir = rootDir
@@ -98,114 +95,6 @@ class CliCommandTest {
       )
   }
 
-  @Test
-  fun `@-notation package URIs - treated as relative paths when no project present`(
-    @TempDir tempDir: Path
-  ) {
-    cmd.parse(arrayOf("--working-dir=$tempDir"))
-    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
-    val cliTest = CliTest(opts)
-    assertThat(cliTest.myResolvedSourceModules)
-      .isEqualTo(listOf(tempDir.toUri().resolve("@foo/bar.pkl")))
-  }
-
-  @Test
-  fun `@-notation package URIs - empty paths are rejected`(@TempDir tempDir: Path) {
-    tempDir
-      .resolve("PklProject")
-      .writeText(
-        """
-        amends "pkl:Project"
-        """
-          .trimIndent()
-      )
-    cmd.parse(arrayOf("--working-dir=$tempDir"))
-    val opts = cmd.baseOptions.baseOptions(listOf(URI("@no.slash")), testMode = true)
-    val exc = assertThrows<CliException> { CliTest(opts) }
-    assertThat(exc.message).isEqualTo("Invalid project dependency URI `@no.slash`.")
-  }
-
-  @Test
-  fun `@-notation package URIs - missing dependencies are rejected`(@TempDir tempDir: Path) {
-    tempDir
-      .resolve("PklProject")
-      .writeText(
-        """
-        amends "pkl:Project"
-        """
-          .trimIndent()
-      )
-    cmd.parse(arrayOf("--working-dir=$tempDir"))
-    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
-    val exc = assertThrows<CliException> { CliTest(opts) }
-    assertThat(exc.message).isEqualTo("Project does not contain dependency `@foo`.")
-  }
-
-  @Test
-  fun `@-notation package URIs - local dependencies are rejected`(
-    @TempDir tempDir: Path,
-    @TempDir depDir: Path,
-  ) {
-    depDir
-      .resolve("PklProject")
-      .writeText(
-        """
-        amends "pkl:Project"
-
-        package {
-          name = "foo"
-          baseUri = "package://example.com/foo"
-          version = "0.0.1"
-          packageZipUrl = "https://example.com/foo@\(version).zip"
-        }
-        """
-          .trimIndent()
-      )
-
-    tempDir
-      .resolve("PklProject")
-      .writeText(
-        """
-      amends "pkl:Project"
-
-      dependencies {
-        ["foo"] = import("${depDir.toUri().resolve("PklProject")}")
-      }
-    """
-          .trimIndent()
-      )
-    cmd.parse(arrayOf("--working-dir=$tempDir"))
-    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
-    val exc = assertThrows<CliException> { CliTest(opts) }
-    assertThat(exc.message)
-      .isEqualTo(
-        "Only remote project dependencies may be referenced using @-notation. Dependency `@foo` is a local dependency."
-      )
-  }
-
-  @Test
-  fun `@-notation package URIs - remote dependencies are resolved`(@TempDir tempDir: Path) {
-    tempDir
-      .resolve("PklProject")
-      .writeText(
-        """
-        amends "pkl:Project"
-
-        dependencies {
-          ["foo"] {
-            uri = "package://example.com/foo@1.2.3"
-          }
-        }
-        """
-          .trimIndent()
-      )
-    cmd.parse(arrayOf("--working-dir=$tempDir"))
-    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
-    val cliTest = CliTest(opts)
-    assertThat(cliTest.myResolvedSourceModules)
-      .isEqualTo(listOf(tempDir.toUri().resolve("package://example.com/foo@1.2.3#/bar.pkl")))
-  }
-
   val projectWithAllEvaluatorSettings =
     """
     amends "pkl:Project"
@@ -246,7 +135,9 @@ class CliCommandTest {
   @DisabledOnJre(JRE.JAVA_22, JRE.JAVA_23, JRE.JAVA_24)
   fun `test that --omit-project-settings actually omits project settings`(@TempDir tempDir: Path) {
     val project = tempDir.resolve("PklProject").writeString(projectWithAllEvaluatorSettings)
-    cmd.parse(arrayOf("--working-dir=$tempDir", "--omit-project-settings"))
+    cmd.parse(
+      arrayOf("--working-dir=$tempDir", "--omit-project-settings", "--settings=pkl:settings")
+    )
     val opts =
       cmd.baseOptions.baseOptions(listOf(project.toUri()), cmd.projectOptions, testMode = true)
     val cliTest = CliTest(opts)
@@ -256,7 +147,7 @@ class CliCommandTest {
     assertThat(cliTest.myRootDir).isNull()
     assertThat(builder.environmentVariables).isEqualTo(System.getenv())
     assertThat(builder.externalProperties).isEmpty()
-    assertThat(builder.moduleCacheDir).isEqualTo(IoUtils.getDefaultModuleCacheDir())
+    assertThat(builder.moduleCacheDir).isEqualTo(IoUtils.getSystemModuleCacheDir())
     assertThat(cliTest.myModulePath).isEmpty()
     assertThat(builder.color).isFalse
     assertThat(cliTest.myProxyAddress).isNull()
@@ -283,5 +174,60 @@ class CliCommandTest {
           .overridingErrorMessage("project evaluator settings returned null for ${it.name}")
           .isNotNull
       }
+  }
+
+  @Test
+  fun `--external-module-reader blows away PklProject externalModuleReaders`(
+    @TempDir tempDir: Path
+  ) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        // language=pkl
+        """
+        amends "pkl:Project"
+
+        evaluatorSettings {
+          externalModuleReaders {
+            ["foo"] {
+              executable = "foo"
+            }
+          }
+        }
+        """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--external-module-reader", "bar=bar"))
+    val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myExternalModuleReaders)
+      .isEqualTo(mapOf("bar" to PklEvaluatorSettings.ExternalReader("bar", listOf(), null)))
+  }
+
+  @Test
+  fun `--cache-dir is used when loading the project`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("cache").also(PackageServer::populateCacheDir)
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        // language=pkl
+        """
+        amends "pkl:Project"
+
+        import "package://localhost:0/fruit@1.0.5#/catalog/apple.pkl"
+
+        evaluatorSettings {
+          externalProperties {
+            ["fruit"] = apple.name
+          }
+        }
+        """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir", "--cache-dir=$cacheDir"))
+    val opts = cmd.baseOptions.baseOptions(emptyList(), cmd.projectOptions, testMode = true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myProjectEvaluatorSettings!!.externalProperties)
+      .containsEntry("fruit", "Apple")
   }
 }

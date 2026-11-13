@@ -22,9 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.packages.PackageLoadError;
@@ -36,7 +37,6 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmImportAnalyzer;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 /** Utility library for static analysis of Pkl programs. */
 public class Analyzer {
@@ -79,10 +79,7 @@ public class Analyzer {
       context.enter();
       var vmContext = VmContext.get(null);
       return VmImportAnalyzer.analyze(sources, vmContext);
-    } catch (SecurityManagerException
-        | IOException
-        | PackageLoadError
-        | HttpClientInitException e) {
+    } catch (SecurityManagerException | IOException | PackageLoadError | HttpClientException e) {
       throw new PklException(e.getMessage(), e);
     } catch (PklException err) {
       throw err;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.cli
 
 import org.pkl.commons.cli.CliBaseOptions
+import org.pkl.core.ProfilerOptions
 
 /** Configuration options for [CliEvaluator]. */
 data class CliEvaluatorOptions(
@@ -51,7 +52,6 @@ data class CliEvaluatorOptions(
    * - `"pcf"` (default)
    * - `"plist"`
    * - `"properties"`
-   * - `"textproto"`
    * - `"xml"`
    * - `"yaml"`
    */
@@ -77,6 +77,13 @@ data class CliEvaluatorOptions(
    * If unset, the module's `output.bytes` property is evaluated.
    */
   val expression: String? = null,
+
+  /**
+   * CPU/Memory profiling options.
+   *
+   * WARN: This is an internal option only. Profiling is currently only supported via CLI flags.
+   */
+  val profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
 ) {
 
   companion object {

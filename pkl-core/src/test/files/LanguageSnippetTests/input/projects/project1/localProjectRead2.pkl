@@ -1,0 +1,3 @@
+res1 = read*("@project2/../*").keys
+res2 = read*("@project2/../../*").keys
+res3 = read("@project2/../../").text

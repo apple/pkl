@@ -1,0 +1,21 @@
+res1 = 1
+res2 {
+  new {
+    "hello"
+  }
+  new {
+    ["hello"] = "world"
+  }
+  123
+  false
+}
+res4 {
+  new {
+    "one"
+    "three"
+  }
+  new {
+    "two"
+    "three"
+  }
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
@@ -36,7 +37,6 @@ import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsObject;
@@ -135,6 +135,7 @@ public final class ProjectDeps {
   }
 
   /** Given a declared dependency, return the resolved dependency. */
+  @SuppressWarnings("DataFlowIssue") // incorrect analysis
   public @Nullable Dependency get(CanonicalPackageUri canonicalPackageUri) {
     return resolvedDependencies.get(canonicalPackageUri);
   }
@@ -150,7 +151,7 @@ public final class ProjectDeps {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

@@ -61,60 +61,67 @@ fun Project.configurePklPomMetadata() {
   }
 }
 
-/** Configures POM validation task to check for unresolved versions and snapshots in releases. */
-fun Project.configurePomValidation() {
-  val validatePom by tasks.registering {
-    if (tasks.findByName("generatePomFileForLibraryPublication") == null) {
-      return@registering
-    }
-    val generatePomFileForLibraryPublication by tasks.existing(GenerateMavenPom::class)
-    val outputFile =
-      layout.buildDirectory.file("validatePom") // dummy output to satisfy up-to-date check
+/**
+ * Configures POM validation for [publicationName] to check for unresolved versions and snapshots in
+ * releases.
+ */
+fun Project.configurePomValidation(publicationName: String = "library") {
+  val generatePomTaskName =
+    "generatePomFileFor${publicationName.replaceFirstChar { it.uppercase() }}Publication"
+  val generatePomTasks =
+    tasks.withType<GenerateMavenPom>().matching { it.name == generatePomTaskName }
+  val pomFiles = providers.provider { generatePomTasks.map { it.destination } }
 
-    dependsOn(generatePomFileForLibraryPublication)
-    inputs.file(generatePomFileForLibraryPublication.get().destination)
-    outputs.file(outputFile)
+  val validatePom =
+    tasks.register("validatePom") {
+      val outputFile =
+        layout.buildDirectory.file("validatePom") // dummy output to satisfy up-to-date check
 
-    doLast {
-      outputFile.get().asFile.delete()
+      dependsOn(generatePomTasks)
+      inputs.files(pomFiles)
+      outputs.file(outputFile)
+      onlyIf { pomFiles.get().isNotEmpty() }
 
-      val pomFile = generatePomFileForLibraryPublication.get().destination
-      assert(pomFile.exists())
+      doLast {
+        outputFile.get().asFile.delete()
 
-      val text = pomFile.readText()
+        val pomFile = pomFiles.get().single()
+        assert(pomFile.exists())
 
-      run {
-        val unresolvedVersion = Regex("<version>.*[+,()\\[\\]].*</version>")
-        val matches = unresolvedVersion.findAll(text).toList()
-        if (matches.isNotEmpty()) {
-          throw org.gradle.api.GradleException(
-            """
+        val text = pomFile.readText()
+
+        run {
+          val unresolvedVersion = Regex("<version>.*[+,()\\[\\]].*</version>")
+          val matches = unresolvedVersion.findAll(text).toList()
+          if (matches.isNotEmpty()) {
+            throw org.gradle.api.GradleException(
+              """
         Found unresolved version selector(s) in generated POM:
         ${matches.joinToString("\n") { it.groupValues[0] }}
       """
-              .trimIndent()
-          )
+                .trimIndent()
+            )
+          }
         }
-      }
 
-      val buildInfo = project.extensions.getByType<BuildInfo>()
-      if (buildInfo.isReleaseBuild) {
-        val snapshotVersion = Regex("<version>.*-SNAPSHOT</version>")
-        val matches = snapshotVersion.findAll(text).toList()
-        if (matches.isNotEmpty()) {
-          throw org.gradle.api.GradleException(
-            """
+        val buildInfo = project.extensions.getByType<BuildInfo>()
+        if (buildInfo.isReleaseBuild) {
+          val snapshotVersion = Regex("<version>.*-SNAPSHOT</version>")
+          val matches = snapshotVersion.findAll(text).toList()
+          if (matches.isNotEmpty()) {
+            throw org.gradle.api.GradleException(
+              """
         Found snapshot version(s) in generated POM of Pkl release version:
         ${matches.joinToString("\n") { it.groupValues[0] }}
       """
-              .trimIndent()
-          )
+                .trimIndent()
+            )
+          }
         }
-      }
 
-      outputFile.get().asFile.writeText("OK")
+        outputFile.get().asFile.writeText("OK")
+      }
     }
-  }
 
   tasks.named("publish") { dependsOn(validatePom) }
 }

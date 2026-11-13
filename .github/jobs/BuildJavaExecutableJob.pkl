@@ -16,7 +16,6 @@ local command =
   }.join(" ")
 
 steps {
-  catalog.`actions/checkout@v6`
   new {
     name = "gradle build java executables"
     shell = "bash"
@@ -25,7 +24,7 @@ steps {
   (catalog.`actions/upload-artifact@v5`) {
     name = "Upload executable artifacts"
     with {
-      name = "executable-java"
+      name = "deploy-artifacts-java-executables"
       path = "*/build/executable/**/*"
     }
   }

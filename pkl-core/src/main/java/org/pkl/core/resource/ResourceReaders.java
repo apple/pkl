@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcess;
@@ -48,7 +49,6 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** Predefined resource readers for OS environment variables and external properties. */
 public final class ResourceReaders {
@@ -257,7 +257,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new FileResource();
 
     @Override
-    public Optional<Object> read(URI uri) throws IOException, URISyntaxException {
+    public Optional<Object> read(URI uri)
+        throws IOException, URISyntaxException, SecurityManagerException {
       IoUtils.validateFileUri(uri);
       // Use resolveSecurePath to get a symlink-free path verified under rootDir.
       var securityManager = VmContext.get(null).getSecurityManager();
@@ -307,7 +308,7 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class HttpResource extends UrlResource {
+  public static final class HttpResource extends UrlResource {
     static final ResourceReader INSTANCE = new HttpResource();
 
     @Override
@@ -326,7 +327,7 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class HttpsResource extends UrlResource {
+  public static final class HttpsResource extends UrlResource {
     static final ResourceReader INSTANCE = new HttpsResource();
 
     @Override
@@ -347,11 +348,16 @@ public final class ResourceReaders {
 
   private abstract static class UrlResource implements ResourceReader {
     @Override
-    public Optional<Object> read(URI uri) throws IOException, URISyntaxException {
+    public Optional<Object> read(URI uri)
+        throws IOException, URISyntaxException, SecurityManagerException {
       if (HttpUtils.isHttpUrl(uri)) {
-        var httpClient = VmContext.get(null).getHttpClient();
+        var vmContext = VmContext.get(null);
+        var securityManager = vmContext.getSecurityManager();
+        var httpClient = vmContext.getHttpClient();
         var request = HttpRequest.newBuilder(uri).build();
-        var response = httpClient.send(request, BodyHandlers.ofByteArray());
+        var response =
+            httpClient.send(
+                request, BodyHandlers.ofByteArray(), securityManager::checkReadResource);
         if (response.statusCode() == 404) return Optional.empty();
         HttpUtils.checkHasStatusCode200(response);
         return Optional.of(new Resource(uri, response.body()));
@@ -654,7 +660,7 @@ public final class ResourceReaders {
     private final String scheme;
     private final ExternalReaderProcess process;
     private final long evaluatorId;
-    private ExternalResolver underlying;
+    private @Nullable ExternalResolver underlying;
 
     public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;

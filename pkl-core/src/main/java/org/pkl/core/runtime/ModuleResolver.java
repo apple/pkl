@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.IoUtils;
 
 public final class ModuleResolver {
   private final Collection<ModuleKeyFactory> factories;
@@ -78,6 +79,9 @@ public final class ModuleResolver {
       Optional<ModuleKey> key;
       try {
         key = factory.create(normalized);
+        if (key.isPresent()) {
+          key = Optional.of(renormalize(factory, normalized, key.get()));
+        }
       } catch (URISyntaxException e) {
         throw new VmExceptionBuilder()
             .withOptionalLocation(importNode)
@@ -104,5 +108,21 @@ public final class ModuleResolver {
         .evalError("noModuleLoaderRegistered", moduleUri)
         .withOptionalLocation(importNode)
         .build();
+  }
+
+  /**
+   * Ensures that the URI of the module key is normalized according to the key's own URI semantics
+   * (which {@link URI#normalize()} knows nothing about), so that security checks and loading
+   * observe the same URI.
+   *
+   * <p>Module keys are immutable, so a new one is created if {@code uri} changes.
+   */
+  private ModuleKey renormalize(ModuleKeyFactory factory, URI uri, ModuleKey key)
+      throws URISyntaxException, IOException, ExternalReaderProcessException {
+    var renormalized = IoUtils.normalizeUri(uri, key.hasHierarchicalUris());
+    if (renormalized.equals(uri)) return key;
+    return factory
+        .create(renormalized)
+        .orElseThrow(() -> new IllegalStateException("failed to renormalize a module URI"));
   }
 }

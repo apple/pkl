@@ -26,8 +26,17 @@ internal class ClassPageGenerator(
   clazz: PClass,
   pageScope: ClassScope,
   isTestMode: Boolean,
+  isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
-) : ModuleOrClassPageGenerator<ClassScope>(docsiteInfo, clazz, pageScope, isTestMode, consoleOut) {
+) :
+  ModuleOrClassPageGenerator<ClassScope>(
+    docsiteInfo,
+    clazz,
+    pageScope,
+    isTestMode,
+    isSinglePackageSite,
+    consoleOut,
+  ) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 

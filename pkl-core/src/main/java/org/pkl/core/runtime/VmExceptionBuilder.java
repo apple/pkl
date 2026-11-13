@@ -22,11 +22,13 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 /**
  * Error message guidelines:
@@ -56,7 +58,7 @@ public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
   private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
-  private VmException wrappedException;
+  private @Nullable VmException wrappedException;
   private @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
   public static class MultilineValue {
@@ -94,11 +96,12 @@ public final class VmExceptionBuilder {
   private @Nullable Throwable cause;
   private VmException.Kind kind = VmException.Kind.EVAL_ERROR;
   private boolean isExternalMessage;
-  private Object[] messageArguments = new Object[0];
+  private @Nullable Object[] messageArguments = new Object[0];
   private final List<VmException.ProgramValue> programValues = new ArrayList<>();
   private @Nullable Node location;
   private @Nullable SourceSection sourceSection;
   private @Nullable String memberName;
+  private List<StackFrame> leadingStackFrames = List.of();
 
   public VmExceptionBuilder typeMismatch(Object value, VmClass expectedType) {
     if (value instanceof VmNull) {
@@ -136,7 +139,8 @@ public final class VmExceptionBuilder {
 
   public VmExceptionBuilder cannotFindMember(VmObjectLike receiver, Object memberKey) {
     if (memberKey instanceof Identifier identifier) {
-      return cannotFindProperty(receiver, identifier, true, false);
+      return cannotFindProperty(
+          receiver, receiver, identifier, true, MemberLookupMode.EXPLICIT_RECEIVER, null);
     }
     if (memberKey instanceof String string) {
       var candidates = KeyLookupSuggestions.forObject(receiver, string);
@@ -152,19 +156,21 @@ public final class VmExceptionBuilder {
 
   public VmExceptionBuilder cannotFindProperty(
       VmObjectLike receiver,
+      VmObjectLike owner,
       Identifier propertyName,
       // true -> property read, false -> property definition
       boolean isRead,
-      boolean isImplicitReceiver) {
+      MemberLookupMode memberLookupMode,
+      @Nullable PklNode receiverNode) {
 
     var memberKinds = isRead ? EnumSet.allOf(Kind.class) : EnumSet.of(Kind.PROPERTY);
 
     var candidates =
-        new MemberLookupSuggestions(receiver, propertyName, -1, memberKinds)
-            .find(isImplicitReceiver);
+        new MemberLookupSuggestions(receiver, owner, propertyName, -1, memberKinds)
+            .find(memberLookupMode, receiverNode);
 
     if (candidates.isEmpty()) {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         // probably wouldn't be useful to list all members in scope (includes all pkl.base members)
         evalError("cannotFindPropertyInScope", propertyName);
       } else if (receiver.isModuleObject()) {
@@ -182,7 +188,7 @@ public final class VmExceptionBuilder {
             propertyNames.isEmpty() ? "(none)" : new MultilineValue(propertyNames));
       }
     } else {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         evalError(
             "cannotFindPropertyInScopeListCandidates",
             propertyName,
@@ -207,14 +213,20 @@ public final class VmExceptionBuilder {
 
   // `foo.bar()`
   public VmExceptionBuilder cannotFindMethod(
-      VmObjectLike receiver, Identifier methodName, int arity, boolean isImplicitReceiver) {
+      VmObjectLike receiver,
+      VmObjectLike owner,
+      Identifier methodName,
+      int arity,
+      MemberLookupMode memberLookupMode,
+      boolean hasTypeArgs,
+      @Nullable PklNode receiverNode) {
 
     var candidates =
-        new MemberLookupSuggestions(receiver, methodName, arity, EnumSet.allOf(Kind.class))
-            .find(isImplicitReceiver);
+        new MemberLookupSuggestions(receiver, owner, methodName, arity, EnumSet.allOf(Kind.class))
+            .find(memberLookupMode, receiverNode);
 
     if (candidates.isEmpty()) {
-      if (isImplicitReceiver) {
+      if (memberLookupMode.isImplicitReceiver()) {
         // probably not useful to list all members in scope (includes all pkl.base members)
         evalError("cannotFindMethodInScope", methodName);
       } else if (receiver.isModuleObject()) {
@@ -231,7 +243,15 @@ public final class VmExceptionBuilder {
             new MultilineValue(collectMethodNames(receiver.getVmClass())));
       }
     } else {
-      if (isImplicitReceiver) {
+      var exactPropertyMatch =
+          candidates.stream()
+              .filter((it) -> it.nameSimilarity() == 1 && it.kind() == Kind.PROPERTY)
+              .findFirst();
+      if (hasTypeArgs && exactPropertyMatch.isPresent()) {
+        var candidate = exactPropertyMatch.get();
+        evalError(
+            "cannotFindMethodMaybeComparisonExpr", methodName, candidate.memberNameWithReceiver());
+      } else if (memberLookupMode.isImplicitReceiver()) {
         evalError(
             "cannotFindMethodInScopeListCandidates", methodName, new MultilineValue(candidates));
       } else if (receiver.isModuleObject()) {
@@ -267,12 +287,12 @@ public final class VmExceptionBuilder {
   }
 
   // not internationalized
-  public VmExceptionBuilder bug(String message, Object... args) {
+  public VmExceptionBuilder bug(@Nullable String message, @Nullable Object... args) {
     kind = VmException.Kind.BUG;
     return withMessage(message, args);
   }
 
-  private VmExceptionBuilder withMessage(String message, Object... args) {
+  private VmExceptionBuilder withMessage(@Nullable String message, @Nullable Object... args) {
     this.message = message;
     messageArguments = args;
     isExternalMessage = false;
@@ -280,7 +300,7 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  private VmExceptionBuilder withExternalMessage(String message, Object... args) {
+  private VmExceptionBuilder withExternalMessage(String message, @Nullable Object... args) {
     this.message = message;
     messageArguments = args;
     isExternalMessage = true;
@@ -289,11 +309,11 @@ public final class VmExceptionBuilder {
   }
 
   // slow path, hence no need to cache anything (also resource bundles are cached by default)
-  public VmExceptionBuilder evalError(String messageKey, Object... args) {
+  public VmExceptionBuilder evalError(String messageKey, @Nullable Object... args) {
     return withExternalMessage(messageKey, args);
   }
 
-  public VmExceptionBuilder adhocEvalError(String message, Object... args) {
+  public VmExceptionBuilder adhocEvalError(@Nullable String message, @Nullable Object... args) {
     return withMessage(message, args);
   }
 
@@ -329,12 +349,8 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  public VmExceptionBuilder withCause(Throwable cause) {
+  public VmExceptionBuilder withCause(@Nullable Throwable cause) {
     this.cause = cause;
-    if (this.message == null) {
-      var causeMessage = cause.getMessage();
-      this.message = causeMessage == null ? "None (cause has no message)" : causeMessage;
-    }
     return this;
   }
 
@@ -363,12 +379,26 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  /**
+   * Frames to show ahead of the captured stack trace (see {@link
+   * VmException#getLeadingStackFrames()}).
+   */
+  public VmExceptionBuilder withLeadingStackFrames(List<StackFrame> leadingStackFrames) {
+    this.leadingStackFrames = leadingStackFrames;
+    return this;
+  }
+
   public VmException build() {
-    if (message == null && messageBuilder == null) {
-      throw new IllegalStateException("No message set.");
-    }
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
+    }
+
+    if (message == null && messageBuilder == null) {
+      if (cause == null) {
+        throw new IllegalStateException("No message set.");
+      }
+      var causeMessage = cause.getMessage();
+      message = causeMessage == null ? "None (cause has no message)" : causeMessage;
     }
 
     var effectiveInsertedStackFrames =
@@ -386,7 +416,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
@@ -400,7 +431,8 @@ public final class VmExceptionBuilder {
               memberName,
               hintBuilder,
               receiver,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case BUG ->
           new VmBugException(
               message,
@@ -413,21 +445,25 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
-      case WRAPPED ->
-          new VmWrappedEvalException(
-              message,
-              cause,
-              isExternalMessage,
-              messageArguments,
-              messageBuilder,
-              programValues,
-              location,
-              sourceSection,
-              memberName,
-              hintBuilder,
               effectiveInsertedStackFrames,
-              wrappedException);
+              leadingStackFrames);
+      case WRAPPED -> {
+        assert wrappedException != null;
+        yield new VmWrappedEvalException(
+            message,
+            cause,
+            isExternalMessage,
+            messageArguments,
+            messageBuilder,
+            programValues,
+            location,
+            sourceSection,
+            memberName,
+            hintBuilder,
+            effectiveInsertedStackFrames,
+            leadingStackFrames,
+            wrappedException);
+      }
     };
   }
 

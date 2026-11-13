@@ -1,0 +1,29 @@
+// `qux` has ambiguous locality; don't know if it should be local read or not
+
+hidden res1 {
+  cond = true
+  prop {
+    when (cond) {
+      local qux = "then branch"
+    } else {
+      qux = "else branch"
+    }
+    theBranch = qux
+  }
+}
+
+res2 = (res1) {
+  cond = false
+}
+
+res3 {
+  cond = true
+  prop {
+    when (cond) {
+      local qux = "then branch"
+    } else {
+      qux = cond
+    }
+    theBranch = qux
+  }
+}

@@ -96,6 +96,11 @@ examples {
       three = 3
     }
   }
+  ["toDynamic() round-trip"] {
+    Map(-1, 2)
+    Map(0, 2)
+    Map(1, 2)
+  }
   ["toMapping()"] {
     new {}
     new {

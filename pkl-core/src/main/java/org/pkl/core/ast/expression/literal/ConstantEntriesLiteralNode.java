@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,18 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 /**
  * Object literal that contains entries (and possibly properties) but not elements. Additionally,
  * all entry keys are constants. Example: `new foo { ["one"] = 1 }`
  */
 // IDEA: don't materialize frames if all members have constant values
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLiteralNode {
   public ConstantEntriesLiteralNode(
       SourceSection sourceSection,
@@ -73,9 +73,24 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
     return new VmMapping(frame.materialize(), parent, members);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isMappingClass()", "checkIsValidMappingAmendment()"})
+  protected Object evalNullWithMappingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalMapping(frame, (VmMapping) defaultValue);
+  }
+
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(guards = "getClass(defaultValue).isDynamicClass()")
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalDynamic(frame, (VmDynamic) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
@@ -84,10 +99,12 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
     return new VmListing(frame.materialize(), parent, members, parent.getLength());
   }
 
-  @Specialization
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkIsValidListingAmendment()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListing(frame, (VmListing) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidFunctionAmendment(parent)")
@@ -98,6 +115,18 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(guards = {"parent == getMappingClass()", "checkIsValidMappingAmendment()"})
@@ -119,7 +148,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
         "checkIsValidListingAmendment()",
         "checkMaxListingMemberIndex(0)"
       })
-  protected void evalListingClass(@SuppressWarnings("unused") VmClass parent) {
+  protected Object evalListingClass(@SuppressWarnings("unused") VmClass parent) {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().unreachableCode().build();
   }
@@ -127,6 +156,11 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
   @Fallback
   @TruffleBoundary
   protected void fallback(Object parent) {
-    elementsEntriesFallback(parent, findFirstNonProperty(members), false);
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
+    elementsEntriesFallback(value, findFirstNonProperty(members), false);
   }
 }

@@ -1,0 +1,7 @@
+local foo = "hello"
+
+bar {
+  new Mixin {
+    [foo] = "world"
+  }.apply(new Dynamic {})
+}

@@ -21,13 +21,14 @@ plugins {
   id("pklJavaLibrary")
   //  id("pklPublishLibrary")
   id("com.gradleup.shadow")
+  id("pklJvmSourceBundle")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val javaExecutable by
-  tasks.registering(ExecutableJar::class) {
+val javaExecutable =
+  tasks.register<ExecutableJar>("javaExecutable") {
     group = "build"
     dependsOn(tasks.jar)
     inJar = tasks.shadowJar.flatMap { it.archiveFile }
@@ -77,7 +78,8 @@ fun Task.setupTestStartJavaExecutable(launcher: Provider<JavaLauncher>? = null) 
   }
 }
 
-val testStartJavaExecutable by tasks.registering { setupTestStartJavaExecutable() }
+val testStartJavaExecutable =
+  tasks.register("testStartJavaExecutable") { setupTestStartJavaExecutable() }
 
 // Setup `testStartJavaExecutable` tasks for multi-JDK testing.
 val testStartJavaExecutableOnOtherJdks =

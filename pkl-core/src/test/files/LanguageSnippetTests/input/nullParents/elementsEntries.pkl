@@ -1,0 +1,45 @@
+// Covers ElementsEntriesLiteralNode's specializations for amending a `VmNull` whose default value
+// is each of the underlying parent types it supports. Element and entry keys are mixed, and at
+// least one key is non-constant (via `id()`), matching this node's shape.
+import "pkl:test"
+
+function id(x) = x
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { "a" })
+
+res1 = (dynamic) {
+  [id(0)] = "updated a"
+  "b"
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "a"; "b" })
+res2 = (listing) {
+  "c"
+  [id(0)] = "updated a"
+}
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Listing { "a" })
+local amendedFun = (fun) {
+  "b"
+  [id(0)] = "updated a"
+}
+res3 = amendedFun.apply()
+
+// error: mapping cannot have an element
+res4 = test.catch(() -> (Null(new Mapping { ["a"] = 1 })) { "b"; [id("c")] = 2 })
+
+// error: listing entry index out of range
+res5 = test.catch(() -> (Null(new Listing { "a" })) { "b"; [id(5)] = "value" })
+
+// error: listing cannot have a property (other than `default`)
+res6 = test.catch(() -> (Null(new Listing { "a" })) { "b"; [id(0)] = "updated a"; foo = "bar" })
+
+// error: function amendment with wrong parameter count
+local twoArgFun = (x, y) -> new Listing {}
+res7 = test.catch(() -> (Null(twoArgFun)) { x -> "b"; [id(0)] = "updated a" })
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res8 = test.catch(() -> (Null(42)) { "b"; [id(0)] = "updated a" })

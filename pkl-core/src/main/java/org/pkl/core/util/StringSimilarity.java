@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 package org.pkl.core.util;
 
+import com.google.errorprone.annotations.Immutable;
 import java.util.Arrays;
-import javax.annotation.concurrent.Immutable;
 
 /**
  * The Jaro–Winkler distance metric is designed and best suited for short strings such as person
  * names, and to detect typos; it is (roughly) a variation of Damerau-Levenshtein, where the
- * substitution of 2 close characters is considered less important then the substitution of 2
+ * substitution of 2 close characters is considered less important than the substitution of 2
  * characters that a far from each other. Jaro-Winkler was developed in the area of record linkage
  * (duplicate detection) (Winkler, 1990). It returns a value in the interval [0.0, 1.0]. The
  * distance is computed as 1 - Jaro-Winkler similarity.
@@ -54,7 +54,7 @@ public final class StringSimilarity {
    *
    * @return the current value of the threshold
    */
-  public final double getThreshold() {
+  public double getThreshold() {
     return threshold;
   }
 
@@ -65,7 +65,7 @@ public final class StringSimilarity {
    * @param s2 The second string to compare.
    * @return The Jaro-Winkler similarity in the range [0, 1]
    */
-  public final double similarity(final String s1, final String s2) {
+  public double similarity(final String s1, final String s2) {
     if (s1.equals(s2)) {
       return 1;
     }
@@ -90,7 +90,7 @@ public final class StringSimilarity {
    * @param s2 The second string to compare.
    * @return 1 - similarity.
    */
-  public final double distance(final String s1, final String s2) {
+  public double distance(final String s1, final String s2) {
     return 1.0 - similarity(s1, s2);
   }
 

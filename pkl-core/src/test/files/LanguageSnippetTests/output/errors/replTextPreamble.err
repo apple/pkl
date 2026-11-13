@@ -1,0 +1,14 @@
+–– Pkl Error ––
+uh oh
+
+x | `THE REPL TEXT EXPR` = throw("uh oh")
+                           ^^^^^^^^^^^^^^
+at replTextPreamble#`THE REPL TEXT EXPR` (file:///$snippetsDir/input/errors/replTextPreamble.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

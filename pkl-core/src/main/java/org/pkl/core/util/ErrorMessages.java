@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,16 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.stream.*;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.runtime.VmValue;
+import org.pkl.core.runtime.VmValueRenderer;
 
 public final class ErrorMessages {
   private ErrorMessages() {}
 
-  public static String create(String messageName, Object... args) {
+  private static final VmValueRenderer renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
+
+  public static String create(String messageName, @Nullable Object... args) {
     var locale = Locale.getDefault();
     String errorMessage =
         ResourceBundle.getBundle("org.pkl.core.errorMessages", locale).getString(messageName);
@@ -32,10 +37,21 @@ public final class ErrorMessages {
     if (args.length == 0) return errorMessage;
 
     var formatter = new MessageFormat(errorMessage, locale);
-    return formatter.format(args);
+    // TODO: we render VmValues here with VmValueRenderer, but that's not enough to properly
+    //       render all kinds of values, like Pkl Strings, for example
+    @Nullable Object[] actualArgs = new @Nullable Object[args.length];
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      if (arg instanceof VmValue) {
+        actualArgs[i] = renderer.render(arg);
+      } else {
+        actualArgs[i] = arg;
+      }
+    }
+    return formatter.format(actualArgs);
   }
 
-  public static String createIndented(String messageName, String indent, Object... args) {
+  public static String createIndented(String messageName, String indent, @Nullable Object... args) {
     return create(messageName, args)
         .lines()
         .map((msg) -> indent + msg)

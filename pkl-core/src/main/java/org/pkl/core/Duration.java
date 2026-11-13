@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import static org.pkl.core.DurationUnit.*;
 
 import java.io.Serial;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.DurationUtils;
-import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#Duration} value. */
 public final class Duration implements Value {
@@ -222,7 +222,8 @@ public final class Duration implements Value {
 
   @Override
   public int hashCode() {
-    return Double.hashCode(convertValueTo(DurationUnit.NANOS));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(convertValueTo(DurationUnit.NANOS) + 0.0);
   }
 
   @Override

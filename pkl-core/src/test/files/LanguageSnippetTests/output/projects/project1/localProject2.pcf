@@ -1,0 +1,16 @@
+res1 {
+  bird {
+    name = "Penguin"
+    favoriteFruit {
+      name = "Ice Fruit"
+    }
+  }
+}
+res2 {
+  bird {
+    name = "Penguin"
+    favoriteFruit {
+      name = "Ice Fruit"
+    }
+  }
+}

@@ -22,6 +22,7 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
+  id("pklNativeSourceBundle")
   id("pklPublishLibrary")
   id("com.gradleup.shadow")
 }
@@ -30,54 +31,66 @@ plugins {
 val executableSpec = project.extensions.getByType<ExecutableSpec>()
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val stagedMacAmd64Executable: Configuration by configurations.creating
-val stagedMacAarch64Executable: Configuration by configurations.creating
-val stagedLinuxAmd64Executable: Configuration by configurations.creating
-val stagedLinuxAarch64Executable: Configuration by configurations.creating
-val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
-val stagedWindowsAmd64Executable: Configuration by configurations.creating
+// musl executables are linked with `--static`, so musl and zlib become part of the executable
+extensions.getByType<SourceBundleSpec>().staticMuslLibc = true
 
-val nativeImageClasspath by configurations.creating {
-  extendsFrom(configurations.runtimeClasspath.get())
-  // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
-  // (comes from artifact `mordant-jvm-graal-ffi`).
-  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
-}
+val stagedMacAarch64Executable: Configuration = configurations.create("stagedMacAarch64Executable")
+val stagedLinuxAmd64Executable: Configuration = configurations.create("stagedLinuxAmd64Executable")
+val stagedLinuxAarch64Executable: Configuration =
+  configurations.create("stagedLinuxAarch64Executable")
+val stagedAlpineLinuxAmd64Executable: Configuration =
+  configurations.create("stagedAlpineLinuxAmd64Executable")
+val stagedWindowsAmd64Executable: Configuration =
+  configurations.create("stagedWindowsAmd64Executable")
+
+val nativeImageClasspath =
+  configurations.create("nativeImageClasspath") {
+    extendsFrom(configurations.runtimeClasspath.get())
+    // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
+    // (comes from artifact `mordant-jvm-graal-ffi`).
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
+  }
 
 val libs = the<LibrariesForLibs>()
 
 dependencies {
-  fun executableFile(suffix: String) =
+  fun executableFile(target: Target) =
     files(
       layout.buildDirectory.dir("executable").map { dir ->
-        dir.file(executableSpec.name.map { "$it-$suffix" })
+        dir.file(
+          executableSpec.name.map { name ->
+            if (target.os.isWindows) "$name-${target.targetName}.exe"
+            else "$name-${target.targetName}"
+          }
+        )
       }
     )
+
   nativeImageClasspath(libs.truffleRuntime)
   nativeImageClasspath(libs.graalSdk)
 
-  stagedMacAarch64Executable(executableFile("macos-aarch64"))
-  stagedMacAmd64Executable(executableFile("macos-amd64"))
-  stagedLinuxAmd64Executable(executableFile("linux-amd64"))
-  stagedLinuxAarch64Executable(executableFile("linux-aarch64"))
-  stagedAlpineLinuxAmd64Executable(executableFile("alpine-linux-amd64"))
-  stagedWindowsAmd64Executable(executableFile("windows-amd64.exe"))
+  stagedMacAarch64Executable(executableFile(Target.MacosAarch64))
+  stagedLinuxAarch64Executable(executableFile(Target.LinuxAarch64))
+  stagedLinuxAmd64Executable(executableFile(Target.LinuxAmd64))
+  stagedAlpineLinuxAmd64Executable(executableFile(Target.AlpineLinuxAmd64))
+  stagedWindowsAmd64Executable(executableFile(Target.WindowsAmd64))
 }
 
-private fun NativeImageBuild.amd64() {
-  arch = Architecture.AMD64
-  dependsOn(":installGraalVmAmd64")
-}
+private fun NativeImageBuild.configure(target: Target) {
+  arch = target.arch
 
-private fun NativeImageBuild.aarch64() {
-  arch = Architecture.AARCH64
-  dependsOn(":installGraalVmAarch64")
-}
+  outputName = executableSpec.name.map { "$it-${target.targetName}" }
+  mainClass = executableSpec.mainClass
 
-private fun NativeImageBuild.setClasspath() {
+  if (target.arch == Target.Arch.AARCH64) {
+    dependsOn(":installGraalVmAarch64")
+  } else {
+    dependsOn(":installGraalVmAmd64")
+  }
+
   classpath.from(sourceSets.main.map { it.output })
   classpath.from(
     project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
@@ -85,117 +98,93 @@ private fun NativeImageBuild.setClasspath() {
   classpath.from(nativeImageClasspath)
 }
 
-val macExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-macos-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-  }
+val macExecutableAarch64 =
+  tasks.register<NativeImageBuild>("macExecutableAarch64") { configure(Target.MacosAarch64) }
 
-val macExecutableAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-macos-aarch64" }
-    mainClass = executableSpec.mainClass
-    aarch64()
-    setClasspath()
-  }
+val linuxExecutableAmd64 =
+  tasks.register<NativeImageBuild>("linuxExecutableAmd64") { configure(Target.LinuxAmd64) }
 
-val linuxExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-linux-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-  }
-
-val linuxExecutableAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-linux-aarch64" }
-    mainClass = executableSpec.mainClass
-    aarch64()
-    setClasspath()
+val linuxExecutableAarch64 =
+  tasks.register<NativeImageBuild>("linuxExecutableAarch64") {
+    configure(Target.LinuxAarch64)
     // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
     // (e.g. Raspberry Pi 5, Asahi Linux)
     extraNativeImageArgs.add("-H:PageSize=65536")
   }
 
-val alpineExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-    extraNativeImageArgs.addAll(listOf("--static", "--libc=musl"))
+val alpineExecutableAmd64 =
+  tasks.register<NativeImageBuild>("alpineExecutableAmd64") {
+    configure(Target.AlpineLinuxAmd64)
+    extraNativeImageArgs.addAll("--static", "--libc=musl")
   }
 
-val windowsExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    imageName = executableSpec.name.map { "$it-windows-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
+val windowsExecutableAmd64 =
+  tasks.register<NativeImageBuild>("windowsExecutableAmd64") {
+    configure(Target.WindowsAmd64)
+    extraNativeImageArgs.add("-Dfile.encoding=UTF-8")
   }
 
-val assembleNative by tasks.existing
+val assembleNative = tasks.named("assembleNative")
 
-val testStartNativeExecutable by tasks.registering {
-  dependsOn(assembleNative)
+val testStartNativeExecutable =
+  tasks.register("testStartNativeExecutable") {
+    dependsOn(assembleNative)
 
-  // dummy file for up-to-date checking
-  val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
-  outputs.file(outputFile)
+    // dummy file for up-to-date checking
+    val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
+    outputs.file(outputFile)
 
-  val execOutput = providers.exec {
-    commandLine(assembleNative.get().outputs.files.singleFile, "--version")
-  }
-
-  doLast {
-    val outputText = execOutput.standardOutput.asText.get()
-    if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
-      throw GradleException(
-        "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
-      )
+    val execOutput = providers.exec {
+      commandLine(assembleNative.get().outputs.files.singleFile, "--version")
     }
-    outputFile.get().asFile.toPath().apply {
-      try {
-        parent.createDirectories()
-      } catch (_: java.nio.file.FileAlreadyExistsException) {}
-      writeText("OK")
+
+    doLast {
+      val outputText = execOutput.standardOutput.asText.get()
+      if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
+        throw GradleException(
+          "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
+        )
+      }
+      outputFile.get().asFile.toPath().apply {
+        try {
+          parent.createDirectories()
+        } catch (_: java.nio.file.FileAlreadyExistsException) {}
+        writeText("OK")
+      }
     }
   }
-}
 
 val requiredGlibcVersion: Version = Version.parse("2.17")
 
-val checkGlibc by tasks.registering {
-  enabled = buildInfo.os.isLinux && !buildInfo.musl
-  dependsOn(assembleNative)
-  doLast {
-    val exec = providers.exec {
-      commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
-    }
-    val output = exec.standardOutput.asText.get()
-    val minimumGlibcVersion =
-      output
-        .split("\n")
-        .mapNotNull { line ->
-          val match = Regex("GLIBC_([.0-9]*)").find(line)
-          match?.groups[1]?.let { Version.parse(it.value) }
-        }
-        .maxOrNull()
-    if (minimumGlibcVersion == null) {
-      throw GradleException(
-        "Could not determine glibc version from executable. objdump output: $output"
-      )
-    }
-    if (minimumGlibcVersion > requiredGlibcVersion) {
-      throw GradleException(
-        "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
-      )
+val checkGlibc =
+  tasks.register("checkGlibc") {
+    enabled = buildInfo.os.isLinux && !buildInfo.musl
+    dependsOn(assembleNative)
+    doLast {
+      val exec = providers.exec {
+        commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
+      }
+      val output = exec.standardOutput.asText.get()
+      val minimumGlibcVersion =
+        output
+          .split("\n")
+          .mapNotNull { line ->
+            val match = Regex("GLIBC_([.0-9]*)").find(line)
+            match?.groups[1]?.let { Version.parse(it.value) }
+          }
+          .maxOrNull()
+      if (minimumGlibcVersion == null) {
+        throw GradleException(
+          "Could not determine glibc version from executable. objdump output: $output"
+        )
+      }
+      if (minimumGlibcVersion > requiredGlibcVersion) {
+        throw GradleException(
+          "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
+        )
+      }
     }
   }
-}
 
 // Expose underlying task's outputs
 private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
@@ -203,124 +192,68 @@ private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
   outputs.files(other)
 }
 
-val testNative by tasks.existing { dependsOn(testStartNativeExecutable, checkGlibc) }
+val testNative = tasks.named("testNative") { dependsOn(testStartNativeExecutable, checkGlibc) }
 
-val assembleNativeMacOsAarch64 by tasks.existing { wraps(macExecutableAarch64) }
+val assembleNativeMacOsAarch64 =
+  tasks.named("assembleNativeMacOsAarch64") { wraps(macExecutableAarch64) }
 
-val assembleNativeMacOsAmd64 by tasks.existing { wraps(macExecutableAmd64) }
+val assembleNativeLinuxAarch64 =
+  tasks.named("assembleNativeLinuxAarch64") { wraps(linuxExecutableAarch64) }
 
-val assembleNativeLinuxAarch64 by tasks.existing { wraps(linuxExecutableAarch64) }
+val assembleNativeLinuxAmd64 =
+  tasks.named("assembleNativeLinuxAmd64") { wraps(linuxExecutableAmd64) }
 
-val assembleNativeLinuxAmd64 by tasks.existing { wraps(linuxExecutableAmd64) }
+val assembleNativeAlpineLinuxAmd64 =
+  tasks.named("assembleNativeAlpineLinuxAmd64") { wraps(alpineExecutableAmd64) }
 
-val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineExecutableAmd64) }
+val assembleNativeWindowsAmd64 =
+  tasks.named("assembleNativeWindowsAmd64") { wraps(windowsExecutableAmd64) }
 
-val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64) }
+private fun MavenPublication.configurePublication(target: Target, configuration: Configuration) {
+  artifactId = "${executableSpec.publicationName.get()}-${target.targetName}"
+  pom {
+    name = "${executableSpec.publicationName.get()}-${target.targetName}"
+    url = executableSpec.website
+    artifact(configuration.singleFile) {
+      classifier = null
+      extension = if (target.os.isWindows) "exe" else "bin"
+      builtBy(configuration)
+    }
+    description =
+      executableSpec.documentationName.map { name ->
+        buildString {
+          append("Native $name executable for ${target.os.displayName}/${target.arch}")
+          if (target.musl) {
+            append(" and statically linked to musl")
+          }
+          append(".")
+        }
+      }
+  }
+}
 
 publishing {
   publications {
     // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
     project.afterEvaluate {
-      create<MavenPublication>("macExecutableAmd64") {
-        artifactId = "${executableSpec.publicationName.get()}-macos-amd64"
-        artifact(stagedMacAmd64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedMacAmd64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-macos-amd64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for macOS/amd64."
-            }
-        }
-      }
-
       create<MavenPublication>("macExecutableAarch64") {
-        artifactId = "${executableSpec.publicationName.get()}-macos-aarch64"
-        artifact(stagedMacAarch64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedMacAarch64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-macos-aarch64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for macOS/aarch64."
-            }
-        }
+        configurePublication(Target.MacosAarch64, stagedMacAarch64Executable)
       }
 
       create<MavenPublication>("linuxExecutableAmd64") {
-        artifactId = "${executableSpec.publicationName.get()}-linux-amd64"
-        artifact(stagedLinuxAmd64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedLinuxAmd64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-linux-amd64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for linux/amd64."
-            }
-        }
+        configurePublication(Target.LinuxAmd64, stagedLinuxAmd64Executable)
       }
 
       create<MavenPublication>("linuxExecutableAarch64") {
-        artifactId = "${executableSpec.publicationName.get()}-linux-aarch64"
-        artifact(stagedLinuxAarch64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedLinuxAarch64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-linux-aarch64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for linux/aarch64."
-            }
-        }
+        configurePublication(Target.LinuxAarch64, stagedLinuxAarch64Executable)
       }
 
       create<MavenPublication>("alpineLinuxExecutableAmd64") {
-        artifactId = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
-        artifact(stagedAlpineLinuxAmd64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedAlpineLinuxAmd64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for linux/amd64 and statically linked to musl."
-            }
-        }
+        configurePublication(Target.AlpineLinuxAmd64, stagedAlpineLinuxAmd64Executable)
       }
 
       create<MavenPublication>("windowsExecutableAmd64") {
-        artifactId = "${executableSpec.publicationName.get()}-windows-amd64"
-        artifact(stagedWindowsAmd64Executable.singleFile) {
-          classifier = null
-          extension = "exe"
-          builtBy(stagedWindowsAmd64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-windows-amd64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for windows/amd64."
-            }
-        }
+        configurePublication(Target.WindowsAmd64, stagedWindowsAmd64Executable)
       }
     }
   }
@@ -331,7 +264,6 @@ signing {
     sign(publishing.publications["linuxExecutableAarch64"])
     sign(publishing.publications["linuxExecutableAmd64"])
     sign(publishing.publications["macExecutableAarch64"])
-    sign(publishing.publications["macExecutableAmd64"])
     sign(publishing.publications["alpineLinuxExecutableAmd64"])
     sign(publishing.publications["windowsExecutableAmd64"])
   }

@@ -1160,6 +1160,52 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `pkl_net Url`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module mod
+
+        import "pkl:net"
+
+        url: net.Url
+        nullableUrl: net.Url?
+        listing: Listing<net.Url>
+        mapping: Mapping<String, net.Url>
+
+        class Foo {
+          url: net.Url
+        }
+        """
+          .trimIndent()
+      )
+
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains("import java.net.URI;")
+      .contains(
+        """
+        |public final class Mod {
+        |  public final @NonNull URI url;
+        |
+        |  public final URI nullableUrl;
+        |
+        |  public final @NonNull List<@NonNull URI> listing;
+        |
+        |  public final @NonNull Map<@NonNull String, @NonNull URI> mapping;
+        """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final @NonNull URI url;
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `nullable properties`() {
     var javaCode =
       generateJavaCode(
@@ -1553,6 +1599,115 @@ class JavaCodeGeneratorTest {
       it.contains("ConfigurationProperties")
     }
     assertThat(javaCodeWithoutSpringAnnotations).compilesSuccessfully()
+  }
+
+  @Test
+  fun `spring boot -- single module property has type but invalid prefix`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        fooBar: FooBar
+
+        class FooBar
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(generateSpringBootConfig = true),
+      )
+    // "fooBar" is not a valid prefix for `@ConfigurationProperties` annotations, so no
+    // annotation is added
+    assertThat(javaCode)
+      .contains(
+        """
+        |
+        |  public static final class FooBar {
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- single module property has type and valid prefix`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(generateSpringBootConfig = true),
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |  @ConfigurationProperties("server")
+        |  public static final class Server {
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- explicitly configured ConfigurationProperties`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        class Server
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(
+          generateSpringBootConfig = true,
+          springBootConfigurationProperties =
+            mapOf("my.mod" to "", "my.mod#Server" to "my-server-prefix"),
+        ),
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |@ConfigurationProperties
+        |public final class Mod {
+        |  private Mod() {
+        |  }
+        """
+          .trimMargin()
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |  @ConfigurationProperties("my-server-prefix")
+        |  public static final class Server {
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- explicity configured properties means no interface`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(
+          generateSpringBootConfig = true,
+          springBootConfigurationProperties = mapOf("foo" to "foo"),
+        ),
+      )
+    // normally this would generate `@ConfigurationProperties` annotations through inference.
+    // but setting this option means that the user is in total control of how these annotations
+    // get produced.
+    assertThat(javaCode).doesNotContain("@ConfigurationProperties")
   }
 
   @Test
@@ -2259,6 +2414,24 @@ class JavaCodeGeneratorTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `block comment escaping in doc comments`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+        class Person {
+          /// This doc coment needs */ escaping
+          foo: Int
+        }
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(generateJavadoc = true),
+      )
+
+    assertThat(javaCode).compilesSuccessfully().contains("*&#47;")
   }
 
   private fun Map<String, String>.validateContents(

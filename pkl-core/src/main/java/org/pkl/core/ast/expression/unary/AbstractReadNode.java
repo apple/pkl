@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public abstract class AbstractReadNode extends UnaryExpressionNode {
   protected final ModuleKey currentModule;

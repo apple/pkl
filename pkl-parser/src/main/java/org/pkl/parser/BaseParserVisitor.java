@@ -81,7 +81,8 @@ import org.pkl.parser.syntax.Type.ModuleType;
 import org.pkl.parser.syntax.Type.NothingType;
 import org.pkl.parser.syntax.Type.NullableType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
-import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.StringLiteralType;
+import org.pkl.parser.syntax.Type.ThisType;
 import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
 import org.pkl.parser.syntax.TypeAlias;
@@ -108,7 +109,12 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitStringConstantType(StringConstantType type) {
+  public T visitThisType(ThisType type) {
+    return defaultValue();
+  }
+
+  @Override
+  public T visitStringLiteralType(StringLiteralType type) {
     return visitChildren(type);
   }
 

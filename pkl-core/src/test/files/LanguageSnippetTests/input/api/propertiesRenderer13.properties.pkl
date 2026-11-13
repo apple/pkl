@@ -1,0 +1,4 @@
+output {
+  value = Map(5.s, "value")
+  renderer = new PropertiesRenderer {}
+}

@@ -51,7 +51,7 @@ ifdef::is-release-version[]
         mavenCentral()
 endif::[]
 ifndef::is-release-version[]
-        maven(url = "{uri-sonatype}")
+        maven(url = "{uri-snapshot-repo}")
 endif::[]
     }
 }
@@ -76,7 +76,7 @@ ifdef::is-release-version[]
         mavenCentral()
 endif::[]
 ifndef::is-release-version[]
-        maven { url "{uri-sonatype}" }
+        maven { url "{uri-snapshot-repo}" }
 endif::[]
     }
 }
@@ -152,7 +152,6 @@ The default output renderer for a module supports the following formats:
 * `"pcf"`
 * `"plist"`
 * `"properties"`
-* `"textproto"`
 * `"xml"`
 * `"yaml"`
 ====
@@ -322,6 +321,15 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
+[[test-reporter]]
+.testReporter: Property<String>
+[%collapsible]
+====
+Default: `"spec"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"spec"` and `"minimal"`.
+====
+
 [[power-assertions-test]]
 .powerAssertions: Property<Boolean>
 [%collapsible]
@@ -414,7 +422,7 @@ For Spring Boot applications, and for users of `pkl-config-java` compiling the g
 .nonNullAnnotation: Property<String>
 [%collapsible]
 ====
-Default: `"org.pkl.config.java.mapper.NonNull"` +
+Default: `"org.jspecify.annotations.NonNull"` +
 Example: `nonNullAnnotation = "org.project.MyAnnotation"` +
 Fully qualified name of the annotation type to use for annotating non-null types. +
 The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
@@ -675,6 +683,21 @@ Whether and where to generate JUnit XML reports.
 ====
 Default: `false` +
 Whether to ignore expected example files and generate them again.
+====
+
+.testReporter: Property<String>
+[%collapsible]
+====
+Default: `"spec"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"spec"` and `"minimal"`.
+====
+
+.install: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Install the built package into the module cache dir.
 ====
 
 Common properties:

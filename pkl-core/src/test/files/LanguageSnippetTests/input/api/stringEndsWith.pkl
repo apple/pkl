@@ -1,0 +1,61 @@
+res1 =
+  !"""
+  aa
+  zz
+  """.endsWith(Regex("(?m)aa"))
+
+res1a =
+  """
+  zz
+  aaa
+  """.endsWith(Regex("(?m)aa"))
+
+res2 =
+  !"""
+  aa
+  zz
+  """.endsWith("aa")
+
+res3 =
+  """
+  aa
+  zz
+  """.endsWith("zz")
+
+res4 =
+  """
+  aa
+  zz
+  """.endsWith(
+    Regex(
+      """
+      (?x)
+      zz # this is the comment for zz
+      """,
+    ),
+  )
+
+res5 =
+  !"""
+  aabbcc
+  """.endsWith(Regex("aa|zz"))
+
+res6 = "zz".endsWith(Regex("(?x)zz"))
+res7 = "zz".endsWith(Regex("(?x) zz # comment"))
+
+res8 = "a\né".endsWith(Regex(#"(?x)\w"#))
+
+res9 = "a\nÉ".endsWith(Regex("(?x)(?i)é"))
+res10 = "é".endsWith(Regex(#"\w"#))
+
+res11 = !"foo\n".endsWith(Regex("foo"))
+res12 = !"foo\r\n".endsWith(Regex("foo"))
+
+res13 = "a\nb".endsWith(Regex(#"(?m)a(?:\nb)??"#))
+
+res14 = "x)".endsWith(Regex(#"x\Q)"#))
+res14a = "x # some comment".endsWith(Regex(#"(?x)x\Q # some comment"#))
+
+res15 = !"Ab".endsWith(Regex("a(?i)b"))
+res16 = !"x\n".endsWith(Regex("x.(?s)"))
+res17 = "a b".endsWith(Regex("a b(?x)"))

@@ -15,9 +15,12 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
@@ -31,6 +34,7 @@ import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputFiles;
 import org.pkl.cli.CliEvaluator;
 import org.pkl.cli.CliEvaluatorOptions;
+import org.pkl.core.ProfilerOptions;
 
 @CacheableTask
 public abstract class EvalTask extends ModulesTask {
@@ -63,7 +67,8 @@ public abstract class EvalTask extends ModulesTask {
             getOutputFormat().get(),
             getModuleOutputSeparator().get(),
             mapAndGetOrNull(getMultipleFileOutputDir(), it -> it.getAsFile().getAbsolutePath()),
-            getExpression().getOrNull()));
+            getExpression().getOrNull(),
+            ProfilerOptions.DEFAULT));
   }
 
   @SuppressWarnings("unused")
@@ -72,7 +77,12 @@ public abstract class EvalTask extends ModulesTask {
   public FileCollection getEffectiveOutputFiles() {
     return getObjects()
         .fileCollection()
-        .from(getProviders().provider(() -> nullToEmpty(createCliEvaluator().getOutputFiles())));
+        .from(
+            getProviders()
+                .provider(
+                    () ->
+                        exceptionToEmpty(
+                            () -> nullToEmpty(createCliEvaluator().getOutputFiles()))));
   }
 
   @OutputDirectories
@@ -82,11 +92,22 @@ public abstract class EvalTask extends ModulesTask {
         .fileCollection()
         .from(
             getProviders()
-                .provider(() -> nullToEmpty(createCliEvaluator().getOutputDirectories())));
+                .provider(
+                    () ->
+                        exceptionToEmpty(
+                            () -> nullToEmpty(createCliEvaluator().getOutputDirectories()))));
   }
 
   private static <T> Set<T> nullToEmpty(@Nullable Set<T> set) {
     return set == null ? Collections.emptySet() : set;
+  }
+
+  private static <T> Set<T> exceptionToEmpty(Callable<? extends Set<T>> provider) {
+    try {
+      return provider.call();
+    } catch (Exception e) {
+      return Collections.emptySet();
+    }
   }
 
   @Override

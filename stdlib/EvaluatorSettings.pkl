@@ -15,9 +15,13 @@
 //===----------------------------------------------------------------------===//
 
 /// Common settings for Pkl's own evaluator.
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 @Since { version = "0.26.0" }
 module pkl.EvaluatorSettings
+
+import "pkl:EvaluatorSettings"
+import "pkl:platform"
+import "pkl:Project"
 
 /// The external properties available to Pkl, read using the `prop:` scheme.
 externalProperties: Mapping<String, String>?
@@ -118,6 +122,89 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
 
+/// These evaluator settings, whose settings are resolved against [enclosingUri] using OS rules for
+/// [os].
+@Since { version = "0.32.0" }
+function resolveForOs(enclosingUri: Uri, os: platform.OperatingSystem): EvaluatorSettings = (module) {
+  local forWindows = os.name == "Windows"
+
+  when (module.modulePath != null) {
+    modulePath = new {
+      for (path in module.modulePath!!) {
+        resolvePath(enclosingUri, path, forWindows)
+      }
+    }
+  }
+
+  when (module.moduleCacheDir != null) {
+    moduleCacheDir = resolvePath(enclosingUri, module.moduleCacheDir!!, forWindows)
+  }
+
+  when (module.rootDir != null) {
+    rootDir = resolvePath(enclosingUri, module.rootDir!!, forWindows)
+  }
+
+  when (module.externalResourceReaders != null) {
+    externalResourceReaders {
+      [[true]] {
+        executable = resolveExecutable(enclosingUri, super.executable, forWindows)
+        workingDir = resolvePath(enclosingUri, super.workingDir ?? "./", forWindows)
+      }
+    }
+  }
+
+  when (module.externalModuleReaders != null) {
+    externalModuleReaders {
+      for (readerName, reader in module.externalModuleReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(enclosingUri, reader.executable, forWindows)
+          workingDir =
+            if (reader.workingDir == null)
+              resolvePath(enclosingUri, "./", forWindows)
+            else
+              resolvePath(enclosingUri, reader.workingDir!!, forWindows)
+        }
+      }
+    }
+  }
+}
+
+/// These evaluator settings, whose settings are resolved to URIs against [enclosingUri].
+///
+/// The following settings are resolved:
+///
+///   * [modulePath]
+///   * [rootDir]
+///   * [moduleCacheDir]
+///   * [ExternalReader.executable]
+///   * [ExternalReader.workingDir]
+///
+/// Returns file paths based on the host OS filesystem.
+///
+/// If [ExternalReader.workingDir] is `null`, it resolves to the `./` path off of
+/// [enclosingUri].
+///
+/// On POSIX-based systems (like macOS and linux), this resolves to paths such as `/path/to/dir`.
+///
+/// On Windows, this resolves to drive letter paths such as `C:\path\to\dir`, or UNC paths such as 
+/// `\\network\share\path\to\dir`. 
+@Since { version = "0.32.0" }
+function resolve(enclosingUri: Uri): EvaluatorSettings =
+  resolveForOs(
+    enclosingUri,
+    platform.current.operatingSystem,
+  )
+
+local function resolveExecutable(base: String, path: String, forWindows: Boolean) =
+  let (hasSep = if (forWindows) path.contains(Regex(#"[/\\]"#)) else path.contains("/"))
+    if (hasSep) resolvePath(base, path, forWindows) else path
+
+external local function resolvePath(
+  baseUri: String(startsWith("file:/")),
+  path: String,
+  forWindows: Boolean,
+): String
+
 local const hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
 local const hasNonEmptyHostname = (it: String) ->
@@ -149,7 +236,7 @@ class Http {
   /// In the following example, an original request for `https://pkg.pkl-lang.org/my/pkg@1.0.0` is
   /// replaced with `https://my.internal.mirror/my/pkg@1.0.0`.
   ///
-  /// This does not affect `3XX` status code redirect following.
+  /// This also affects `3XX` status code redirect following.
   ///
   /// Example:
   ///
@@ -169,6 +256,75 @@ class Http {
   /// (not schematically enforced).
   @Since { version = "0.29.0" }
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
+
+  /// HTTP headers to add to outbound requests.
+  ///
+  /// Each key is a glob pattern, and each value is a mapping of header name to header value(s).
+  ///
+  /// Before an HTTP request is made, each key is matched against the request URL.
+  /// If any matches are found, each of their described headers are added to the request.
+  ///
+  /// To add headers to all HTTP requests, use `**` as the glob pattern.
+  ///
+  /// Example:
+  ///
+  /// ```
+  /// headers {
+  ///   // Add this user agent to all out-bound requests.
+  ///   ["**"] {
+  ///     ["User-Agent"] = "MyApp-Pkl"
+  ///   }
+  ///
+  ///   // Add an authorization header to all requests made to the
+  ///   // `https://my.internal.service` host.
+  ///   ["https://my.internal.service/**"] {
+  ///     ["Authorization"] = "Bearer abc123"
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// To repeat a header multiple times, set the value to a listing:
+  ///
+  /// ```
+  /// headers {
+  ///   // Adds:
+  ///   //   My-Custom-Header: foo
+  ///   //   My-Custom-Header: bar
+  ///   ["**"] {
+  ///     ["My-Custom-Header"] { "foo"; "bar" }
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// For details on glob patterns, see
+  /// <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+  @Since { version = "0.32.0" }
+  headers: Mapping<String(isGlobPattern), HttpHeaders>?
+
+  /// Returns parsed headers from the given netrc file contents.
+  ///
+  /// Example:
+  /// ```
+  /// headers = netRcHeaders(read("/path/to/.netrc"))
+  /// ```
+  ///
+  /// This largely follows how [curl](https://everything.curl.dev/usingcurl/netrc.html) parses netrc
+  /// files:
+  ///
+  ///   * Values can optionally be quoted.
+  ///   * Quoted values can include `\"`, `\n`, `\r`, and `\t` to represent double quote, newline,
+  ///     carriage return, and tab.
+  ///   * Lines starting with `#` are treated as comments.
+  ///   * "macdef" sections are ignored.
+  ///
+  /// Additionally, the following rules are applied:
+  ///
+  ///   * The "default" section is ignored.
+  ///   * Machine names that contain `/` are ignored.
+  @Since { version = "0.33.0" }
+  external function netRcHeaders(
+    contents: String | Resource,
+  ): Mapping<String(isGlobPattern), HttpHeaders>
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.
@@ -224,14 +380,84 @@ class ExternalReader {
   /// The external reader executable.
   ///
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
-  /// Executable is resolved according to the operating system's process spawning rules.
-  /// On macOS, Linux, and Windows platforms, this may be:
   ///
-  ///   * An absolute path
-  ///   * A relative path (to the current working directory)
-  ///   * The name of the executable, to be resolved against the `PATH` environment variable 
+  /// This may be:
+  ///
+  ///   * An absolute or relative path.
+  ///   * The name of the executable, to be resolved against the `PATH` environment variable. 
+  ///
+  /// When declared inside a [Project], relative paths are resolved against
+  /// [Project.projectFileUri].
   executable: String
 
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
+
+  /// The working directory used to spawn [executable].
+  ///
+  /// When declared inside a [Project], relative paths are resolved against
+  /// [Project.projectFileUri].
+  @Since { version = "0.32.0" }
+  workingDir: String?
 }
+
+local typealias ReservedHttpHeaderName =
+  "connection"
+    | "content-length"
+    | "expect"
+    | "host"
+    | "keep-alive"
+    | "te"
+    | "trailer"
+    | "transfer-encoding"
+    | "upgrade"
+
+local const reservedHttpHeaderPrefix =
+  Set(
+    "proxy-",
+    "sec-",
+  )
+
+local const isNotReservedHeaderName = (header: String) ->
+  !(header.toLowerCase() is ReservedHttpHeaderName)
+
+local const doesNotStartWithReservedPrefix = (header: String) ->
+  !reservedHttpHeaderPrefix.any((it) -> header.toLowerCase().startsWith(it))
+
+local const hasValidHeaderNameSyntax = (header: String) ->
+  header.matches(Regex(#"[a-zA-Z0-9!#$%&'*+-.^_`|~]+"#))
+
+/// A mapping of header names to header value(s).
+///
+/// The mapping must have distinct header keys (case insensitive).
+@Since { version = "0.32.0" }
+typealias HttpHeaders =
+  Mapping<HttpHeaderName, *Listing<HttpHeaderValue> | HttpHeaderValue>(
+    keys.toList().isDistinctBy((it) -> it.toLowerCase()),
+  )
+
+/// An HTTP header name.
+///
+/// It conforms to the following rules:
+///
+/// * It is not one of "connection", "keep-alive", "content-length", "expect", "host", "upgrade",
+///   "te", "transfer-encoding", "trailer" (case insensitive).
+/// * It does not start with "proxy-" nor "sec-".
+/// * It consists of a-z, A-Z, or a character in "!#$%&'*+-.^_`|~".
+/// * It is not a blank string.
+@Since { version = "0.32.0" }
+typealias HttpHeaderName =
+  String(
+    isNotReservedHeaderName,
+    doesNotStartWithReservedPrefix,
+    hasValidHeaderNameSyntax,
+    isNotBlank,
+  )
+
+/// An HTTP header value.
+///
+/// It consists of ASCII characters between the range of 0x20 - 0x7E, and 0x80 - 0xFF (all visible
+/// ASCII characters), and also the tab character.
+@Since { version = "0.32.0" }
+typealias HttpHeaderValue =
+  String(matches(Regex(#"[\t\u0020-\u007E\u0080-\u00FF]*"#)), length < 4096)

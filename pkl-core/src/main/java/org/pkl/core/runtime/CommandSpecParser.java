@@ -19,20 +19,27 @@ import static org.pkl.core.runtime.VmUtils.REPL_TEXT;
 import static org.pkl.core.runtime.VmUtils.REPL_TEXT_URI;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.CommandSpec;
 import org.pkl.core.CommandSpec.Argument;
 import org.pkl.core.CommandSpec.BooleanFlag;
@@ -46,6 +53,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
@@ -60,11 +68,11 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 /** Runs commands. */
@@ -96,6 +104,36 @@ public final class CommandSpecParser {
   }
 
   public CommandSpec parse(VmTyped command) {
+    var path = new ArrayDeque<String>();
+    path.push("[root]");
+    try {
+      return doParse(command, path);
+    } catch (VmException e) {
+      var hint = new StringBuilder("Error occurred while parsing command definition: ");
+      assert !path.isEmpty();
+      var iter = path.descendingIterator();
+      hint.append(iter.next());
+      while (iter.hasNext()) {
+        hint.append(" > ").append(iter.next());
+      }
+
+      var hintBuilder = e.getHintBuilder();
+      if (hintBuilder != null) {
+        e.setHintBuilder(
+            (builder, flag) -> {
+              hintBuilder.accept(builder, flag);
+              builder.append("\n\n");
+              builder.append(hint);
+            });
+      } else {
+        e.setHint(hint.toString());
+      }
+
+      throw e;
+    }
+  }
+
+  private CommandSpec doParse(VmTyped command, Deque<String> path) {
     VmUtils.checkAmends(command, CommandModule.getModule().getVmClass());
     checkPropertyIsUndefined(command, Identifier.OPTIONS);
     checkPropertyIsUndefined(command, Identifier.PARENT);
@@ -105,22 +143,27 @@ public final class CommandSpecParser {
         VmUtils.checkAmends(
             VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
     var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
+    if (path.size() > 1) {
+      path.pop();
+      path.push(commandName);
+    }
     var optionSpecs = collectOptions(optionsClass);
 
     return new CommandSpec(
         commandName,
         exportNullableString(commandInfo, Identifier.DESCRIPTION),
-        (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
-        (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
+        (boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
+        (boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
         optionSpecs,
-        collectSubcommands(commandInfo),
+        collectSubcommands(commandInfo, path),
         (options, parent) ->
             new CommandSpec.State(
                 buildExecutionModule(
                     command,
                     buildObject(optionsClass, options),
                     // NB: these next two lines are the only place where we lose type safety.
-                    // SubcommandState is type-erased to Object in the public API to hide internals.
+                    // SubcommandState is type-erased to Object in the public API to hide
+                    // internals.
                     // Consumers of this API must ensure CommandSpec.apply is only ever passed an
                     // instance of CommandSpec.State previously returned from a prior invocation
                     // of CommandSpec.apply.
@@ -128,28 +171,32 @@ public final class CommandSpecParser {
                 (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
   }
 
-  private List<CommandSpec> collectSubcommands(VmTyped commandInfo) {
+  private List<CommandSpec> collectSubcommands(VmTyped commandInfo, Deque<String> path) {
     var subcommands = new ArrayList<CommandSpec>();
-    var subcommandNames = new HashSet<String>();
+    var subcommandNames = new HashMap<String, Object>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
-    subcommandsProperty.iterateAlreadyForcedMemberValues(
-        (key, member, value) -> {
-          var spec = parse((VmTyped) value);
-          if (subcommandNames.contains(spec.name())) {
-            throw exceptionBuilder()
-                .withSourceSection(member.getSourceSection())
-                .evalError(
-                    "commandSubcommandConflict",
-                    VmUtils.readMember(commandInfo, Identifier.NAME),
-                    spec.name())
-                .build();
-          }
-          subcommandNames.add(spec.name());
-          subcommands.add(spec);
-          return true;
-        });
-
+    var callNode = IndirectCallNode.getUncached();
+    for (var cursor = subcommandsProperty.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var value = (VmTyped) cursor.value(callNode);
+      path.push("subcommands[" + cursor.keyToString() + "]");
+      var spec = doParse(value, path);
+      path.pop();
+      var existingNameIndex = subcommandNames.get(spec.name());
+      if (existingNameIndex != null) {
+        throw exceptionBuilder()
+            .withSourceSection(cursor.member().getSourceSection())
+            .evalError(
+                "commandSubcommandConflict",
+                VmUtils.readMember(commandInfo, Identifier.NAME),
+                spec.name(),
+                existingNameIndex,
+                cursor.keyToString())
+            .build();
+      }
+      subcommandNames.put(spec.name(), cursor.key());
+      subcommands.add(spec);
+    }
     return subcommands;
   }
 
@@ -172,14 +219,14 @@ public final class CommandSpecParser {
     if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
       return BaseModule.getTypedClass();
     }
-    if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
+    if (!(optionsTypeNode instanceof TypeNode.UserClassTypeNode node)) {
       throw exceptionBuilder()
-          .withSourceSection(optionsTypeNode.getSourceSection())
+          .withSourceSection(optionsPropertyTypeNode.getSourceSection())
           .evalError(
               "commandOptionsTypeNotClass", optionsTypeNode.getSourceSection().getCharacters())
           .build();
     }
-    var clazz = node.getVmClass();
+    var clazz = ((VmType.ClassType) node.getType()).getVmClass();
     if (clazz.isAbstract()) {
       throw exceptionBuilder()
           .withSourceSection(clazz.getHeaderSection())
@@ -280,7 +327,7 @@ public final class CommandSpecParser {
     boolean hide = false;
     if (flagAnnotation != null) {
       shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
-      hide = (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
+      hide = (boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
     }
     checkFlagNames(prop, name, shortName);
 
@@ -307,14 +354,14 @@ public final class CommandSpecParser {
 
     // assert type is Boolean
     var typeInfo = resolveType(prop);
-    if (!(typeInfo.getFirst() instanceof TypeNode.BooleanTypeNode)) {
+    if (typeInfo.getFirst().getVmClass() != BaseModule.getBooleanClass()) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError(
               "commandFlagInvalidType",
               prop.getName(),
               "BooleanFlag",
-              typeInfo.getFirst().getSourceSection().getCharacters(),
+              typeInfo.getFirst().toString(),
               "Boolean")
           .build();
     }
@@ -341,7 +388,7 @@ public final class CommandSpecParser {
               "commandFlagInvalidType",
               prop.getName(),
               "CountedFlag",
-              typeInfo.getFirst().getSourceSection().getCharacters(),
+              typeInfo.getFirst().toString(),
               "Int")
           .build();
     }
@@ -384,10 +431,10 @@ public final class CommandSpecParser {
   }
 
   /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
-  private Pair<TypeNode, Boolean> resolveType(ClassProperty prop) {
+  private Pair<VmType, Boolean> resolveType(ClassProperty prop) {
     var propertyTypeNode = prop.getTypeNode();
     if (propertyTypeNode != null) {
-      return resolveType(propertyTypeNode.getTypeNode());
+      return resolveType(propertyTypeNode.getTypeNode().getType());
     }
     throw exceptionBuilder()
         .withSourceSection(prop.getHeaderSection())
@@ -396,23 +443,23 @@ public final class CommandSpecParser {
   }
 
   /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
-  private Pair<TypeNode, Boolean> resolveType(TypeNode typeNode) {
+  private Pair<VmType, Boolean> resolveType(VmType type) {
     var isNullable = false;
     while (true) {
-      if (typeNode instanceof TypeNode.NullableTypeNode nullableTypeNode) {
+      if (type instanceof VmType.NullableType nullableType) {
         isNullable = true;
-        typeNode = nullableTypeNode.getElementTypeNode();
-      } else if (typeNode instanceof TypeNode.ConstrainedTypeNode constrainedTypeNode) {
-        typeNode = constrainedTypeNode.getChildTypeNode();
-      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode) {
-        if (typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
-        typeNode = typeAliasTypeNode.getAliasedTypeNode();
+        type = nullableType.getElementType();
+      } else if (type instanceof VmType.ConstrainedType constrainedType) {
+        type = constrainedType.getBaseType();
+      } else if (type instanceof VmType.AliasType aliasType) {
+        if (aliasType.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
+        type = aliasType.getAliasedType();
       } else {
         break;
       }
     }
 
-    return Pair.of(typeNode, isNullable);
+    return Pair.of(type, isNullable);
   }
 
   // This sigil used to indicate that an option has a default value that is a non-constant expr.
@@ -446,10 +493,12 @@ public final class CommandSpecParser {
         // wrapped by a nullable, no default value
         return null;
       }
-      if (resolved.getFirst() instanceof TypeNode.UnionOfStringLiteralsTypeNode union
-          && union.getUnionDefault() != null) {
-        return union.getUnionDefault();
-      } else if (resolved.getFirst() instanceof TypeNode.StringLiteralTypeNode literal) {
+      if (resolved.getFirst() instanceof VmType.UnionType union
+          && union.getDefaultIndex() != -1
+          && union.isUnionOfStringLiterals()) {
+        return ((VmType.StringLiteralType) union.getElementTypes()[union.getDefaultIndex()])
+            .getLiteral();
+      } else if (resolved.getFirst() instanceof VmType.StringLiteralType literal) {
         return literal.getLiteral();
       }
     }
@@ -460,19 +509,19 @@ public final class CommandSpecParser {
 
   private class OptionBehavior {
     private @Nullable BiFunction<String, URI, Object> each;
-    private @Nullable BiFunction<List<Object>, URI, Object> all;
+    private @Nullable BiFunction<List<Object>, URI, @Nullable Object> all;
     private @Nullable Boolean multiple;
     private @Nullable String metavar;
-    private @Nullable CommandSpec.CompletionCandidates completionCandidates;
+    private CommandSpec.@Nullable CompletionCandidates completionCandidates;
     private @Nullable Object defaultValue = null;
     private boolean isNullable = false;
 
     private OptionBehavior(
         @Nullable BiFunction<String, URI, Object> each,
-        @Nullable BiFunction<List<Object>, URI, Object> all,
+        @Nullable BiFunction<List<Object>, URI, @Nullable Object> all,
         @Nullable Boolean multiple,
         @Nullable String metavar,
-        @Nullable CommandSpec.CompletionCandidates completionCandidates) {
+        CommandSpec.@Nullable CompletionCandidates completionCandidates) {
       this.each = each;
       this.all = all;
       this.multiple = multiple;
@@ -508,130 +557,151 @@ public final class CommandSpecParser {
 
     public OptionBehavior resolve(ClassProperty prop, boolean requireExplicitDefault) {
       var resolved = resolveType(prop);
-      var typeNode = resolved.getFirst();
+      var type = resolved.getFirst();
       isNullable = resolved.getSecond();
       defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
 
-      resolve(prop, typeNode);
+      resolve(prop, type);
       return this;
     }
 
-    private void resolve(ClassProperty prop, TypeNode typeNode) {
-      if (resolvePrimitive(typeNode)) {
+    private void resolve(ClassProperty prop, VmType type) {
+      if (resolvePrimitive(type)) {
         return;
       }
-      if (typeNode instanceof TypeNode.ListingTypeNode listingTypeNode) {
-        handleElement(listingTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = new VmObjectBuilder();
-                    values.forEach(builder::addElement);
-                    return builder.toListing();
-                  };
-      } else if (typeNode instanceof TypeNode.MappingTypeNode mappingTypeNode) {
-        assert mappingTypeNode.getKeyTypeNode() != null;
-        handleEntry(mappingTypeNode.getKeyTypeNode(), mappingTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = new VmObjectBuilder();
-                    values.forEach(
-                        (entry) ->
-                            builder.addEntry(
-                                ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
-                    return builder.toMapping();
-                  };
-      } else if (typeNode instanceof TypeNode.ListTypeNode listTypeNode) {
-        handleElement(listTypeNode.getElementTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
-      } else if (typeNode instanceof TypeNode.SetTypeNode setTypeNode) {
-        handleElement(setTypeNode.getElementTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
-      } else if (typeNode instanceof TypeNode.MapTypeNode mapTypeNode) {
-        handleEntry(mapTypeNode.getKeyTypeNode(), mapTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = VmMap.builder();
-                    values.forEach(
-                        (entry) ->
-                            builder.add(((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
-                    return builder.build();
-                  };
-      } else if (typeNode instanceof TypeNode.PairTypeNode pairTypeNode) {
-        handleEntry(pairTypeNode.getFirstTypeNode(), pairTypeNode.getSecondTypeNode(), prop);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-      } else if (typeNode instanceof TypeNode.FinalClassTypeNode finalClassTypeNode
-          && (finalClassTypeNode.getVmClass() == BaseModule.getListingClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getMappingClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getListClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getSetClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getMapClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getPairClass())) {
-        // if a supported type is provided without type arguments
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError(
-                "commandOptionUnsupportedType",
-                prop.getName(),
-                "",
-                typeNode.getSourceSection().getCharacters())
-            .withHint(
-                finalClassTypeNode.getVmClass().getSimpleName()
-                    + " options must provide "
-                    + switch (finalClassTypeNode.getVmClass().getTypeParameterCount()) {
-                      case 1 -> "one type argument.";
-                      case 2 -> "two type arguments.";
-                      default -> throw PklBugException.unreachableCode();
-                    })
-            .build();
-      } else if (each == null && all == null) {
+      if (type instanceof VmType.ClassType ct) {
+        if (ct.getVmClass() == BaseModule.getListingClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = new VmObjectBuilder();
+                      values.forEach(builder::addElement);
+                      return builder.toListing();
+                    };
+          }
+        } else if (ct.getVmClass() == BaseModule.getMappingClass()) {
+          handleEntry(prop, ct);
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = new VmObjectBuilder();
+                      values.forEach(
+                          (entry) ->
+                              builder.addEntry(
+                                  ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                      return builder.toMapping();
+                    };
+          }
+        } else if (ct.getVmClass() == BaseModule.getListClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
+          }
+        } else if (ct.getVmClass() == BaseModule.getSetClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
+          }
+        } else if (ct.getVmClass() == BaseModule.getMapClass()) {
+          handleEntry(prop, ct);
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = VmMap.builder();
+                      values.forEach(
+                          (entry) ->
+                              builder.add(
+                                  ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                      return builder.build();
+                    };
+          }
+        } else if (ct.getVmClass() == BaseModule.getPairClass()) {
+          handleEntry(prop, ct);
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+        }
+      }
+
+      if (each == null && all == null) {
         // if another type and no transform functions are provided, that's an error
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError(
-                "commandOptionUnsupportedType",
-                prop.getName(),
-                "",
-                typeNode.getSourceSection().getCharacters())
-            .withHint("Use a supported type or define a transformEach and/or transformAll function")
-            .build();
+        throw unsupportedOptionNoTransform(prop, type);
       } else {
         // if we have at least one transform then allow the type and fill in reasonable defaults
-        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_VALUE;
+        if (each == null) {
+          each = (rawValue, workingDirUri) -> rawValue;
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = METAVAR_VALUE;
+        }
       }
     }
 
+    private VmException unsupportedOptionTypeArguments(ClassProperty prop, VmType.ClassType type) {
+      var typeArgCountText =
+          switch (type.getVmClass().getTypeParameterCount()) {
+            case 1 -> "one type argument.";
+            case 2 -> "two type arguments.";
+            default -> throw PklBugException.unreachableCode();
+          };
+      return exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnsupportedType", prop.getName(), "", type.toString())
+          .withHint(type.getVmClass().getSimpleName() + " options must provide " + typeArgCountText)
+          .build();
+    }
+
+    private VmException unsupportedOptionNoTransform(ClassProperty prop, VmType type) {
+      return exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnsupportedType", prop.getName(), "", type.toString())
+          .withHint("Use a supported type or define a transformEach and/or transformAll function")
+          .build();
+    }
+
     private OptionBehavior resolveTypeArgument(
-        ClassProperty prop, TypeNode typeNode, String typeArgumentName) {
-      if (resolvePrimitive(typeNode)) {
+        ClassProperty prop, VmType type, String typeArgumentName) {
+      if (resolvePrimitive(type)) {
         return this;
       }
 
@@ -643,7 +713,7 @@ public final class CommandSpecParser {
                 "commandOptionUnsupportedType",
                 prop.getName(),
                 typeArgumentName + " ",
-                typeNode.getSourceSection().getCharacters())
+                type.toString())
             .withHint("Use a supported type or define a transformEach and/or transformAll function")
             .build();
       } else if (metavar == null) {
@@ -655,138 +725,252 @@ public final class CommandSpecParser {
       return this;
     }
 
-    private boolean resolvePrimitive(TypeNode typeNode) {
-      if (typeNode instanceof TypeNode.NumberTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Long.parseLong(rawValue);
-                } catch (NumberFormatException e) {
+    private boolean resolvePrimitive(VmType type) {
+      if (type instanceof VmType.ClassType ct) {
+        if (ct.getVmClass() == BaseModule.getNumberClass()) {
+          if (each == null) {
+            each =
+                (rawValue, workingDirUri) -> {
+                  try {
+                    return Long.parseLong(rawValue);
+                  } catch (NumberFormatException e) {
+                    try {
+                      return Double.parseDouble(rawValue);
+                    } catch (NumberFormatException e2) {
+                      throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                    }
+                  }
+                };
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_NUMBER;
+          }
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getFloatClass()) {
+          if (each == null) {
+            each =
+                (rawValue, workingDirUri) -> {
                   try {
                     return Double.parseDouble(rawValue);
-                  } catch (NumberFormatException e2) {
-                    throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                  } catch (NumberFormatException e) {
+                    throw BadValue.invalid(rawValue, METAVAR_FLOAT);
                   }
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_NUMBER;
-        return true;
-      } else if (typeNode instanceof TypeNode.FloatTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Double.parseDouble(rawValue);
-                } catch (NumberFormatException e) {
-                  throw BadValue.invalid(rawValue, METAVAR_FLOAT);
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_FLOAT;
-        return true;
-      } else if (typeNode instanceof TypeNode.IntTypeNode) {
-        if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT8;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int16TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT16;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int32TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT32;
-        return true;
-      } else if (typeNode instanceof TypeNode.UIntTypeAliasTypeNode uIntTypeAliasTypeNode) {
-        var mask = uIntTypeAliasTypeNode.getMask();
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (mask == 0x000000000000FFFFL) {
-          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
-          if (metavar == null) metavar = METAVAR_UINT16;
-        } else if (mask == 0x00000000FFFFFFFFL) {
-          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
-          if (metavar == null) metavar = METAVAR_UINT32;
-        } else {
-          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
-          if (metavar == null) metavar = METAVAR_UINT;
+                };
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_FLOAT;
+          }
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getIntClass()) {
+          if (each == null) {
+            each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT;
+          }
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getBooleanClass()) {
+          if (each == null) {
+            each =
+                (rawValue, workingDirUri) -> {
+                  var value = rawValue.toLowerCase(Locale.ROOT);
+                  if (TRUE_VALUES.contains(value)) {
+                    return true;
+                  } else if (FALSE_VALUES.contains(value)) {
+                    return false;
+                  }
+                  throw BadValue.invalid(rawValue, "boolean");
+                };
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_BOOLEAN;
+          }
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getStringClass()) {
+          if (each == null) {
+            each = (rawValue, workingDirUri) -> rawValue;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_STRING;
+          }
+          return true;
         }
-        return true;
-      } else if (typeNode instanceof TypeNode.UInt8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_UINT8;
-        return true;
-      } else if (typeNode instanceof TypeNode.BooleanTypeNode) {
-        if (each == null)
+      } else if (type instanceof VmType.AliasType at) {
+        if (at.getVmTypeAlias() == BaseModule.getInt8TypeAlias()) {
+          if (each == null) {
+            each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT8;
+          }
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getInt16TypeAlias()) {
+          if (each == null) {
+            each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT16;
+          }
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getInt32TypeAlias()) {
+          if (each == null) {
+            each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT32;
+          }
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt8TypeAlias()) {
+          if (each == null) {
+            each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT8;
+          }
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt16TypeAlias()) {
+          if (each == null) {
+            each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT16;
+          }
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt32TypeAlias()) {
+          if (each == null) {
+            each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT32;
+          }
+        } else if (at.getVmTypeAlias() == BaseModule.getUIntTypeAlias()) {
+          if (each == null) {
+            each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT;
+          }
+        } else if (at.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
+          if (each == null) {
+            each =
+                (rawValue, workingDirUri) -> {
+                  if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
+                  return rawValue;
+                };
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_CHAR;
+          }
+          return true;
+        }
+      } else if (type instanceof VmType.UnionType ut && ut.isUnionOfStringLiterals()) {
+        var choices =
+            Arrays.stream(ut.getElementTypes())
+                .map(it -> ((VmType.StringLiteralType) it).getLiteral())
+                .toList();
+        var choiceSet = new HashSet<>(choices);
+        if (each == null) {
           each =
               (rawValue, workingDirUri) -> {
-                var value = rawValue.toLowerCase();
-                if (TRUE_VALUES.contains(value)) {
-                  return true;
-                } else if (FALSE_VALUES.contains(value)) {
-                  return false;
-                }
-                throw BadValue.invalid(rawValue, "boolean");
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_BOOLEAN;
-        return true;
-      } else if (typeNode instanceof TypeNode.StringTypeNode) {
-        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_STRING;
-        return true;
-      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode
-          && typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
-                return rawValue;
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_CHAR;
-        return true;
-      } else if (typeNode
-          instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
-        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted().toList();
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
+                if (!choiceSet.contains(rawValue)) {
                   throw BadValue.invalidChoice(rawValue, choices);
                 }
                 return rawValue;
               };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + String.join(", ", choices) + "]";
-        if (completionCandidates == null)
-          completionCandidates = new Fixed(unionOfStringLiteralsTypeNode.getStringLiterals());
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = "[" + String.join(", ", choices) + "]";
+        }
+        if (completionCandidates == null) {
+          completionCandidates = new Fixed(choiceSet);
+        }
         return true;
-      } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
-        var choice = stringLiteralTypeNode.getLiteral();
-        if (each == null)
+      } else if (type instanceof VmType.StringLiteralType slt) {
+        var choice = slt.getLiteral();
+        if (each == null) {
           each =
               (rawValue, workingDirUri) -> {
                 if (!rawValue.equals(choice)) {
@@ -794,10 +978,19 @@ public final class CommandSpecParser {
                 }
                 return rawValue;
               };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + choice + "]";
-        if (completionCandidates == null) completionCandidates = new Fixed(Set.of(choice));
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = "[" + choice + "]";
+        }
+        if (completionCandidates == null) {
+          completionCandidates = new Fixed(Set.of(choice));
+        }
         return true;
       }
       return false;
@@ -822,7 +1015,10 @@ public final class CommandSpecParser {
     private static final Set<String> FALSE_VALUES = Set.of("false", "f", "0", "no", "n", "off");
 
     /** Sets each and metavar if they're not set */
-    private void handleElement(TypeNode valueType, ClassProperty prop) {
+    private void handleElement(ClassProperty prop, VmType.ClassType type) {
+      if (!type.isParametric()) throw unsupportedOptionTypeArguments(prop, type);
+      var valueType = type.getTypeArguments()[0];
+
       if (each != null && metavar != null) return;
       var transformValue =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
@@ -832,7 +1028,11 @@ public final class CommandSpecParser {
     }
 
     /** Sets each and metavar if they're not set */
-    private void handleEntry(TypeNode keyType, TypeNode valueType, ClassProperty prop) {
+    private void handleEntry(ClassProperty prop, VmType.ClassType type) {
+      if (!type.isParametric()) throw unsupportedOptionTypeArguments(prop, type);
+      var keyType = type.getTypeArguments()[0];
+      var valueType = type.getTypeArguments()[1];
+
       if (each != null && metavar != null) return;
       var transformKey =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
@@ -840,7 +1040,7 @@ public final class CommandSpecParser {
       var transformValue =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
               .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "value");
-      if (each == null)
+      if (each == null) {
         each =
             (rawValue, workingDirUri) -> {
               var split = rawValue.split("=", 2);
@@ -851,7 +1051,10 @@ public final class CommandSpecParser {
                   transformKey.getEach().apply(split[0], workingDirUri),
                   transformValue.getEach().apply(split[1], workingDirUri));
             };
-      if (metavar == null) metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
+      }
+      if (metavar == null) {
+        metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
+      }
     }
 
     private @Nullable Object allChooseLast(List<Object> values, URI workingDirUri) {
@@ -874,7 +1077,7 @@ public final class CommandSpecParser {
       };
     }
 
-    private static @Nullable CommandSpec.CompletionCandidates exportCompletionCandidates(
+    private static CommandSpec.@Nullable CompletionCandidates exportCompletionCandidates(
         VmTyped annotation) {
       var value = VmUtils.readMember(annotation, Identifier.COMPLETION_CANDIDATES);
       if (value instanceof VmNull) return null;
@@ -883,7 +1086,10 @@ public final class CommandSpecParser {
       // otherwise value is Listing<String> so will export to List<String>
       if (!(value instanceof VmListing vmListing)) throw PklBugException.unreachableCode();
       var result = new HashSet<String>(vmListing.getLength());
-      vmListing.forceAndIterateMemberValues((key, member, val) -> result.add((String) val));
+      var callNode = IndirectCallNode.getUncached();
+      for (var cursor = vmListing.members(); cursor.advance(); ) {
+        result.add((String) cursor.value(callNode));
+      }
       return new Fixed(result);
     }
 
@@ -892,7 +1098,7 @@ public final class CommandSpecParser {
       return each;
     }
 
-    public BiFunction<List<Object>, URI, Object> getAll() {
+    public BiFunction<List<Object>, URI, @Nullable Object> getAll() {
       assert all != null;
       return all;
     }
@@ -907,7 +1113,7 @@ public final class CommandSpecParser {
       return metavar;
     }
 
-    public @Nullable CommandSpec.CompletionCandidates getCompletionCandidates() {
+    public CommandSpec.@Nullable CompletionCandidates getCompletionCandidates() {
       return completionCandidates;
     }
 
@@ -928,17 +1134,14 @@ public final class CommandSpecParser {
    *
    * <p>Transforms List into VmList, Set into VmSet, and Map into VmMap.
    */
-  private VmTyped buildObject(VmClass clazz, Map<String, Object> properties) {
-    EconomicMap<Object, ObjectMember> members = EconomicMaps.create(properties.size());
+  private VmTyped buildObject(VmClass clazz, Map<String, @Nullable Object> properties) {
+    var builder = new VmObjectBuilder();
     for (var prop : properties.entrySet()) {
-      var key = prop.getKey();
       var value = prop.getValue();
       if (value == null) continue;
-      var identifier = Identifier.get(key);
-      members.put(identifier, VmUtils.createSyntheticObjectProperty(identifier, "", value));
+      builder.addProperty(Identifier.get(prop.getKey()), value);
     }
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    return builder.toTyped(clazz);
   }
 
   private record SubcommandState(VmTyped module, EconomicMap<Object, ObjectMember> members) {}
@@ -1021,11 +1224,13 @@ public final class CommandSpecParser {
             new ExpressionNode[] {},
             parent.members,
             moduleInfo,
-            new ImportNode(
-                language,
-                VmUtils.unavailableSourceSection(),
-                resolvedModule,
-                module.getModuleInfo().getResolvedModuleKey().getUri()));
+            module.isModuleObject()
+                ? new ImportNode(
+                    language,
+                    VmUtils.unavailableSourceSection(),
+                    resolvedModule,
+                    module.getModuleInfo().getResolvedModuleKey().getUri())
+                : new ConstantValueNode(VmUtils.unavailableSourceSection(), module));
 
     var moduleNode =
         new ModuleNode(
@@ -1056,7 +1261,7 @@ public final class CommandSpecParser {
     var output = VmUtils.readModuleOutput(evaluated);
     return new CommandSpec.Result(
         VmUtils.readBytesProperty(output).export(),
-        VmUtils.readFilesProperty(output, makeFileOutput));
+        VmUtils.readFilesProperty(output, makeFileOutput, IndirectCallNode.getUncached()));
   }
 
   // endregion
@@ -1159,7 +1364,7 @@ public final class CommandSpecParser {
       var uri =
           IoUtils.isUriLike(moduleName)
               ? new URI(moduleName)
-              : IoUtils.isWindowsAbsolutePath(moduleName)
+              : IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(moduleName)
                   ? Path.of(moduleName).toUri()
                   : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null);
       uriString =

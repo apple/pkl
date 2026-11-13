@@ -149,21 +149,26 @@ examples {
     Infinity
     1.0
     1.0
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
-    "Integer overflow."
     1
     9223372036854775807
+    true
+    true
+    true
+    true
+    true
+  }
+  ["integer overflow"] {
     "Integer overflow."
-    true
-    true
-    true
-    true
-    true
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
+    "Integer overflow."
   }
 }

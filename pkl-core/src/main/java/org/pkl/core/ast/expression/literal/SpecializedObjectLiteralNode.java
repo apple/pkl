@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.literal;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -26,13 +27,14 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 
 /**
  * Base class for object literal nodes specialized for a certain mix of property/entry/element
@@ -71,7 +73,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   @Idempotent
   protected boolean checkIsValidTypedAmendment(Object parent) {
     var parentClass = parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent);
-    VmUtils.checkIsInstantiable(parentClass, getParentNode());
+    VmUtils.checkIsInstantiable(parentClass, getParentNode(), this);
 
     for (var member : EconomicMaps.getValues(members)) {
       if (member.isLocal()) continue;
@@ -79,7 +81,13 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
       var memberName = member.getName();
       if (!parentClass.hasProperty(memberName)) {
         throw exceptionBuilder()
-            .cannotFindProperty(parentClass.getPrototype(), memberName, false, false)
+            .cannotFindProperty(
+                parentClass.getPrototype(),
+                parentClass.getPrototype(),
+                memberName,
+                false,
+                MemberLookupMode.EXPLICIT_RECEIVER,
+                null)
             .withSourceSection(member.getHeaderSection())
             .build();
       }
@@ -230,6 +238,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     for (var i = 0; i < keyNodes.length; i++) {
       long index;
       try {
+        TruffleSafepoint.poll(this);
         index = keyNodes[i].executeInt(frame);
       } catch (UnexpectedResultException e) {
         CompilerDirectives.transferToInterpreter();
@@ -288,7 +297,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
       Object parent, @Nullable ObjectMember firstElemOrEntry, boolean isElementsOnly) {
     var parentIsClass = parent instanceof VmClass;
     var parentClass = parentIsClass ? (VmClass) parent : VmUtils.getClass(parent);
-    VmUtils.checkIsInstantiable(parentClass, getParentNode());
+    VmUtils.checkIsInstantiable(parentClass, getParentNode(), this);
 
     var property = findFirstNonDefaultProperty(members);
     if (property != null

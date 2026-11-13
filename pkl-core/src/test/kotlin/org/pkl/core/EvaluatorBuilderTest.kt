@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,16 @@
  */
 package org.pkl.core
 
+import java.net.URI
 import java.nio.file.Path
 import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pkl.core.http.getConfiguredSettings
 import org.pkl.core.project.Project
 import org.pkl.core.resource.TestResourceReader
+import org.pkl.core.util.IoUtils
 
 class EvaluatorBuilderTest {
   @Test
@@ -93,5 +96,10 @@ class EvaluatorBuilderTest {
       .isEqualTo(3) // two external readers, one module path
     assertThat(builder.resourceReaders.find { it.uriScheme == "scheme3" }).isNotNull
     assertThat(builder.resourceReaders.find { it.uriScheme == "scheme4" }).isNotNull
+    val settings = builder.httpClient.getConfiguredSettings()
+    assertThat(settings.headers)
+      .isEqualTo(mapOf(IoUtils.doubleStarGlob to mapOf("X-Foo" to listOf("Foo"))))
+    assertThat(settings.rewritesMap)
+      .isEqualTo(mapOf(URI("https://foo.com/") to URI("https://bar.com/")))
   }
 }

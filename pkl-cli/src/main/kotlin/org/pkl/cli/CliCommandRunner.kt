@@ -21,6 +21,7 @@ import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.arguments.*
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.int
+import com.oracle.truffle.api.TruffleOptions
 import java.io.OutputStream
 import java.net.URI
 import java.nio.file.Path
@@ -40,6 +41,8 @@ import org.pkl.core.FileOutput
 import org.pkl.core.ModuleSource.uri
 import org.pkl.core.PklBugException
 import org.pkl.core.PklException
+import org.pkl.core.ProfilerOptions
+import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
 class CliCommandRunner
@@ -51,23 +54,27 @@ constructor(
   private val args: List<String>,
   private val outputStream: OutputStream = System.out,
   private val errStream: OutputStream = System.err,
+  private val profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
 ) : CliCommand(options) {
-
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      evalCmd(builder)
+      withCpuProfiler(profilerOptions) { startProfiling -> evalCmd(builder, startProfiling) }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
+      if (TruffleOptions.AOT) {
+        VmUtils.closeEngine()
+      }
     }
   }
 
-  private fun evalCmd(builder: EvaluatorBuilder) {
+  private fun evalCmd(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val evaluator = builder.build()
+    startProfiling()
     evaluator.use {
       evaluator.evaluateCommand(
-        uri(resolvedSourceModules.first()),
+        uri(options.normalizedSourceModules.first()),
         reservedFlagNames,
         reservedFlagShortNames,
       ) { spec ->

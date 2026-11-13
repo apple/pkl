@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.pklbinary;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.msgpack.core.MessageBufferPacker;
 import org.msgpack.core.MessagePack;
 import org.pkl.core.runtime.VmBytes;
@@ -30,9 +32,10 @@ public final class RendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected VmBytes eval(VmTyped self, Object value) {
+    protected VmBytes eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var packer = MessagePack.newDefaultBufferPacker();
-      createRenderer(self, packer).renderDocument(value);
+      createRenderer(self, packer, callNode).renderDocument(value);
       return new VmBytes(packer.toByteArray());
     }
   }
@@ -40,14 +43,16 @@ public final class RendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected VmBytes eval(VmTyped self, Object value) {
+    protected VmBytes eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var packer = MessagePack.newDefaultBufferPacker();
-      createRenderer(self, packer).renderValue(value);
+      createRenderer(self, packer, callNode).renderValue(value);
       return new VmBytes(packer.toByteArray());
     }
   }
 
-  private static VmPklBinaryEncoder createRenderer(VmTyped self, MessageBufferPacker packer) {
-    return new VmPklBinaryEncoder(packer, PklConverter.fromRenderer(self));
+  private static VmPklBinaryEncoder createRenderer(
+      VmTyped self, MessageBufferPacker packer, IndirectCallNode callNode) {
+    return new VmPklBinaryEncoder(packer, PklConverter.fromRenderer(self, callNode));
   }
 }

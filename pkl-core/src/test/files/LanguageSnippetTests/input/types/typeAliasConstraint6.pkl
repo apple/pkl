@@ -1,0 +1,5 @@
+import "../../input-helper/types/typeAliasClosedModule.pkl"
+
+const function isValid(s: String): Boolean = s.startsWith("Alice")
+
+myProp: typeAliasClosedModule.ValidString2 = "Alice Jenkins"

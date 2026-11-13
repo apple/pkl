@@ -1,0 +1,3 @@
+import "@project6/children.pkl"
+
+res = children

@@ -45,6 +45,9 @@ fixed job {
     when (os == "windows") {
       ["JAVA_HOME"] = "/jdk"
     }
+    when (os == "macOS") {
+      ["DEVELOPER_DIR"] = "/Applications/Xcode_swift_6.4.app"
+    }
   }
   when (os == "macOS") {
     `if` =
@@ -65,6 +68,7 @@ fixed job {
       new Listing {
         "self-hosted"
         "macos"
+        "goldengate"
         when (nightlyMacOS) {
           "nightly"
         }

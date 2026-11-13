@@ -1,0 +1,12 @@
+// let exprs inside typealiases turn into their own root node
+typealias Foo = String(let (x = this) this == x)
+
+typealias Foo2 = String(let (x = "foo") this.startsWith(x), let (y = "o") this.endsWith(y))
+
+typealias Foo3 = String(let (x = "foo") this.startsWith(x))(let (y = "o") this.endsWith(y))
+
+res1: Foo = "foo"
+
+res2: Foo2 = "foo"
+
+res3: Foo3 = "foo"

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,11 +69,11 @@ public record ImportGraph(Map<URI, Set<Import>> imports, Map<URI, URI> resolvedI
         var value = entry.getValue();
         var set = new TreeSet<Import>();
         if (!(value instanceof JsArray array)) {
-          throw new FormatException("array", value.getClass());
+          throw new FormatException("array", value == null ? Void.class : value.getClass());
         }
         for (var elem : array) {
           if (!(elem instanceof JsObject importObj)) {
-            throw new FormatException("object", elem.getClass());
+            throw new FormatException("object", elem == null ? Void.class : elem.getClass());
           }
           set.add(parseImport(importObj));
         }
@@ -98,7 +98,7 @@ public record ImportGraph(Map<URI, Set<Import>> imports, Map<URI, URI> resolvedI
         var key = new URI(entry.getKey());
         var value = entry.getValue();
         if (!(value instanceof String str)) {
-          throw new FormatException("string", value.getClass());
+          throw new FormatException("string", value == null ? Void.class : value.getClass());
         }
         var valueUri = new URI(str);
         ret.put(key, valueUri);

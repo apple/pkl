@@ -143,7 +143,7 @@
  *
  * <p>END OF TERMS AND CONDITIONS
  */
-@NonnullByDefault
+@NullMarked
 package org.pkl.core.stdlib.yaml;
 
-import org.pkl.core.util.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

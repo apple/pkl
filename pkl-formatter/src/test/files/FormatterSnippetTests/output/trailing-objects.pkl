@@ -1,0 +1,9 @@
+foo =
+  bar(
+    "string",
+    true,
+    new Baz {
+      name = "name"
+      num = 10
+    },
+  )

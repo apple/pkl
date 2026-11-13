@@ -1,0 +1,8 @@
+res1 {
+  local x: Int(let (q = 0) this > q) = 5
+  z = x
+}
+
+res2 = f()
+
+function f(): Int(let (q = 0) this > q) = 5

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "==")
 @NodeChild(value = "leftNode", type = ExpressionNode.class)
@@ -33,6 +34,9 @@ public abstract class EqualNode extends ExpressionNode {
   protected EqualNode(SourceSection sourceSection) {
     super(sourceSection);
   }
+
+  /** When using this method, pass {@code null} in for {@code leftNode} and {@code rightNode}. */
+  public abstract boolean executeWith(VirtualFrame frame, Object left, Object right);
 
   @Specialization
   protected boolean eval(String left, String right) {

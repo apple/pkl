@@ -21,9 +21,9 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 public class VmWrappedEvalException extends VmEvalException {
 
@@ -33,7 +33,7 @@ public class VmWrappedEvalException extends VmEvalException {
       @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
-      Object[] messageArguments,
+      @Nullable Object[] messageArguments,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
@@ -41,6 +41,7 @@ public class VmWrappedEvalException extends VmEvalException {
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames,
       VmException wrappedException) {
     super(
         message,
@@ -53,7 +54,8 @@ public class VmWrappedEvalException extends VmEvalException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames);
+        insertedStackFrames,
+        leadingStackFrames);
     this.wrappedException = wrappedException;
   }
 

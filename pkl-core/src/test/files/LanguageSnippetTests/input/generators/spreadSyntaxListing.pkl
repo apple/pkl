@@ -85,3 +85,11 @@ res19 = new Listing {
   0
   0
 }
+
+res20 = new Listing {
+  ...IntSeq(0, -1)
+}
+
+res21 = new Listing {
+  ...IntSeq(0, 1).step(-1)
+}

@@ -1,0 +1,58 @@
+- 1
+- 'localMembers.msgpack.yaml'
+- 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+- 
+  - 
+    - 16
+    - 'dynamic'
+    - 
+      - 1
+      - 'Dynamic'
+      - 'pkl:base'
+      - 
+        - 
+          - 16
+          - 'bar'
+          - 
+            - 1
+            - 'localMembers.msgpack.yaml#Test'
+            - 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+            - []
+  - 
+    - 16
+    - 'listing'
+    - 
+      - 5
+      - 
+        - 
+          - 1
+          - 'localMembers.msgpack.yaml#Test'
+          - 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+          - []
+  - 
+    - 16
+    - 'mapping'
+    - 
+      - 3
+      - 
+        'bar': 
+          - 1
+          - 'localMembers.msgpack.yaml#Test'
+          - 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+          - []
+  - 
+    - 16
+    - 'class'
+    - 
+      - 1
+      - 'localMembers.msgpack.yaml#MyClass'
+      - 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+      - 
+        - 
+          - 16
+          - 'bar'
+          - 
+            - 1
+            - 'localMembers.msgpack.yaml#Test'
+            - 'file:///$snippetsDir/input/pklbinary/localMembers.msgpack.yaml.pkl'
+            - []

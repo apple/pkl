@@ -18,7 +18,7 @@ package org.pkl.core.runtime;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.pkl.core.ValueFormatter;
-import org.pkl.core.util.MutableBoolean;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.parser.Lexer;
 
 /**
@@ -111,12 +111,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitDuration(VmDuration value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitDataSize(VmDataSize value) {
-      append(value);
+      append(value.toPklString());
     }
 
     private void renderByteSize(VmDataSize size) {
@@ -169,12 +169,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitRegex(VmRegex value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitIntSeq(VmIntSeq value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
@@ -258,12 +258,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitClass(VmClass value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitTypeAlias(VmTypeAlias value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
@@ -271,8 +271,32 @@ public final class VmValueRenderer {
       append("null");
     }
 
+    @Override
+    public void visitReference(VmReference value) {
+      contexts.push(Context.EXPLICIT);
+      append("Reference(");
+      visit(value.getDomain());
+      append(", ");
+      append(value.getReferentType());
+      append(", ");
+      visit(value.getData());
+      append(")");
+      for (var elem : value.getPath()) {
+        var property = VmUtils.readMember(elem, Identifier.PROPERTY);
+        if (property instanceof String propName) {
+          append(".");
+          writeIdentifier(propName);
+        } else {
+          append("[");
+          visit(VmUtils.readMember(elem, Identifier.KEY));
+          append("]");
+        }
+      }
+      contexts.pop();
+    }
+
     private void append(Object value) {
-      builder.append(value);
+      builder.append(VmUtils.toPklString(value));
       checkLengthLimit();
     }
 
@@ -308,56 +332,57 @@ public final class VmValueRenderer {
 
       currIndent += indent;
 
-      var isEmpty = new MutableBoolean(true);
-      object.iterateMemberValues(
-          (key, member, value) -> {
-            // don't render type definitions
-            if (member.isClass() || member.isTypeAlias()) return true;
+      var isEmpty = true;
+      for (var cursor = object.members(CursorOption.LAZY_REQUIRED); cursor.advance(); ) {
+        var key = cursor.key();
+        var value = cursor.cachedValueOrNull();
+        var member = cursor.member();
+        // don't render type definitions
+        if (member.isType()) continue;
 
-            if (isEmpty.get()) {
-              append(leadingOrTrailingNewline);
-              isEmpty.set(false);
-            }
+        if (isEmpty) {
+          append(leadingOrTrailingNewline);
+          isEmpty = false;
+        }
 
-            append(currIndent);
+        append(currIndent);
 
-            if (member.isProp()) {
-              contexts.push(Context.IMPLICIT);
-              writeIdentifier(key.toString());
-              if (value instanceof VmObjectLike) {
-                append(' ');
-              } else {
-                append(" = ");
-              }
-            } else if (member.isElement()) {
-              contexts.push(Context.EXPLICIT);
-            } else {
-              assert member.isEntry();
-              contexts.push(Context.EXPLICIT);
-              append('[');
-              visit(key);
-              append(']');
-              contexts.pop();
-              contexts.push(Context.IMPLICIT);
-              if (value instanceof VmObjectLike) {
-                append(' ');
-              } else {
-                append(" = ");
-              }
-            }
+        if (member.isProp()) {
+          contexts.push(Context.IMPLICIT);
+          writeIdentifier(key.toString());
+          if (value instanceof VmObjectLike) {
+            append(' ');
+          } else {
+            append(" = ");
+          }
+        } else if (member.isElement()) {
+          contexts.push(Context.EXPLICIT);
+        } else {
+          assert member.isEntry();
+          contexts.push(Context.EXPLICIT);
+          append('[');
+          visit(key);
+          append(']');
+          contexts.pop();
+          contexts.push(Context.IMPLICIT);
+          if (value instanceof VmObjectLike) {
+            append(' ');
+          } else {
+            append(" = ");
+          }
+        }
 
-            if (value == null) { // not forced
-              append('?');
-            } else {
-              visit(value);
-            }
+        if (value == null) { // not forced
+          append('?');
+        } else {
+          visit(value);
+        }
 
-            contexts.pop();
-            append(interiorNewline);
-            return true;
-          });
+        contexts.pop();
+        append(interiorNewline);
+      }
 
-      if (!isEmpty.get()) {
+      if (!isEmpty) {
         // replace last interiorNewline with leadingOrTrailingNewline
         builder.delete(builder.length() - interiorNewline.length(), builder.length());
         append(leadingOrTrailingNewline);
@@ -376,7 +401,7 @@ public final class VmValueRenderer {
 
       VmClass clazz = value.getVmClass();
       append("new ");
-      append(clazz.getSimpleName());
+      append(clazz.getDisplayName());
       append(' ');
     }
 

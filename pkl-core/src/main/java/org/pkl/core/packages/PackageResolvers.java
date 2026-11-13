@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.packages;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,8 +43,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipInputStream;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClient;
@@ -56,7 +58,6 @@ import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.json.Json.JsonParseException;
 
@@ -87,6 +88,8 @@ final class PackageResolvers {
       checkNotClosed();
       synchronized (lock) {
         var metadata = cachedDependencyMetadata.get(uri);
+        // incorrect "condition is always false" inspection
+        //noinspection ConstantValue
         if (metadata == null) {
           metadata = doGetDependencyMetadata(uri, checksums);
           cachedDependencyMetadata.put(uri, metadata);
@@ -199,7 +202,9 @@ final class PackageResolvers {
       var request = HttpRequest.newBuilder(uri).build();
       HttpResponse<InputStream> response;
       try {
-        response = httpClient.send(request, BodyHandlers.ofInputStream());
+        response =
+            httpClient.send(
+                request, BodyHandlers.ofInputStream(), securityManager::checkReadResource);
       } catch (IOException e) {
         throw new PackageLoadError(e, "ioErrorMakingHttpGet", uri, e.getMessage());
       }
@@ -313,12 +318,20 @@ final class PackageResolvers {
     }
 
     @Override
+    public Pair<Path, Path> writePackage(PackageUri packageUri, Path metadataFile, Path zipFile) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public byte[] getBytes(
         PackageAssetUri uri, boolean allowDirectories, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var elem = cachedTreePathElementRoots.get(uri.getPackageUri()).getElement(uri.getAssetPath());
+      TreePathElement elem;
+      synchronized (lock) {
+        elem = cachedTreePathElementRoots.get(uri.getPackageUri()).getElement(uri.getAssetPath());
+      }
       if (elem == null) {
         throw new FileNotFoundException();
       } else if (elem.isDirectory()) {
@@ -332,7 +345,10 @@ final class PackageResolvers {
         }
         throw fileIsADirectory();
       }
-      var entries = cachedEntries.get(packageUri);
+      EconomicMap<String, ByteBuffer> entries;
+      synchronized (lock) {
+        entries = cachedEntries.get(packageUri);
+      }
       // need to normalize here but not in `doListElements` nor `doHasElement` because
       // `TreePathElement.getElement` does normalization already.
       var path = IoUtils.toNormalizedPathString(Path.of(uri.getAssetPath()).normalize());
@@ -344,7 +360,10 @@ final class PackageResolvers {
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+      TreePathElement element;
+      synchronized (lock) {
+        element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+      }
       if (element == null) {
         return Collections.emptyList();
       }
@@ -356,8 +375,10 @@ final class PackageResolvers {
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
-      return element != null;
+      synchronized (lock) {
+        var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+        return element != null;
+      }
     }
 
     @Override
@@ -412,6 +433,7 @@ final class PackageResolvers {
 
     private final Path tmpDir;
 
+    // if updated, also update CliProjectPackagerTest.`install package to local cache`
     private static final String CACHE_DIR_PREFIX = "package-2";
 
     @GuardedBy("lock")
@@ -441,10 +463,17 @@ final class PackageResolvers {
     }
 
     private Path getRelativePath(PackageUri uri) {
-      return Path.of(
-          CACHE_DIR_PREFIX,
-          IoUtils.encodePath(uri.getUri().getAuthority()),
-          getEffectivePackageUriPath(uri));
+      var relativePath =
+          Path.of(
+              CACHE_DIR_PREFIX,
+              IoUtils.encodePath(uri.getUri().getAuthority()),
+              getEffectivePackageUriPath(uri));
+      // ensure the derived path cannot escape the cache directory
+      var resolved = cacheDir.resolve(relativePath).normalize();
+      if (!resolved.startsWith(cacheDir.normalize())) {
+        throw new PklBugException("Package URI escapes the cache directory");
+      }
+      return relativePath;
     }
 
     private String getLastSegmentName(PackageUri packageUri) {
@@ -480,12 +509,16 @@ final class PackageResolvers {
       }
     }
 
+    private Path doGetMetadataPath(PackageUri packageUri) {
+      var metadataFileName = getLastSegmentName(packageUri) + ".json";
+      var metadataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
+      return cacheDir.resolve(metadataRelativePath);
+    }
+
     private Path getMetadataPath(
         PackageUri packageUri, URI requestUri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
-      var metadataFileName = getLastSegmentName(packageUri) + ".json";
-      var metadataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
-      var cachePath = cacheDir.resolve(metadataRelativePath);
+      var cachePath = doGetMetadataPath(packageUri);
       if (Files.exists(cachePath)) {
         return cachePath;
       }
@@ -533,11 +566,15 @@ final class PackageResolvers {
       return metadata;
     }
 
-    private Path getZipFilePath(PackageUri packageUri, DependencyMetadata dependencyMetadata)
-        throws IOException, SecurityManagerException {
+    private Path doGetZipFilePath(PackageUri packageUri) {
       var packageZipName = getLastSegmentName(packageUri) + ".zip";
       var relativePath = getRelativePath(packageUri).resolve(packageZipName);
-      var cachePath = cacheDir.resolve(relativePath);
+      return cacheDir.resolve(relativePath);
+    }
+
+    private Path getZipFilePath(PackageUri packageUri, DependencyMetadata dependencyMetadata)
+        throws IOException, SecurityManagerException {
+      var cachePath = doGetZipFilePath(packageUri);
       if (Files.exists(cachePath)) {
         return cachePath;
       }
@@ -570,6 +607,8 @@ final class PackageResolvers {
       var packageUri = uri.getPackageUri();
       synchronized (lock) {
         var fs = fileSystems.get(packageUri);
+        // incorrect "condition is always false" inspection
+        //noinspection ConstantValue
         if (fs == null) {
           var metadata = getDependencyMetadata(packageUri, checksums);
           var zipFilePath = getZipFilePath(packageUri, metadata);
@@ -658,6 +697,29 @@ final class PackageResolvers {
         }
         fileSystems.clear();
       }
+    }
+
+    @Override
+    public Pair<Path, Path> writePackage(PackageUri packageUri, Path metadataFile, Path zipFile)
+        throws IOException {
+      Files.createDirectories(tmpDir);
+      var tmpSubpath = IoUtils.encodePath(packageUri.toString().replace("/", "-"));
+      return Pair.of(
+          writePackagePart(metadataFile, doGetMetadataPath(packageUri), tmpSubpath, ".json"),
+          writePackagePart(zipFile, doGetZipFilePath(packageUri), tmpSubpath, ".zip"));
+    }
+
+    private Path writePackagePart(Path srcFile, Path cacheFile, String tmpSubpath, String suffix)
+        throws IOException {
+      var tmpFile = Files.createTempFile(tmpDir, tmpSubpath, suffix);
+      Files.createDirectories(cacheFile.getParent());
+      Files.copy(srcFile, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+      Files.move(
+          tmpFile, cacheFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+      if (!IoUtils.isWindows()) {
+        Files.setPosixFilePermissions(cacheFile, FILE_PERMISSIONS);
+      }
+      return cacheFile;
     }
   }
 }

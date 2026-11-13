@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.io.UnsupportedEncodingException;
@@ -29,8 +30,14 @@ import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.util.ByteArrayUtils;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.StringUtils;
+import org.pkl.core.util.url.UrlParser;
+import org.pkl.parser.Lexer;
+import org.pkl.parser.ParserError;
+import org.pkl.parser.Token;
 
 @SuppressWarnings("unused")
 public final class StringNodes {
@@ -165,6 +172,19 @@ public final class StringNodes {
     }
   }
 
+  public abstract static class isGlobPattern extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(String self) {
+      try {
+        GlobResolver.toRegexString(self);
+        return true;
+      } catch (InvalidGlobPatternException e) {
+        return false;
+      }
+    }
+  }
+
   public abstract static class isBase64 extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary
@@ -175,6 +195,14 @@ public final class StringNodes {
       } catch (IllegalArgumentException e) {
         return false;
       }
+    }
+  }
+
+  public abstract static class isValidUrl extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(String self) {
+      return UrlParser.isValidUrl(self);
     }
   }
 
@@ -205,7 +233,9 @@ public final class StringNodes {
       var charIndex = VmUtils.codePointOffsetToCharOffset(self, index);
       if (charIndex == -1 || charIndex == self.length()) return VmNull.withoutDefault();
 
-      if (Character.isHighSurrogate(self.charAt(charIndex))) {
+      if (Character.isHighSurrogate(self.charAt(charIndex))
+          && charIndex < self.length() - 1
+          && Character.isLowSurrogate(self.charAt(charIndex + 1))) {
         return self.substring(charIndex, charIndex + 2);
       }
       return self.substring(charIndex, charIndex + 1);
@@ -312,15 +342,49 @@ public final class StringNodes {
     }
 
     @TruffleBoundary
-    @Specialization
-    // inefficient but at least correct
-    protected boolean eval(String self, VmRegex regex) {
-      var matcher = regex.matcher(self);
-      var end = -1;
-      while (matcher.find()) {
-        end = matcher.end();
+    @Specialization(guards = "regex.equals(cachedRegex)")
+    protected boolean evalRegexCached(
+        String self,
+        VmRegex regex,
+        @Cached("regex") VmRegex cachedRegex,
+        @Cached("computePattern(cachedRegex)") Pattern pattern) {
+      return pattern.matcher(self).find();
+    }
+
+    @TruffleBoundary
+    @Specialization(replaces = "evalRegexCached")
+    protected boolean evalRegex(String self, VmRegex regex) {
+      return computePattern(regex).matcher(self).find();
+    }
+
+    // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
+    // constructing a regex like `foo|bar$`)
+    @SuppressWarnings({
+      "RegExpUnnecessaryNonCapturingGroup",
+      "RegExpUnexpectedAnchor",
+      "MagicConstant"
+    })
+    protected final Pattern computePattern(VmRegex regex) {
+      var existingPattern = regex.getPattern();
+      var suffix = isCommentsEnabled(regex) ? "\n)\\z" : ")\\z";
+      try {
+        return Pattern.compile("(?:" + existingPattern.pattern() + suffix, VmUtils.REGEX_FLAGS);
+      } catch (PatternSyntaxException e) {
+        // if we have an unclosed group, the issue here must be that there was a quote start with
+        // an unmatched quote end (e.g. `foo\Qs`)
+        if (e.getMessage().contains("Unclosed group")) {
+          // incorrect regex error diagnostic here but not suppressable.
+          return Pattern.compile(
+              "(?:" + existingPattern.pattern() + "\\E" + suffix, VmUtils.REGEX_FLAGS);
+        } else {
+          CompilerDirectives.transferToInterpreter();
+          throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
+        }
       }
-      return end == self.length();
+    }
+
+    private boolean isCommentsEnabled(VmRegex regex) {
+      return (regex.getPattern().flags() & Pattern.COMMENTS) != 0;
     }
   }
 
@@ -730,13 +794,12 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization
     protected String eval(String self, long width, String ch) {
-      var length = self.length();
+      var length = self.codePointCount(0, self.length());
       if (length >= width) return self;
 
       var result = new StringBuilder(VmSafeMath.toInt32(width));
-      var c = ch.charAt(0);
       for (var i = 0; i < width - length; i++) {
-        result.append(c);
+        result.append(ch);
       }
       result.append(self);
       return result.toString();
@@ -747,14 +810,13 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization
     protected String eval(String self, long width, String ch) {
-      var length = self.length();
+      var length = self.codePointCount(0, self.length());
       if (length >= width) return self;
 
       var result = new StringBuilder(VmSafeMath.toInt32(width));
       result.append(self);
-      var c = ch.charAt(0);
       for (var i = 0; i < width - length; i++) {
-        result.append(c);
+        result.append(ch);
       }
       return result.toString();
     }
@@ -815,12 +877,57 @@ public final class StringNodes {
     }
   }
 
+  /** Use the lexer to parse integer values in the same forms that Pkl itself accepts */
+  private static long toInt(String self) throws NumberFormatException {
+    try {
+      var lexer = new Lexer(self);
+      var tk = lexer.next();
+      var prefix = "";
+      switch (tk) {
+        case MINUS -> {
+          prefix = "-";
+          tk = lexer.next();
+        }
+        case PLUS -> tk = lexer.next();
+      }
+
+      int radix;
+      var text = lexer.text();
+      switch (tk) {
+        case INT -> radix = 10;
+        case BIN -> {
+          radix = 2;
+          text = text.substring(2); // strip "0b"
+        }
+        case OCT -> {
+          radix = 8;
+          text = text.substring(2); // strip "0o"
+        }
+        case HEX -> {
+          radix = 16;
+          text = text.substring(2); // strip "0x"
+        }
+        default -> throw new NumberFormatException();
+      }
+      var parsed = Long.parseLong(prefix + VmUtils.removeUnderscoresFromNumber(text, false), radix);
+
+      // ensure no trailing garbage
+      if (lexer.next() != Token.EOF) {
+        throw new NumberFormatException();
+      }
+
+      return parsed;
+    } catch (ParserError ignored) {
+      throw new NumberFormatException();
+    }
+  }
+
   public abstract static class toInt extends ExternalMethod0Node {
     @TruffleBoundary
     @Specialization
     protected long eval(String self) {
       try {
-        return Long.parseLong(removeUnderlinesFromNumber(self));
+        return toInt(self);
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Int")
@@ -835,7 +942,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Long.parseLong(removeUnderlinesFromNumber(self));
+        return toInt(self);
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -847,7 +954,7 @@ public final class StringNodes {
     @Specialization
     protected double eval(String self) {
       try {
-        return Double.parseDouble(removeUnderlinesFromNumber(self));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, true));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Float")
@@ -862,7 +969,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Double.parseDouble(removeUnderlinesFromNumber(self));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, true));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -1000,7 +1107,7 @@ public final class StringNodes {
     } while (m.find());
 
     // Reset `m` to the last match before returning (should always be `true` at this point)
-    return m.region(r.start(), r.end()).lookingAt();
+    return m.find(r.start());
   }
 
   /**
@@ -1015,24 +1122,5 @@ public final class StringNodes {
     var regexMatch = RegexMatchFactory.create(Pair.of(matcher.toMatchResult(), -1));
     var replacement = applyNode.executeString(mapper, regexMatch);
     return Matcher.quoteReplacement(replacement);
-  }
-
-  /**
-   * Removes `_` from numbers to be parsed to be compatible with how Pkl parses numbers. Will return
-   * the string unmodified if it's invalid.
-   */
-  private static String removeUnderlinesFromNumber(String number) {
-    var builder = new StringBuilder();
-    var numberStart = true;
-    for (var i = 0; i < number.length(); i++) {
-      var c = number.charAt(i);
-      if (c != '_') {
-        builder.append(c);
-      } else if (numberStart) return number;
-
-      numberStart = c == '.' || c == 'e' || c == 'E';
-    }
-
-    return builder.toString();
   }
 }

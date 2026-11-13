@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Unexpected token `}`.
+
+x | }
+    ^
+at letExpressionError3 (file:///$snippetsDir/input/errors/letExpressionError3.pkl)

@@ -1,0 +1,141 @@
+examples {
+  ["resolve()"] {
+    new {
+      modulePath {
+        #"C:\path\to\dir\first\module\path"#
+        #"C:\path\to\dir\second\module\path"#
+      }
+      moduleCacheDir = #"C:\path\to\dir\my\cache\dir"#
+      rootDir = #"C:\path\to\dir\my\root\dir"#
+      externalModuleReaders {
+        ["foo"] {
+          executable = #"C:\path\to\dir\path\to\my\executable"#
+          workingDir = #"C:\path\to\dir"#
+        }
+      }
+      externalResourceReaders {
+        ["foo"] {
+          executable = #"C:\path\to\dir\path\to\my\executable"#
+          workingDir = #"C:\path\to\dir"#
+        }
+      }
+    }
+  }
+  ["relative path"] {
+    #"C:\path\to\dir\foo\bar"#
+  }
+  ["relative path 2"] {
+    #"C:\path\to\dir\foo\bar"#
+  }
+  ["absolute path"] {
+    #"C:\foo\bar"#
+  }
+  ["absolute path with drive letter"] {
+    #"C:\foo\bar"#
+  }
+  ["absolute path with drive letter 2"] {
+    #"C:\foo\bar"#
+  }
+  ["absolute path with drive letter 3"] {
+    #"C:\"#
+  }
+  ["absolute path with drive letter 4"] {
+    "C:"
+  }
+  ["absolute path with drive letter 5"] {
+    #"\\path\to\foo"#
+  }
+  ["base path with drive letter"] {
+    #"\path\to\foo"#
+  }
+  ["enclosing URI has spaces"] {
+    #"C:\path\to\dir with spaces\foo\bar"#
+  }
+  ["relative path with dot segments"] {
+    #"C:\path\to\my\module\path"#
+  }
+  ["relative path with dot segments 2"] {
+    #"C:\path\my\module\path"#
+  }
+  ["relative path with dot segments 3"] {
+    #"C:\path\to\dir"#
+  }
+  ["relative path with dot segments 4"] {
+    #"C:\path\to\dir"#
+  }
+  ["relative path with dot segments 5"] {
+    #"C:\"#
+  }
+  ["file URI with no drive"] {
+    #"\path\to\dir\foo\bar"#
+  }
+  ["executable with simple name is not resolved"] {
+    "my-reader"
+  }
+  ["executable with path segments is resolved against enclosingUri"] {
+    #"C:\path\to\dir\path\to\reader"#
+  }
+  ["workingDir defaults to enclosingUri"] {
+    #"C:\path\to\dir"#
+  }
+  ["workingDir with relative path"] {
+    #"C:\path\to\dir"#
+  }
+  ["workingDir with absolute path"] {
+    #"C:\foo\bar"#
+  }
+  ["UNC path"] {
+    #"\\server\share\path\to\foo"#
+  }
+  ["UNC path 2"] {
+    #"\\server\share\new\path"#
+  }
+  ["empty path"] {
+    #"C:\path\to\dir"#
+  }
+  ["multiple consecutive slashes"] {
+    #"C:\path\to\dir\my\path"#
+  }
+  ["different drive letter"] {
+    #"D:\my\path"#
+  }
+  ["UNC path as base with relative path"] {
+    #"\\server\share\dir\my\path"#
+  }
+  ["UNC path as base with .."] {
+    #"\\server\share\dir\my\path"#
+  }
+  ["UNC path as base with ."] {
+    #"\\server\share\dir"#
+  }
+  ["UNC path as base, cannot remove root"] {
+    #"\\server\share\"#
+  }
+  ["UNC path as base, cannot remove root 2"] {
+    #"\\server\share\"#
+  }
+  ["UNC path as base with drive letter path"] {
+    #"C:\local\path"#
+  }
+  ["UNC path as base with no drive"] {
+    #"\\server\\my\path"#
+  }
+  ["trailing separator preserved"] {
+    #"C:\path\to\dir\my\path"#
+  }
+  ["trailing separator preserved with normalization"] {
+    #"C:\path\to\my\path"#
+  }
+  ["no trailing separator"] {
+    #"C:\path\to\dir\my\path"#
+  }
+  ["complex normalization"] {
+    #"C:\path\to\dir\bar\baz"#
+  }
+  ["UNC with forward slashes"] {
+    #"\\server\share\dir\my\path"#
+  }
+  ["absolute path with different drive and forward slashes"] {
+    #"D:\my\path"#
+  }
+}

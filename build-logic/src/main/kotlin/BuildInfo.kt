@@ -15,7 +15,10 @@
  */
 @file:Suppress("MemberVisibilityCanBePrivate")
 
+import Target.Arch
+import Target.OS
 import java.io.File
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -24,6 +27,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.extensions.stdlib.capitalized
+import org.gradle.internal.os.OperatingSystem
 import org.gradle.jvm.toolchain.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.kotlin.dsl.support.serviceOf
@@ -70,31 +74,28 @@ const val PKL_TEST_ALL_JDKS = false
 // `buildInfo` in main build scripts
 // `project.extensions.getByType<BuildInfo>()` in precompiled script plugins
 open class BuildInfo(private val project: Project) {
-  inner class GraalVm(val arch: String) {
+  inner class GraalVm(
+    val osName: String,
+    val arch: String,
+    val version: String,
+    val graalJdkVersion: String,
+  ) {
     val homeDir: String by lazy {
       System.getenv("GRAALVM_HOME") ?: "${System.getProperty("user.home")}/.graalvm"
     }
-
-    val version: String by lazy { libs.findVersion("graalVm").get().toString() }
-
     val graalVmJdkVersion: String by lazy { libs.findVersion("graalVmJdkVersion").get().toString() }
-
-    val osName: String by lazy {
-      when {
-        os.isMacOsX -> "macos"
-        os.isLinux -> "linux"
-        os.isWindows -> "windows"
-        else -> throw RuntimeException("${os.familyName} is not supported.")
-      }
-    }
+    val graalVmInnovation: String by lazy { libs.findVersion("graalVmInnovation").get().toString() }
 
     val baseName: String by lazy {
       "graalvm-community-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin"
     }
 
+    val graalMajorVersion: String = graalJdkVersion.split(".").first()
+
     val downloadUrl: String by lazy {
-      val extension = if (os.isWindows) "zip" else "tar.gz"
-      "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalVmJdkVersion}/$baseName.$extension"
+      val ext = if (os.isWindows) "zip" else "tar.gz"
+      val platformArch = if (arch == "amd64") "x64" else arch
+      "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-$version/graalvm-community-jdk-${graalMajorVersion}i${graalVmInnovation}-${graalJdkVersion}_${osName}-${platformArch}_bin.$ext"
     }
 
     val downloadFile: File by lazy {
@@ -105,35 +106,50 @@ open class BuildInfo(private val project: Project) {
     val installDir: File by lazy { File(homeDir, baseName) }
 
     val baseDir: String by lazy {
-      if (os.isMacOsX) "$installDir/Contents/Home" else installDir.toString()
+      if (os.isMacOS) "$installDir/Contents/Home" else installDir.toString()
     }
   }
 
+  /** The target machine to build, defaulting to the host system machine. */
+  val targetMachine: Target by lazy { Target.from(os = os, arch = targetArch, musl = musl) }
+
   /** The target architecture to build, defaulting to the system architecture. */
-  val targetArch by lazy { System.getProperty("pkl.targetArch") ?: arch }
+  val targetArch: Arch by lazy { System.getProperty("pkl.targetArch")?.let(Arch::fromName) ?: arch }
 
   /** Tells if this is a cross-arch build (e.g. targeting amd64 when on an aarch64 machine). */
   val isCrossArch by lazy { arch != targetArch }
 
   /** Tells if cross-arch builds are supported on this machine. */
-  val isCrossArchSupported by lazy { os.isMacOsX }
+  val isCrossArchSupported by lazy { os.isMacOS }
 
   /** Whether to build native executables using the musl toolchain or not. */
   val musl: Boolean by lazy { java.lang.Boolean.getBoolean("pkl.musl") }
 
-  /** Same logic as [org.gradle.internal.os.OperatingSystem#arch], which is protected. */
-  val arch: String by lazy {
+  val arch: Arch by lazy {
     when (val arch = System.getProperty("os.arch")) {
-      "x86" -> "i386"
-      "x86_64" -> "amd64"
-      "powerpc" -> "ppc"
-      else -> arch
+      "x86_64",
+      "amd64" -> Arch.AMD64
+      "aarch64" -> Arch.AARCH64
+      else -> throw GradleException("Cannot build Pkl on arch: $arch")
     }
   }
 
-  val graalVmAarch64: GraalVm = GraalVm("aarch64")
+  val graalVmAarch64: GraalVm by lazy { createGraalVm("aarch64") }
 
-  val graalVmAmd64: GraalVm = GraalVm("x64")
+  val graalVmAmd64: GraalVm by lazy { createGraalVm("x64") }
+
+  private fun createGraalVm(arch: String): GraalVm {
+    val osName =
+      when {
+        os.isMacOS -> "macos"
+        os.isLinux -> "linux"
+        os.isWindows -> "windows"
+        else -> throw RuntimeException("Unsupported OS for GraalVM: ${os.name}")
+      }
+    val version = libs.findVersion("graalVm").get().toString()
+    val graalJdkVersion = libs.findVersion("graalVmJdkVersion").get().toString()
+    return GraalVm(osName, arch, version, graalJdkVersion)
+  }
 
   val isCiBuild: Boolean by lazy { System.getenv("CI") != null }
 
@@ -288,7 +304,15 @@ open class BuildInfo(private val project: Project) {
           classpath = template.classpath
           testClassesDirs = template.testClassesDirs
           jvmArgs.addAll(template.jvmArgs)
-          jvmArgumentProviders.addAll(template.jvmArgumentProviders)
+          jvmArgumentProviders.addAll(
+            template.jvmArgumentProviders.map { provider ->
+              // Gradle injects this arg, which is not compatible across JDK versions
+              // other JDK versions (see https://github.com/gradle/gradle/issues/39442)
+              CommandLineArgumentProvider {
+                provider.asArguments().filter { !it.startsWith("--sun-misc-unsafe-memory-access") }
+              }
+            }
+          )
           forkEvery = template.forkEvery
           maxParallelForks = template.maxParallelForks
           minHeapSize = template.minHeapSize
@@ -368,8 +392,14 @@ open class BuildInfo(private val project: Project) {
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
   }
 
-  val os: org.gradle.internal.os.OperatingSystem by lazy {
-    org.gradle.internal.os.OperatingSystem.current()
+  val os: OS by lazy {
+    val currentOs = OperatingSystem.current()
+    when {
+      currentOs.isMacOsX -> OS.MacOS
+      currentOs.isLinux -> OS.Linux
+      currentOs.isWindows -> OS.Windows
+      else -> throw GradleException("Cannot build on ${currentOs.name}")
+    }
   }
 
   // could be `commitId: Provider<String> = project.provider { ... }`
@@ -425,3 +455,12 @@ open class BuildInfo(private val project: Project) {
 // Shape of a function which is applied to configure multi-JDK testing.
 private typealias MultiJdkTestConfigurator =
   Test.(Pair<JavaLanguageVersion, Provider<JavaLauncher>>) -> Unit
+
+private val OperatingSystem.canonicalName
+  get() =
+    when {
+      isMacOsX -> "macos"
+      isWindows -> "windows"
+      isLinux -> "linux"
+      else -> throw RuntimeException("Unsupported OS: $name")
+    }

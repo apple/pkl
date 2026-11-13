@@ -15,6 +15,9 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+import static org.pkl.gradle.utils.PluginUtils.toTestReporter;
+
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
@@ -60,6 +63,14 @@ public abstract class ProjectPackageTask extends BasePklTask {
   @Optional
   public abstract Property<Boolean> getSkipPublishCheck();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getInstall();
+
+  @Input
+  @Optional
+  public abstract Property<String> getTestReporter();
+
   public ProjectPackageTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
   }
@@ -81,9 +92,11 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
-                getJunitAggregateSuiteName().get()),
+                getJunitAggregateSuiteName().get(),
+                toTestReporter(getTestReporter())),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
+            getInstall().getOrElse(false),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

@@ -32,7 +32,7 @@ class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions)
 
     try {
       builder.build().use { evaluator ->
-        for (moduleUri in resolvedSourceModules) {
+        for (moduleUri in options.base.normalizedSourceModules) {
           val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
           val codeGenerator = KotlinCodeGenerator(schema, options.toKotlinCodeGeneratorOptions())
           try {

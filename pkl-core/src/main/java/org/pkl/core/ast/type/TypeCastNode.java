@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "as")
 public final class TypeCastNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
-  @Child @LateInit private TypeNode typeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable TypeNode typeNode;
 
   public TypeCastNode(
       SourceSection sourceSection,
@@ -43,6 +43,7 @@ public final class TypeCastNode extends ExpressionNode {
       // don't compile unresolvedTypeNode.execute()
       // invalidation is done by insert()
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }

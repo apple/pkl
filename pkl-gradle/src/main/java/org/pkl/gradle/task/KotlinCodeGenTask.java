@@ -41,7 +41,8 @@ public abstract class KotlinCodeGenTask extends CodeGenTask {
                 getGenerateSpringBootConfig().get(),
                 getImplementSerializable().get(),
                 getAddGeneratedAnnotation().get(),
-                getRenames().get()))
+                getRenames().get(),
+                getSpringBootConfigurationProperties().get()))
         .run();
   }
 }

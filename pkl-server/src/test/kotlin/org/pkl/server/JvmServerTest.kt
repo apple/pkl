@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.pkl.commons.test.server.AbstractHttpServerTest
+import org.pkl.commons.test.server.TestTransport
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.util.Pair
 
-class JvmServerTest : AbstractServerTest() {
+class JvmServerTest : AbstractHttpServerTest() {
   private val transports: Pair<MessageTransport, MessageTransport> = run {
     if (USE_DIRECT_TRANSPORT) {
       MessageTransports.direct(::log)

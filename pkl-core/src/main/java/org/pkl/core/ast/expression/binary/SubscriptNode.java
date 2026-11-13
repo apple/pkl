@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessError;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessErrorType;
+import org.pkl.core.util.ErrorMessages;
 
 @NodeInfo(shortName = "[]")
 public abstract class SubscriptNode extends BinaryExpressionNode {
@@ -44,7 +48,9 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
           .build();
     }
 
-    if (Character.isHighSurrogate(receiver.charAt(charIndex))) {
+    if (Character.isHighSurrogate(receiver.charAt(charIndex))
+        && charIndex < receiver.length() - 1
+        && Character.isLowSurrogate(receiver.charAt(charIndex + 1))) {
       return receiver.substring(charIndex, charIndex + 2);
     }
     return receiver.substring(charIndex, charIndex + 1);
@@ -96,6 +102,34 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
       VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     return readMember(dynamic, key, callNode);
+  }
+
+  private @Nullable String getReferenceHint(
+      VmReference reference, VmReferenceAccessError err, Object key) {
+    var myType = reference.getReferentType();
+    if (err.getErrorType() != VmReferenceAccessErrorType.CANNOT_FIND_MEMBER) {
+      return null;
+    }
+    return err.getType().equals(myType)
+        ? ErrorMessages.create("operatorNotDefined2", getShortName(), myType, VmUtils.getClass(key))
+        : ErrorMessages.create(
+            "operatorNotDefined3", getShortName(), myType, err.getType(), VmUtils.getClass(key));
+  }
+
+  @Specialization
+  protected VmReference eval(VmReference reference, Object key) {
+    try {
+      return reference.withSubscriptAccess(key);
+    } catch (VmReferenceAccessError err) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError(
+              "operatorNotDefined2", getShortName(), reference.getType(), VmUtils.getClass(key))
+          .withProgramValue("Left operand", reference)
+          .withProgramValue("Right operand", key)
+          .withHint(getReferenceHint(reference, err, key))
+          .build();
+    }
   }
 
   @Specialization

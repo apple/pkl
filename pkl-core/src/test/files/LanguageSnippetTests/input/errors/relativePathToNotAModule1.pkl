@@ -1,0 +1,7 @@
+local objectThatAmendsModule = (module) {
+  // add a local property to force this into a new object amends;
+  // empty object amends are optimized away.
+  local qux = 1
+}
+
+res = objectThatAmendsModule.relativePathTo(module)

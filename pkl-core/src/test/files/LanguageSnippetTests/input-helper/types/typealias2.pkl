@@ -1,0 +1,5 @@
+import "typealias1.pkl"
+
+const name = "Alice"
+
+typealias Outer = typealias1.Inner

@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Analyzer;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
@@ -55,13 +56,13 @@ import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ImportGraphUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** Java representation of module {@code pkl.Project}. */
 public final class Project {
   private final @Nullable Package pkg;
   private final DeclaredDependencies dependencies;
   private final PklEvaluatorSettings evaluatorSettings;
+  private final PklEvaluatorSettings resolvedEvaluatorSettings;
   private final URI projectFileUri;
   private final URI projectBaseUri;
   private final List<URI> tests;
@@ -79,10 +80,38 @@ public final class Project {
   public static Project loadFromPath(
       Path path,
       SecurityManager securityManager,
-      @Nullable java.time.Duration timeout,
+      java.time.@Nullable Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars,
       boolean powerAssertionsEnabled) {
+    return loadFromPath(
+        path,
+        securityManager,
+        timeout,
+        stackFrameTransformer,
+        envVars,
+        powerAssertionsEnabled,
+        IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads Project data from the given {@link Path}.
+   *
+   * <p>Evaluates a module's {@code output.value} to allow for embedding a project within a
+   * template.
+   *
+   * @param moduleCacheDir the directory where packages imported by the project file are cached;
+   *     {@code null} disables caching
+   * @throws PklException if an error occurred while evaluating the project file.
+   */
+  public static Project loadFromPath(
+      Path path,
+      SecurityManager securityManager,
+      java.time.@Nullable Duration timeout,
+      StackFrameTransformer stackFrameTransformer,
+      Map<String, String> envVars,
+      boolean powerAssertionsEnabled,
+      @Nullable Path moduleCacheDir) {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(securityManager)
@@ -96,6 +125,7 @@ public final class Project {
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .setPowerAssertionsEnabled(powerAssertionsEnabled)
+            .setModuleCacheDir(moduleCacheDir)
             .build()) {
       return load(evaluator, ModuleSource.path(path));
     }
@@ -112,7 +142,7 @@ public final class Project {
   public static Project loadFromPath(
       Path path,
       SecurityManager securityManager,
-      @Nullable java.time.Duration timeout,
+      java.time.@Nullable Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars) {
     return loadFromPath(path, securityManager, timeout, stackFrameTransformer, envVars, false);
@@ -120,7 +150,7 @@ public final class Project {
 
   /** Convenience method to load a project with the default stack frame transformer. */
   public static Project loadFromPath(
-      Path path, SecurityManager securityManager, @Nullable java.time.Duration timeout) {
+      Path path, SecurityManager securityManager, java.time.@Nullable Duration timeout) {
     return loadFromPath(
         path, securityManager, timeout, StackFrameTransformers.defaultTransformer, System.getenv());
   }
@@ -198,7 +228,7 @@ public final class Project {
         sb.append("\n│");
       }
       sb.append("\n│  ");
-      sb.append(uri.toString());
+      sb.append(uri);
     }
     sb.append("\n└─");
   }
@@ -247,13 +277,17 @@ public final class Project {
         .addResourceReader(ResourceReaders.pkg());
   }
 
+  @SuppressWarnings("unchecked")
+  private static Map<String, PObject> getDependencies(PObject module) {
+    return (Map<String, PObject>) module.getProperty("dependencies");
+  }
+
   private static DeclaredDependencies parseDependencies(
       PObject module, URI projectFileUri, @Nullable PackageUri packageUri)
       throws URISyntaxException {
     var remoteDependencies = new HashMap<String, RemoteDependency>();
     var localDependencies = new HashMap<String, DeclaredDependencies>();
-    //noinspection unchecked
-    var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
+    var dependencies = getDependencies(module);
     for (var entry : dependencies.entrySet()) {
       var value = entry.getValue();
       if (value.getClassInfo().equals(PClassInfo.Project)) {
@@ -290,7 +324,7 @@ public final class Project {
 
   public static Project parseProject(PObject module) throws URISyntaxException {
     var pkgObj = getNullableProperty(module, "package");
-    var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
+    var projectFileUri = new URI((String) module.getProperty("projectFileUri"));
     var dependencies = parseDependencies(module, projectFileUri, null);
     var projectBaseUri = IoUtils.resolve(projectFileUri, ".");
     Package pkg = null;
@@ -301,9 +335,14 @@ public final class Project {
         getProperty(
             module,
             "evaluatorSettings",
-            (settings) ->
-                PklEvaluatorSettings.parse(
-                    (Value) settings, (it, name) -> resolveNullablePath(it, projectBaseUri, name)));
+            (settings) -> PklEvaluatorSettings.parse((Value) settings));
+
+    var resolvedEvaluatorSettings =
+        getProperty(
+            module,
+            "resolvedEvaluatorSettings",
+            (settings) -> PklEvaluatorSettings.parse((Value) settings));
+
     @SuppressWarnings("unchecked")
     var testPathStrs = (List<String>) getProperty(module, "tests");
     var tests =
@@ -316,6 +355,7 @@ public final class Project {
         pkg,
         dependencies,
         evaluatorSettings,
+        resolvedEvaluatorSettings,
         projectFileUri,
         projectBaseUri,
         tests,
@@ -325,8 +365,7 @@ public final class Project {
 
   private static Map<String, Project> parseLocalProjectDependencies(PObject module)
       throws URISyntaxException {
-    //noinspection unchecked
-    var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
+    var dependencies = getDependencies(module);
     var result = new HashMap<String, Project>();
     for (var entry : dependencies.entrySet()) {
       var value = entry.getValue();
@@ -371,24 +410,6 @@ public final class Project {
     return new URI((String) value);
   }
 
-  /**
-   * Resolve a path string against projectBaseUri.
-   *
-   * @throws PackageLoadError if projectBaseUri is not a {@code file:} URI.
-   */
-  private static @Nullable Path resolveNullablePath(
-      @Nullable String path, URI projectBaseUri, String propertyName) {
-    if (path == null) {
-      return null;
-    }
-    try {
-      return Path.of(projectBaseUri).resolve(path).normalize();
-    } catch (FileSystemNotFoundException e) {
-      throw new PackageLoadError(
-          "relativePathPropertyDefinedByProjectFromNonFileUri", projectBaseUri, propertyName);
-    }
-  }
-
   @SuppressWarnings("unchecked")
   private static Package parsePackage(PObject pObj) throws URISyntaxException {
     var name = (String) pObj.getProperty("name");
@@ -430,6 +451,7 @@ public final class Project {
       @Nullable Package pkg,
       DeclaredDependencies dependencies,
       PklEvaluatorSettings evaluatorSettings,
+      PklEvaluatorSettings resolvedEvaluatorSettings,
       URI projectFileUri,
       URI projectBaseUri,
       List<URI> tests,
@@ -438,6 +460,7 @@ public final class Project {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
+    this.resolvedEvaluatorSettings = resolvedEvaluatorSettings;
     this.projectFileUri = projectFileUri;
     this.projectBaseUri = projectBaseUri;
     this.tests = tests;
@@ -459,6 +482,15 @@ public final class Project {
     return evaluatorSettings;
   }
 
+  /**
+   * The evaluator settings whose paths have been resolved against the project dir.
+   *
+   * @since 0.32.0
+   */
+  public PklEvaluatorSettings getResolvedEvaluatorSettings() {
+    return resolvedEvaluatorSettings;
+  }
+
   public URI getProjectFileUri() {
     return projectFileUri;
   }
@@ -477,7 +509,7 @@ public final class Project {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -488,6 +520,7 @@ public final class Project {
     return Objects.equals(pkg, project.pkg)
         && dependencies.equals(project.dependencies)
         && evaluatorSettings.equals(project.evaluatorSettings)
+        && resolvedEvaluatorSettings.equals(project.resolvedEvaluatorSettings)
         && projectFileUri.equals(project.projectFileUri)
         && tests.equals(project.tests)
         && annotations.equals(project.annotations);
@@ -495,7 +528,14 @@ public final class Project {
 
   @Override
   public int hashCode() {
-    return Objects.hash(pkg, dependencies, evaluatorSettings, projectFileUri, tests, annotations);
+    return Objects.hash(
+        pkg,
+        dependencies,
+        evaluatorSettings,
+        resolvedEvaluatorSettings,
+        projectFileUri,
+        tests,
+        annotations);
   }
 
   public DeclaredDependencies getDependencies() {
@@ -506,6 +546,7 @@ public final class Project {
     return localProjectDependencies;
   }
 
+  @SuppressWarnings("unused")
   public URI getProjectBaseUri() {
     return projectBaseUri;
   }
@@ -602,7 +643,7 @@ public final class Project {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) {
         return true;
       }

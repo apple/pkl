@@ -1,0 +1,7 @@
+class Example {
+  aa: Listing<String> | String
+}
+
+res: Example = new {
+  aa { "hello" }
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.DataSize;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.Duration;
@@ -40,7 +41,6 @@ import org.pkl.core.Pair;
 import org.pkl.core.PklException;
 import org.pkl.core.Version;
 import org.pkl.core.packages.Dependency.RemoteDependency;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsArray;
@@ -217,6 +217,7 @@ public final class DependencyMetadata {
           var map = new HashMap<>();
           for (var kv : value) {
             var kvObj = (JsObject) kv;
+            assert kvObj != null;
             map.put(parsePObject(kvObj.get("key")), parsePObject(kvObj.get("value")));
           }
           return map;
@@ -294,7 +295,7 @@ public final class DependencyMetadata {
     var ret = new ArrayList<String>(arr.size());
     for (var elem : arr) {
       if (!(elem instanceof String string)) {
-        throw new FormatException("string", elem.getClass());
+        throw new FormatException("string", elem != null ? elem.getClass() : Void.class);
       }
       ret.add(string);
     }
@@ -414,7 +415,7 @@ public final class DependencyMetadata {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -532,7 +533,7 @@ public final class DependencyMetadata {
         if (checksums != null) {
           jsonWriter.name("checksums");
           jsonWriter.beginObject();
-          jsonWriter.name("sha256").value(entry.getValue().getChecksums().getSha256());
+          jsonWriter.name("sha256").value(checksums.getSha256());
           jsonWriter.endObject();
         }
         jsonWriter.endObject();
@@ -624,8 +625,8 @@ public final class DependencyMetadata {
       jsonWriter.endObject();
     }
 
-    private void writeGenericObject(Object value) throws IOException {
-      if (value instanceof PNull) {
+    private void writeGenericObject(@Nullable Object value) throws IOException {
+      if (value == null || value instanceof PNull) {
         jsonWriter.nullValue();
       } else if (value instanceof PObject pObject) {
         writePObject(pObject);

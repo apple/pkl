@@ -18,7 +18,7 @@ package org.pkl.core;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Enforces a security model during {@link Evaluator evaluation}.

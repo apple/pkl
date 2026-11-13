@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.binary.LessThanNode;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
@@ -27,7 +28,6 @@ import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 public final class CollectionNodes {
   private CollectionNodes() {}

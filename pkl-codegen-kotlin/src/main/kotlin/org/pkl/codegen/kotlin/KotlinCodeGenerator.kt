@@ -22,6 +22,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
 import java.util.*
 import org.pkl.commons.NameMapper
+import org.pkl.commons.isValidConfigurationPropertiesPrefix
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -52,7 +53,25 @@ data class KotlinCodeGeneratorOptions(
    * from the corresponding name derived from the Pkl module declaration .
    */
   val renames: Map<String, String> = emptyMap(),
-)
+
+  /**
+   * Explicitly configures `@ConfigurationProperties` on generated classes.
+   *
+   * The key is the Pkl class name (e.g. `my.mod` for a module class, `my.mod#Server` for a nested
+   * class), and the value is the prefix. An empty prefix generates a bare annotation.
+   *
+   * If non-empty, no `@ConfigurationProperties` annotations are inferred.
+   */
+  val springBootConfigurationProperties: Map<String, String> = emptyMap(),
+) {
+  init {
+    for (value in springBootConfigurationProperties.values) {
+      require(value.isEmpty() || value.isValidConfigurationPropertiesPrefix) {
+        "Invalid value in `springBootConfigurationProperties`: expected a valid ConfigurationProperties prefix, but got '$value'."
+      }
+    }
+  }
+}
 
 class KotlinCodeGeneratorException(message: String) : RuntimeException(message)
 
@@ -135,7 +154,11 @@ class KotlinCodeGenerator(
 
       val hasModuleProperties = pModuleClass.properties.any { !it.value.isHidden }
       val isGenerateModuleClass =
-        hasModuleProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+        hasModuleProperties ||
+          pModuleClass.isOpen ||
+          pModuleClass.isAbstract ||
+          options.generateSpringBootConfig &&
+            options.springBootConfigurationProperties.containsKey(pModuleClass.displayName)
 
       fun generateCompanionRelatedCode(
         builder: TypeSpec.Builder,
@@ -419,7 +442,21 @@ class KotlinCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      if (isModuleClass) {
+      if (options.springBootConfigurationProperties.isNotEmpty()) {
+        // explicit configuration: the user is in total control, so don't infer anything
+        val prefix = options.springBootConfigurationProperties[pClass.displayName] ?: return
+        val annotation =
+          AnnotationSpec.builder(
+              ClassName("org.springframework.boot.context.properties", "ConfigurationProperties")
+            )
+            .apply {
+              if (prefix.isNotEmpty()) {
+                addMember("%S", prefix)
+              }
+            }
+            .build()
+        builder.addAnnotation(annotation)
+      } else if (isModuleClass) {
         builder.addAnnotation(
           ClassName("org.springframework.boot.context.properties", "ConfigurationProperties")
         )
@@ -437,7 +474,10 @@ class KotlinCodeGenerator(
             }
             propertyType is PType.Class && propertyType.pClass == pClass
           }
-        if (modulePropertiesWithMatchingType.size == 1) {
+        val singleProperty = modulePropertiesWithMatchingType.singleOrNull()
+        if (
+          singleProperty != null && singleProperty.simpleName.isValidConfigurationPropertiesPrefix
+        ) {
           // exactly one module property has this type -> make it available for direct injection
           // (potential improvement: make type available for direct injection if it occurs exactly
           // once in property tree)
@@ -609,7 +649,7 @@ class KotlinCodeGenerator(
 
   // do the minimum work necessary to avoid kotlin compile errors
   // generating idiomatic KDoc would require parsing doc comments, converting member links, etc.
-  private fun renderAsKdoc(docComment: String): String = docComment
+  private fun renderAsKdoc(docComment: String): String = docComment.replace("*/", "*&#47;")
 
   private fun PClass.toKotlinPoetName(): ClassName {
     val (packageName, moduleTypeName) = nameMapper.map(moduleName)
@@ -649,6 +689,12 @@ class KotlinCodeGenerator(
     when (this) {
       PType.UNKNOWN -> ANY_NULL
       PType.NOTHING -> NOTHING
+      PType.MODULE,
+      PType.THIS ->
+        // TODO: support self types: `class Foo<T extends Foo<T>>`
+        throw KotlinCodeGeneratorException(
+          "Pkl `${this}` types are not supported by the Kotlin code generator."
+        )
       is PType.StringLiteral -> STRING
       is PType.Class -> {
         // if in doubt, spell it out
@@ -693,6 +739,7 @@ class KotlinCodeGenerator(
           PClassInfo.Class -> PCLASS
           PClassInfo.Regex -> REGEX
           PClassInfo.Version -> VERSION
+          PClassInfo.Url -> URI
           else ->
             when {
               !classInfo.isStandardLibraryClass -> pClass.toKotlinPoetName()

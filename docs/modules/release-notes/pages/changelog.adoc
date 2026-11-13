@@ -1,8 +1,54 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.34.0]]
+== 0.34.0 (UNRELEASED)
+
+xref:0.34.adoc[Release Notes]
+
+[[release-0.33.0]]
+== 0.33.0 (2026-11-05)
+
+xref:0.33.adoc[Release Notes]
+
+[[release-0.32.2]]
+== 0.32.2 (2026-10-21)
+
+=== Security Fixes [small]#🔒#
+
+* Update fallback CA certificate trust and remove trust for the issuer of compromised intermediate CAs (https://github.com/apple/pkl/pull/1923[#1923]).
+
+=== Fixes
+
+* Fix rendering of stack traces for evaluated multi-line expressions (https://github.com/apple/pkl/pull/1793[#1793]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/HT154[@HT154]
+* https://github.com/protobufel2[@protobufel2]
+
+[[release-0.32.1]]
+== 0.32.1 (2026-07-23)
+
+=== Fixes
+
+* Fix closing intermediate response bodies when following HTTP redirects (https://github.com/apple/pkl/pull/1749[#1749]).
+* Fix `eval -x` of local members (https://github.com/apple/pkl/pull/1760[#1760]).
+* Fix variable resolution of object body params (https://github.com/apple/pkl/pull/1788[#1788]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/KushalP[@KushalP]
+
 [[release-0.32.0]]
-== 0.32.0 (UNRELEASED)
+== 0.32.0 (2026-07-08)
+
+xref:0.32.adoc[Release Notes]
 
 [[release-0.31.1]]
 == 0.31.1 (2026-03-26)
@@ -38,6 +84,7 @@ Thank you to all the contributors for this release!
 == 0.31.0 (2026-02-26)
 
 xref:0.31.adoc[Release Notes]
+
 [[release-0.30.2]]
 
 == 0.30.2 (2025-12-15)

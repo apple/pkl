@@ -26,16 +26,18 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.internal.GetClassNode;
 import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 /** A virtual method call. */
 @SuppressWarnings("DuplicatedCode")
@@ -43,22 +45,22 @@ import org.pkl.core.runtime.VmFunction;
 @NodeChild(value = "receiverNode", type = ExpressionNode.class)
 @NodeChild(value = "receiverClassNode", type = GetClassNode.class, executeWith = "receiverNode")
 @GenerateWrapper
-public abstract class InvokeMethodVirtualNode extends ExpressionNode {
+public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected final Identifier methodName;
-  @Children private final ExpressionNode[] argumentNodes;
   private final MemberLookupMode lookupMode;
   private final boolean needsConst;
 
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
-      boolean needsConst) {
-
-    super(sourceSection);
+      boolean needsConst,
+      int methodSlot,
+      String qualifiedName) {
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
     this.methodName = methodName;
-    this.argumentNodes = argumentNodes;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
   }
@@ -66,9 +68,20 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
-      MemberLookupMode lookupMode) {
-    this(sourceSection, methodName, argumentNodes, lookupMode, false);
+      MemberLookupMode lookupMode,
+      int methodSlot,
+      String qualifiedName) {
+    this(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        lookupMode,
+        false,
+        methodSlot,
+        qualifiedName);
   }
 
   /**
@@ -77,8 +90,9 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
    */
   public abstract Object executeWith(VirtualFrame frame, Object value, VmClass clazz);
 
+  protected abstract ExpressionNode getReceiverNode();
+
   /** Intrinsifies `FunctionN.apply()` calls. */
-  @ExplodeLoop
   @Specialization(guards = {"methodName == APPLY", "receiver.getCallTarget() == cachedCallTarget"})
   protected Object evalFunctionCached(
       VirtualFrame frame,
@@ -87,78 +101,48 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Cached("receiver.getCallTarget()") @SuppressWarnings("unused")
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(args);
   }
 
   /** Intrinsifies `FunctionN.apply()` calls. */
-  @ExplodeLoop
   @Specialization(guards = "methodName == APPLY", replaces = "evalFunctionCached")
   protected Object evalFunction(
       VirtualFrame frame,
       VmFunction receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(receiver.getCallTarget(), args);
   }
 
-  @ExplodeLoop
   @Specialization(guards = "receiverClass == cachedReceiverClass")
   protected Object evalCached(
       VirtualFrame frame,
       Object receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Cached("receiverClass") @SuppressWarnings("unused") VmClass cachedReceiverClass,
-      @Cached("resolveMethod(receiverClass)") ClassMethod method,
+      @Cached("resolveMethod(frame, receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, method, method.getOwner(), receiver);
     return callNode.call(args);
   }
 
-  @ExplodeLoop
   @Specialization(replaces = "evalCached")
   protected Object eval(
       VirtualFrame frame,
       Object receiver,
       VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
-    var method = resolveMethod(receiverClass);
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
+    var method = resolveMethod(frame, receiverClass);
+    var args = evalArgs(frame, method, method.getOwner(), receiver);
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each
     // and every call.
     return callNode.call(method.getCallTarget(), args);
   }
 
-  protected ClassMethod resolveMethod(VmClass receiverClass) {
+  protected ClassMethod resolveMethod(VirtualFrame frame, VmClass receiverClass) {
     var method = receiverClass.getMethod(methodName);
     if (method != null) {
       checkConst(method);
@@ -170,16 +154,28 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     throw exceptionBuilder()
         .cannotFindMethod(
             receiverClass.getPrototype(),
+            VmUtils.getOwner(frame),
             methodName,
             argumentNodes.length,
-            lookupMode != MemberLookupMode.EXPLICIT_RECEIVER)
+            lookupMode,
+            unresolvedTypeArgumentNodes != null,
+            getReceiverNode())
         .build();
   }
 
   @Override
   public WrapperNode createWrapper(ProbeNode probe) {
     return new InvokeMethodVirtualNodeWrapper(
-        sourceSection, methodName, argumentNodes, lookupMode, needsConst, this, probe);
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        lookupMode,
+        needsConst,
+        methodSlot,
+        qualifiedName,
+        this,
+        probe);
   }
 
   private void checkConst(ClassMethod method) {

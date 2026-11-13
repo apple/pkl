@@ -29,8 +29,9 @@ internal abstract class ModuleOrClassPageGenerator<S>(
   protected val clazz: PClass,
   scope: S,
   private val isTestMode: Boolean,
+  isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
-) : PageGenerator<S>(docsiteInfo, scope, consoleOut) where S : PageScope {
+) : PageGenerator<S>(docsiteInfo, scope, isSinglePackageSite, consoleOut) where S : PageScope {
   protected fun HtmlBlockTag.renderProperties() {
     if (!clazz.hasListedProperty) return
 

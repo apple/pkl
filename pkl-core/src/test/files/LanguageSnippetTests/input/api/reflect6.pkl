@@ -1,0 +1,13 @@
+import "pkl:reflect"
+import* "../../input-helper/globtest/child/*.pkl" as globbed
+
+// regression test for VmTyped.getImports()
+// `member.isImport()` is true for glob imports too, so reflecting a module that
+// uses `import*` previously threw ClassCastException when casting the glob
+// import's body to ImportNode.
+// Glob imports resolve to a mapping rather than a module type, so they are
+// excluded from `imports` (which only reports regular imports).
+res = reflect.Module(module).imports
+
+// the glob import itself still works
+globbedKeys = globbed.keys.toListing()

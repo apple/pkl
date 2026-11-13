@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Idempotent;
@@ -22,20 +23,19 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.function.*;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.runtime.VmExceptionBuilder.MultilineValue;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 // Most stdlib modules and their members are initialized in static initializers
 // and reused across Truffle contexts.
@@ -50,7 +50,7 @@ public final class VmClass extends VmValue {
   private final List<VmTyped> annotations;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final VmTyped prototype;
 
   private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
@@ -60,31 +60,27 @@ public final class VmClass extends VmValue {
   @CompilationFinal private @Nullable TypeNode supertypeNode;
   @CompilationFinal private @Nullable VmClass superclass;
 
-  @LateInit
   @GuardedBy("allPropertiesLock")
-  private UnmodifiableEconomicMap<Identifier, ClassProperty> __allProperties;
+  private @Nullable UnmodifiableEconomicMap<Identifier, ClassProperty> __allProperties;
 
   private final Object allPropertiesLock = new Object();
 
-  @LateInit
   @GuardedBy("allMethodsLock")
-  private UnmodifiableEconomicMap<Identifier, ClassMethod> __allMethods;
+  private @Nullable UnmodifiableEconomicMap<Identifier, ClassMethod> __allMethods;
 
   private final Object allMethodsLock = new Object();
 
   // Element type is `Object` rather than `Identifier` to enable `contains(Object)` tests
   // (see signature of `UnmodifiableEconomicSet.contains()`).
-  @LateInit
   @GuardedBy("allRegularPropertyNamesLock")
-  private UnmodifiableEconomicSet<Object> __allRegularPropertyNames;
+  private @Nullable UnmodifiableEconomicSet<Object> __allRegularPropertyNames;
 
   private final Object allRegularPropertyNamesLock = new Object();
 
   // Element type is `Object` rather than `Identifier` to enable `contains(Object)` tests
   // (see signature of `UnmodifiableEconomicSet.contains()`).
-  @LateInit
   @GuardedBy("allHiddenPropertyNamesLock")
-  private UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
+  private @Nullable UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
 
   private final Object allHiddenPropertyNamesLock = new Object();
 
@@ -130,7 +126,7 @@ public final class VmClass extends VmValue {
       List<VmTyped> annotations,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       VmTyped prototype) {
 
     this.sourceSection = sourceSection;
@@ -155,13 +151,91 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkAbstractMethods() {
+    if (isAbstract()) return;
+    // minimize allocations in the non-error case
+    var abstractMethods = getAbstractMethods();
+    if (abstractMethods.isEmpty()) return;
+    if (abstractMethods.size() == 1) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "noImplementationForAbstractMethod",
+              getDisplayName(),
+              abstractMethods.get(0).getCallSignature())
+          .withSourceSection(getHeaderSection())
+          .build();
+    }
+    var methodList = new ArrayList<String>(abstractMethods.size());
+    for (var method : abstractMethods) {
+      methodList.add(method.getCallSignature());
+    }
+    throw new VmExceptionBuilder()
+        .evalError(
+            "noImplementationForAbstractMethods", getDisplayName(), MultilineValue.of(methodList))
+        .withSourceSection(getHeaderSection())
+        .build();
+  }
+
+  private List<ClassMethod> getAbstractMethods() {
+    assert this.superclass != null;
+    var result = new ArrayList<ClassMethod>();
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        result.add(method);
+      }
+    }
+    return result;
+  }
+
+  @TruffleBoundary
+  private void checkMethodOverrides() {
+    var methodCursor = declaredMethods.getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isLocal()) continue;
+      var name = methodCursor.getKey();
+      ClassMethod parent = null;
+      for (var clazz = superclass; clazz != null; clazz = clazz.superclass) {
+        parent = clazz.getDeclaredMethod(name);
+        if (parent != null) break;
+      }
+      if (parent == null) continue;
+
+      checkMethodOverride(method, parent);
+    }
+  }
+
+  private void checkMethodOverride(ClassMethod method, ClassMethod parent) {
+    var typeParamCount = method.getTypeParameterCount();
+    var parentTypeParamCount = parent.getTypeParameterCount();
+
+    if (typeParamCount != parentTypeParamCount) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "methodTypeParameterCountMismatch",
+              method.getQualifiedName(),
+              parent.getQualifiedName(),
+              parentTypeParamCount,
+              typeParamCount)
+          .withSourceSection(method.getHeaderSection())
+          .build();
+    }
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
 
     if (!property.isLocal()) {
-      __allProperties = null;
-      __allHiddenPropertyNames = null;
+      synchronized (allPropertiesLock) {
+        synchronized (allHiddenPropertyNamesLock) {
+          __allProperties = null;
+          __allHiddenPropertyNames = null;
+        }
+      }
     }
   }
 
@@ -177,7 +251,9 @@ public final class VmClass extends VmValue {
     EconomicMaps.put(declaredMethods, method.getName(), method);
 
     if (!method.isLocal()) {
-      __allMethods = null;
+      synchronized (allMethodsLock) {
+        __allMethods = null;
+      }
     }
   }
 
@@ -188,13 +264,28 @@ public final class VmClass extends VmValue {
     }
   }
 
-  // Note: Superclasses may not have finished their initialization when this method is called.
-  public void notifyInitialized() {
+  /**
+   * Called when this class itself has been initialized.
+   *
+   * <p>Superclasses may not have been initialized yet.
+   */
+  public void onOwnClassInitialized() {
     isInitialized = true;
   }
 
+  /** Called when the entire class hierarchy is completely initialized, including superclasses. */
+  public void onFullyInitialized() {
+    checkAbstractMethods();
+    checkMethodOverrides();
+  }
+
+  @TruffleBoundary
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
+  }
+
+  public TypeParameter[] getTypeParameters() {
+    return typeParameters;
   }
 
   /**
@@ -240,8 +331,18 @@ public final class VmClass extends VmValue {
    * corresponding module.
    */
   public VmTyped getModule() {
-    //noinspection ConstantConditions
-    return classInfo.isModuleClass() ? prototype : (VmTyped) prototype.getEnclosingOwner();
+    if (classInfo.isModuleClass()) return prototype;
+
+    var module = prototype.getEnclosingOwner();
+    assert module != null;
+    return (VmTyped) module;
+  }
+
+  public VmClass getModuleClass() {
+    if (classInfo.isModuleClass()) return this;
+    var module = prototype.getEnclosingOwner();
+    assert module != null;
+    return module.getVmClass();
   }
 
   public VmTyped getModuleMirror() {
@@ -337,6 +438,11 @@ public final class VmClass extends VmValue {
 
   public @Nullable VmClass getSuperclass() {
     return superclass;
+  }
+
+  public @Nullable VmType getSupertype() {
+    if (supertypeNode == null) return null;
+    return supertypeNode.getType();
   }
 
   @Override
@@ -440,6 +546,11 @@ public final class VmClass extends VmValue {
     return isClass(BaseModule.getVarArgsClass(), "pkl.base#VarArgs");
   }
 
+  @Idempotent
+  public boolean isReferenceClass() {
+    return isClass(RefModule.getReferenceClass(), "pkl.ref#Reference");
+  }
+
   private boolean isClass(@Nullable VmClass clazz, String qualifiedClassName) {
     // may be null during evaluation of base module
     return clazz != null ? this == clazz : getQualifiedName().equals(qualifiedClassName);
@@ -472,6 +583,7 @@ public final class VmClass extends VmValue {
 
   public VmTyped getMirror() {
     synchronized (mirrorLock) {
+      //noinspection ConstantValue
       if (__mirror == null) {
         __mirror = MirrorFactories.classFactory.create(this);
       }
@@ -482,6 +594,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getTypedToDynamicMembers() {
     synchronized (typedToDynamicMembersLock) {
+      //noinspection ConstantValue
       if (__typedToDynamicMembers == null) {
         __typedToDynamicMembers =
             createDelegatingMembers(
@@ -496,6 +609,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getDynamicToTypedMembers() {
     synchronized (dynamicToTypedMembersLock) {
+      //noinspection ConstantValue
       if (__dynamicToTypedMembers == null) {
         __dynamicToTypedMembers =
             createDelegatingMembers(
@@ -513,6 +627,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getMapToTypedMembers() {
     synchronized (mapToTypedMembersLock) {
+      //noinspection ConstantValue
       if (__mapToTypedMembers == null) {
         __mapToTypedMembers =
             createDelegatingMembers(
@@ -611,49 +726,63 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public PClass export() {
     synchronized (pClassLock) {
-      if (__pClass == null) {
-        var exportedAnnotations = new ArrayList<PObject>();
-        var properties =
-            CollectionUtils.<String, PClass.Property>newLinkedHashMap(
-                EconomicMaps.size(declaredProperties));
-        var methods =
-            CollectionUtils.<String, PClass.Method>newLinkedHashMap(
-                EconomicMaps.size(declaredMethods));
+      //noinspection ConstantValue
+      if (__pClass != null) {
+        return __pClass;
+      }
 
-        // set pClass before exporting class members to prevent
-        // infinite recursion in case of cyclic references
-        __pClass =
-            new PClass(
-                VmUtils.exportDocComment(docComment),
-                new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
-                VmModifier.export(modifiers, true),
-                exportedAnnotations,
-                classInfo,
-                typeParameters,
-                properties,
-                methods);
+      // if this is not a module class, export this class's module's class first to break the cycle
+      PClass moduleClass = null;
+      if (!classInfo.isModuleClass()) {
+        moduleClass = getModule().getVmClass().export();
+      }
+      // then if the cached value is still null, initialize it
+      if (__pClass != null) {
+        return __pClass;
+      }
 
-        for (var parameter : typeParameters) {
-          parameter.initOwner(__pClass);
+      var exportedAnnotations = new ArrayList<PObject>();
+      var properties =
+          CollectionUtils.<String, PClass.Property>newLinkedHashMap(
+              EconomicMaps.size(declaredProperties));
+      var methods =
+          CollectionUtils.<String, PClass.Method>newLinkedHashMap(
+              EconomicMaps.size(declaredMethods));
+
+      // set pClass before exporting class members to prevent
+      // infinite recursion in case of cyclic references
+      __pClass =
+          new PClass(
+              VmUtils.exportDocComment(docComment),
+              new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
+              VmModifier.export(modifiers, true),
+              exportedAnnotations,
+              classInfo,
+              TypeParameter.export(typeParameters),
+              properties,
+              methods,
+              moduleClass);
+
+      for (var parameter : __pClass.getTypeParameters()) {
+        parameter.initOwner(__pClass);
+      }
+
+      if (supertypeNode != null) {
+        assert superclass != null;
+        __pClass.initSupertype(TypeNode.export(supertypeNode), superclass.export());
+      }
+
+      VmUtils.exportAnnotations(annotations, exportedAnnotations);
+
+      for (var property : EconomicMaps.getValues(declaredProperties)) {
+        if (isClassPropertyDefinition(property)) {
+          properties.put(property.getName().toString(), property.export(__pClass));
         }
+      }
 
-        if (supertypeNode != null) {
-          assert superclass != null;
-          __pClass.initSupertype(TypeNode.export(supertypeNode), superclass.export());
-        }
-
-        VmUtils.exportAnnotations(annotations, exportedAnnotations);
-
-        for (var property : EconomicMaps.getValues(declaredProperties)) {
-          if (isClassPropertyDefinition(property)) {
-            properties.put(property.getName().toString(), property.export(__pClass));
-          }
-        }
-
-        for (var method : EconomicMaps.getValues(declaredMethods)) {
-          if (method.isLocal()) continue;
-          methods.put(method.getName().toString(), method.export(__pClass));
-        }
+      for (var method : EconomicMaps.getValues(declaredMethods)) {
+        if (method.isLocal()) continue;
+        methods.put(method.getName().toString(), method.export(__pClass));
       }
 
       return __pClass;
@@ -671,11 +800,11 @@ public final class VmClass extends VmValue {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return getDisplayName();
   }
 
-  private UnmodifiableEconomicMap<Identifier, ClassProperty> getAllProperties() {
+  public UnmodifiableEconomicMap<Identifier, ClassProperty> getAllProperties() {
     synchronized (allPropertiesLock) {
       if (__allProperties == null) {
         // can't do this in ClassNode because it requires a fully initialized inheritance hierarchy
@@ -770,21 +899,14 @@ public final class VmClass extends VmValue {
 
     var size = superclass == null ? 0 : superclass.getAllRegularPropertyNames().size();
     var result = EconomicSet.create(size);
+    if (superclass != null) {
+      result.addAll(superclass.getAllRegularPropertyNames());
+    }
     for (var property : EconomicMaps.getValues(declaredProperties)) {
       if (!(property.isLocal() || isHiddenProperty(property.getName()) || property.isExternal())) {
         result.add(property.getName());
       }
     }
-
-    if (superclass == null) {
-      return result;
-    }
-
-    if (result.isEmpty()) {
-      return superclass.getAllRegularPropertyNames();
-    }
-
-    result.addAll(superclass.getAllRegularPropertyNames());
     return result;
   }
 

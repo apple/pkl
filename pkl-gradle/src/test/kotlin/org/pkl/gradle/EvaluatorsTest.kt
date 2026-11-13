@@ -15,6 +15,15 @@
  */
 package org.pkl.gradle
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.ok
+import com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.verify
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
+import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.nio.file.Path
 import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
@@ -24,6 +33,7 @@ import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.readString
 import org.pkl.commons.test.PackageServer
 
+@WireMockTest
 class EvaluatorsTest : AbstractTest() {
   @Test
   fun `render Pcf`() {
@@ -905,6 +915,28 @@ class EvaluatorsTest : AbstractTest() {
 
     assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
     assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+  }
+
+  @Test
+  fun `http headers`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(get(urlEqualTo("/foo.pkl")).willReturn(ok("foo = 1")))
+    writeBuildFile(
+      "pcf",
+      """
+      httpHeaders = [
+        "**": ["X-Foo": ["Foo"]]
+      ]
+      allowedModules = ["http:", "pkl:", "repl:", "file:"]
+      """
+        .trimIndent(),
+    )
+    writePklFile(
+      """
+      res = import("${wwRuntimeInfo.httpBaseUrl}/foo.pkl")
+      """
+    )
+    runTask("evalTest")
+    verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
   }
 
   private fun writeBuildFile(

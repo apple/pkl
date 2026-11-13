@@ -1,0 +1,20 @@
+local m1 = new Mapping {
+  ["a"] = 1
+  ["b"] = 2
+}
+
+m2 = (m1) {
+  ["any"] = m2.any((_, v) -> v == 2)
+  ["containsValue"] = m2.containsValue(2)
+}
+
+m3 = (m1) {
+  ["isEmpty"] = m3.isEmpty
+}
+
+local l1 = new Listing { 1; 2 }
+
+l2 = (l1) {
+  l2.contains(2)
+  l2.any((it) -> it == 1)
+}

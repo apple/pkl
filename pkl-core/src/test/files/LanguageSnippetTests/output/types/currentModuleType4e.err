@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type from const method `currentModuleType4e#quux`.
+
+x | const function quux() = true is module
+                                    ^^^^^^
+at currentModuleType4e#quux (file:///$snippetsDir/input/types/currentModuleType4e.pkl)

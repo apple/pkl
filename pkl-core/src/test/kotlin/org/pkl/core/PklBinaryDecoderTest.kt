@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.msgpack.core.MessagePack
 import org.pkl.core.util.pklbinary.PklBinaryCode
 
 class PklBinaryDecoderTest {
@@ -229,5 +230,46 @@ class PklBinaryDecoderTest {
         byteArrayOf(0xa0.toByte()),
       "Unexpected blank typealias module URI",
     )
+  }
+
+  @Test
+  fun `decode collections too large`() {
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.OBJECT.code) +
+        strFoo +
+        strFoo +
+        byteArrayOf(0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode object of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.MAP.code, 0xdf.toByte(), 0, 1, 0, 0),
+      "Unable to decode map of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.MAPPING.code, 0xdf.toByte(), 0, 1, 0, 0),
+      "Unable to decode mapping of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.LIST.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode list of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.LISTING.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode listing of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.SET.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode set of length 65536, exceeded maximum collection size",
+    )
+  }
+
+  @Test
+  fun `decode regex preserves Pkl's implicit flags`() {
+    val packer = MessagePack.newDefaultBufferPacker()
+    packer.packArrayHeader(2)
+    packer.packByte(0x0B)
+    packer.packString("(?i)é")
+    val decoded = PklBinaryDecoder.decode(packer.toByteArray()) as Pattern
+    assertThat(decoded.matcher("É")).matches()
   }
 }

@@ -1,0 +1,116 @@
+/*
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.ast.expression.member;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.expression.member.AbstractInvokeMethodNode.MethodCall;
+import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmTypeArgument;
+
+public abstract class InferParentWithinMethodArgumentNode
+    extends AbstractInferParentFromMethodNode {
+  private final int argIndex;
+  private final int methodSlot;
+
+  public InferParentWithinMethodArgumentNode(
+      SourceSection sourceSection, VmLanguage language, int argIndex, int methodSlot) {
+    super(sourceSection, language);
+    this.argIndex = argIndex;
+    this.methodSlot = methodSlot;
+  }
+
+  @Override
+  protected Method getMethod(VirtualFrame frame) {
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+
+    var method = methodCall.method();
+    if (method == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+
+    return method;
+  }
+
+  protected VmTypeArgument @Nullable [] getTypeArgumentOverrides(VirtualFrame frame) {
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+    return methodCall.typeArguments();
+  }
+
+  @Override
+  protected @Nullable TypeNode getTypeNode(Method method) {
+    return method.getFunctionNode().getParameterTypeNode(argIndex);
+  }
+
+  // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses
+
+  @Specialization(
+      guards = {"getMethod(frame) == cachedMethod", "isFinalType(cachedMethod, typeNode)"})
+  protected final Object evalCached(
+      @SuppressWarnings("unused") VirtualFrame frame,
+      @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
+      @Cached("getTypeNode(cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached(
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), true, getTypeArgumentOverrides(frame))")
+          Object defaultValue) {
+    return defaultValue;
+  }
+
+  @Specialization(replaces = "evalCached")
+  protected final Object eval(VirtualFrame frame) {
+    var method = getMethod(frame);
+    var typeNode = getTypeNode(method);
+    return getDefaultValue(
+        frame,
+        typeNode,
+        method.getHeaderSection(),
+        method.getQualifiedName(),
+        true,
+        getTypeArgumentOverrides(frame));
+  }
+
+  @Override
+  protected final Object getDefaultValue(
+      VirtualFrame frame,
+      @Nullable TypeNode typeNode,
+      SourceSection headerSection,
+      String qualifiedName,
+      boolean isPreCall,
+      VmTypeArgument @Nullable [] typeArgumentOverrides) {
+    if (typeNode != null && typeNode.isSelfType()) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+
+    return super.getDefaultValue(
+        frame, typeNode, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
+  }
+}

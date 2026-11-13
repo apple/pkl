@@ -1,0 +1,7 @@
+key = List("hello", "world")
+
+const result = new {
+  for (key in this.key) {
+    key
+  }
+}

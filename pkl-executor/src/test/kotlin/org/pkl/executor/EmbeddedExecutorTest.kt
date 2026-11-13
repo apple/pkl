@@ -15,6 +15,15 @@
  */
 package org.pkl.executor
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.ok
+import com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.verify
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
+import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
@@ -39,6 +48,7 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
+@WireMockTest
 class EmbeddedExecutorTest {
   /**
    * An executor that uses a particular combination of ExecutorSpiOptions version, pkl-executor
@@ -139,7 +149,7 @@ class EmbeddedExecutorTest {
         .apply { if (!exists()) missingTestFixture() }
     }
 
-    // a Pkl distribution that supports ExecutorSpiOptions up to v3
+    // a Pkl distribution that supports ExecutorSpiOptions up to v4
     private val pklDistribution2: Path by lazy {
       FileTestUtils.rootProjectDir
         .resolve(
@@ -520,8 +530,27 @@ class EmbeddedExecutorTest {
           timeout(Duration.ofSeconds(1))
         }
       }
+    assertThat(e.message)
+      .containsAnyOf(
+        "Evaluation timed out after 1 second.",
+        "Evaluation timed out after 1 second(s).",
+      )
 
-    assertThat(e.message).contains("Evaluation timed out after 1 second(s).")
+    val e2 =
+      assertThrows<ExecutorException> {
+        executor.evaluatePath(pklFile) {
+          allowedModules("file:")
+          allowedResources("prop:")
+          rootDir(tempDir)
+          timeout(Duration.ofMillis(1500))
+        }
+      }
+
+    assertThat(e2.message)
+      .containsAnyOf(
+        "Evaluation timed out after 1.5 seconds.",
+        "Evaluation timed out after 1.5 second(s).",
+      )
   }
 
   @Test
@@ -547,7 +576,7 @@ class EmbeddedExecutorTest {
           allowedModules("file:", "package:", "https:")
           allowedResources("prop:", "package:", "https:")
           moduleCacheDir(cacheDir)
-          certificateFiles(FileTestUtils.selfSignedCertificate)
+          certificateFiles(FileTestUtils.selfSignedCertificatePem)
           testPort(server.port)
         }
       }
@@ -588,6 +617,30 @@ class EmbeddedExecutorTest {
       .hasMessageContaining(
         "Error connecting to host `example.example`. (request was rewritten: https://example.com/foo.pkl -> https://example.example/foo.pkl)"
       )
+  }
+
+  @Test
+  fun `http headers option`(@TempDir tempDir: Path, wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(get(urlEqualTo("/foo.pkl")).willReturn(ok("foo = 1")))
+    val pklFile =
+      tempDir.resolve("test.pkl").also {
+        it.writeText(
+          """
+          @ModuleInfo { minPklVersion = "0.32.0" }
+          module test
+
+          res = import("${wwRuntimeInfo.httpBaseUrl}/foo.pkl")
+          """
+            .trimIndent()
+        )
+      }
+
+    currentExecutor.evaluatePath(pklFile) {
+      allowedModules("file:", "https:", "http:")
+      allowedResources("prop:")
+      httpHeaders(mapOf("**" to mapOf("X-Foo" to listOf("Foo"))))
+    }
+    verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
   }
 
   @ParameterizedTest

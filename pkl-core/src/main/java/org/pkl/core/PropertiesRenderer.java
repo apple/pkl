@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.properties.PropertiesUtils;
 
 // To instantiate this class, use ValueRenderers.properties().
@@ -54,6 +54,9 @@ final class PropertiesRenderer implements ValueRenderer {
       } else if (value instanceof Map<?, ?> map) {
         doVisitMap(null, map);
       } else if (value instanceof Pair<?, ?> pair) {
+        // Pair coming from the runtime can never admit null (in-language null is represented as
+        // PNull)
+        //noinspection DataFlowIssue
         doVisitKeyAndValue(null, pair.getFirst(), pair.getSecond());
       } else {
         throw new RendererException(
@@ -175,6 +178,13 @@ final class PropertiesRenderer implements ValueRenderer {
       throw new RendererException(
           String.format(
               "Values of type `Regex` cannot be rendered as Properties. Value: %s", value));
+    }
+
+    @Override
+    public String convertReference(Reference value) {
+      throw new RendererException(
+          String.format(
+              "Values of type `Reference` cannot be rendered as Properties. Value: %s", value));
     }
 
     private void doVisitMap(@Nullable String keyPrefix, Map<?, ?> map) {

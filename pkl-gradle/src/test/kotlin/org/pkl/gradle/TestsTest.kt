@@ -332,6 +332,43 @@ class TestsTest : AbstractTest() {
       )
   }
 
+  @Test
+  fun `minimal test reporter`() {
+    writeFile(
+      "test.pkl",
+      """
+      amends "pkl:test"
+
+      facts {
+        ["passes"] {
+          true
+        }
+        ["fails"] {
+          false
+        }
+      }
+      """
+        .trimIndent(),
+    )
+    writeFile("test.pkl-expected.pcf", bigTestExpected)
+
+    writeBuildFile("testReporter = 'minimal'")
+
+    runTask("evalTest", expectFailure = true)
+  }
+
+  @Test
+  fun `invalid test reporter`() {
+    writePklFile()
+    writeFile("test.pkl-expected.pcf", bigTestExpected)
+
+    writeBuildFile("testReporter = 'not a reporter'")
+
+    val output = runTask("evalTest", expectFailure = true)
+    assertThat(output.output)
+      .contains("Invalid test reporter: 'not a reporter'. Valid reporters: 'spec', 'minimal'.")
+  }
+
   private val examples =
     """
     ["user 0"] {

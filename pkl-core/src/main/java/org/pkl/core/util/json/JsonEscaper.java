@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package org.pkl.core.util.json;
 
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.AbstractCharEscaper;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public final class JsonEscaper extends AbstractCharEscaper {
   /*

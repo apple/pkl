@@ -27,15 +27,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Release;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.util.Nullable;
 
 /**
  * Caches modules by the URI originally specified in the importing module, and also by the resolved
@@ -98,12 +98,16 @@ public final class ModuleCache {
           return JsonnetModule.getModule();
         case "math":
           return MathModule.getModule();
+        case "net":
+          return NetModule.getModule();
         case "pklbinary":
           return PklBinaryModule.getModule();
         case "platform":
           return PlatformModule.getModule();
         case "project":
           return ProjectModule.getModule();
+        case "ref":
+          return RefModule.getModule();
         case "reflect":
           return ReflectModule.getModule();
         case "release":
@@ -111,8 +115,10 @@ public final class ModuleCache {
         case "semver":
           return SemVerModule.getModule();
         case "settings":
-          // always needed if ~/.pkl/settings.pkl is present
+          // always needed if ~/.config/pkl/settings.pkl is present
           return SettingsModule.getModule();
+        case "syntax":
+          return SyntaxModule.getModule();
         case "test":
           return TestModule.getModule();
         case "xml":
@@ -198,7 +204,7 @@ public final class ModuleCache {
       ModuleKey module, SecurityManager securityManager, @Nullable Node importNode) {
     try {
       return module.resolve(securityManager);
-    } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
+    } catch (SecurityManagerException | PackageLoadError | HttpClientException e) {
       throw new VmExceptionBuilder().withOptionalLocation(importNode).withCause(e).build();
     } catch (FileNotFoundException | NoSuchFileException e) {
       var exceptionBuilder =

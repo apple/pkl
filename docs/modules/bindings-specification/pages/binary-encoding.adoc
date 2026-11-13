@@ -46,7 +46,7 @@ The first slot of the array designates the value's type.
 The remaining slots have fixed meanings depending on the type.
 Additional slots may be added to types in future Pkl releases. Decoders *must* be designed to defensively discard values beyond the number of known slots for a type or provide meaningful error messages.
 
-The array's length is the number of slots that are filled. For example, xref:{uri-stdlib-List}[List] is encoded as an MessagePack array with two elements.
+The array's length is the number of slots that are filled. For example, link:{uri-stdlib-List}[List] is encoded as an MessagePack array with two elements.
 
 |===
 |Pkl type |Slot 1 2+|Slot 2 2+|Slot 3 2+|Slot 4
@@ -187,6 +187,15 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+
+|link:{uri-stdlib-ref-Reference}[Reference]
+|`0x20`
+|`<value>` (Typed)
+|Domain
+|`<value>`
+|Data
+|link:{uri-messagepack-array}[array]
+|Array of link:{uri-stdlib-ref-Access}[`pkl.ref#Access`] values
 |===
 
 [[type-name-encoding]]

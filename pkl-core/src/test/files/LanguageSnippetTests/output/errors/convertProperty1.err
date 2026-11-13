@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Tried to read property `prop1` but its value is undefined.
+
+xx | prop1: String
+     ^^^^^
+at convertProperty1#Something.prop1 (file:///$snippetsDir/input/errors/convertProperty1.pkl)
+
+The above error occurred when rendering path `a.prop1` of module `file:///$snippetsDir/input/errors/convertProperty1.pkl`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

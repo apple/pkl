@@ -24,6 +24,23 @@ facts {
     true
     true
   }
+  ["isValidUrl"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["lastIndex"] {
     true
     true
@@ -59,8 +76,18 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
   }
   ["isRegex"] {
+    true
+    true
+    true
+  }
+  ["isGlobPattern"] {
     true
     true
     true
@@ -117,6 +144,7 @@ examples {
     6
     9
     "String does not contain a match for regex pattern. String : \"abxabyabz\" Pattern: Regex(\"b*c\")"
+    3
   }
   ["lastIndexOfOrNull()"] {
     6
@@ -157,6 +185,7 @@ examples {
     "aabb.xaabbcc"
     "aabb..aabbcx"
     "Error replacing matches for regex `cc` with `$4; no such group`: `No group 4`"
+    "abx-yabz"
   }
   ["replaceAllMapped()"] {
     ">>aa<<bbcc>>aa<<bbcc"
@@ -208,18 +237,76 @@ examples {
     List()
     List(97, 98, 99, 100, 101, 102, 103)
   }
-  ["toInt()"] {
+  ["toInt() decimal"] {
+    123
+    -123
+    -123
+    123
+    123
     123
     -123
     123
-    -123
     0
     0
+    0
+    -9223372036854775808
+    9223372036854775807
+  }
+  ["toInt() hex"] {
+    291
+    291
+    -291
+    -291
+    291
+    291
+    291
+    -291
+    291
+    0
+    0
+    0
+    482
+  }
+  ["toInt() binary"] {
+    5
+    5
+    -5
+    -5
+    5
+    5
+    5
+    -5
+    5
+    0
+    0
+    0
+  }
+  ["toInt() octal"] {
+    83
+    83
+    -83
+    -83
+    83
+    83
+    83
+    -83
+    83
+    0
+    0
+    0
+  }
+  ["toInt() error cases"] {
     "Cannot parse string as `Int`. String: \"1.2\""
     "Cannot parse string as `Int`. String: \"9223372036854775808\""
     "Cannot parse string as `Int`. String: \"-9223372036854775809\""
     "Cannot parse string as `Int`. String: \"abc\""
     "Cannot parse string as `Int`. String: \"_1_000\""
+    "Cannot parse string as `Int`. String: \"0p0\""
+    "Cannot parse string as `Int`. String: \"0x-0\""
+    "Cannot parse string as `Int`. String: \"0x+0\""
+    "Cannot parse string as `Int`. String: \"0x0 + 0x1\""
+    "Cannot parse string as `Int`. String: \"\""
+    "Cannot parse string as `Int`. String: \"0o123e4\""
   }
   ["toIntOrNull()"] {
     123
@@ -228,6 +315,11 @@ examples {
     -123
     0
     0
+    null
+    null
+    null
+    null
+    null
     null
     null
     null
@@ -348,6 +440,7 @@ examples {
     "c"
     "cd"
     "abcdefg"
+    "?h"
     "Character index `-1` is out of range `0`..`7`. String: \"abcdefg\""
     "Character index `8` is out of range `1`..`7`. String: \"abcdefg\""
     "Character index `2` is out of range `3`..`7`. String: \"abcdefg\""
@@ -367,6 +460,15 @@ examples {
     "d"
     "g"
     null
+    "🏀"
+    null
+    "?"
+    null
+    "?"
+    "h"
+    null
+    "h"
+    "?"
   }
   ["toCodePoints()"] {
     List(97, 98, 99, 100, 101, 102, 103)
@@ -381,6 +483,9 @@ examples {
     "   abcdefg"
     "Type constraint `length == 1` violated. Value: \"\""
     "Type constraint `length == 1` violated. Value: \"aa\""
+    "hhhh🙃"
+    "🏀🏀🏀🏀🙃"
+    "🏀🏀🏀hi"
   }
   ["padEnd()"] {
     ""
@@ -391,6 +496,9 @@ examples {
     "abcdefg   "
     "Type constraint `length == 1` violated. Value: \"\""
     "Type constraint `length == 1` violated. Value: \"aa\""
+    "🙃hhhh"
+    "🙃🏀🏀🏀🏀"
+    "hi🏀🏀🏀"
   }
   ["toBooleanOrNull()"] {
     true

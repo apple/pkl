@@ -1,0 +1,130 @@
+amends "../snippetTest.pkl"
+
+import "pkl:EvaluatorSettings"
+import "pkl:platform"
+
+// macOS and linux have the same impl; both POSIX systems
+local macOS = new platform.OperatingSystem { name = "macOS" }
+
+local function resolve(base: String, path: String) =
+  new EvaluatorSettings { rootDir = path }.resolveForOs(base, macOS).rootDir
+
+examples {
+  ["resolve()"] {
+    local settings: EvaluatorSettings = new {
+      modulePath {
+        "first/module/path"
+        "second/module/path"
+      }
+      moduleCacheDir = "my/cache/dir"
+      rootDir = "my/root/dir"
+      externalModuleReaders {
+        ["foo"] {
+          executable = "path/to/my/executable"
+        }
+      }
+      externalResourceReaders {
+        ["foo"] {
+          executable = "path/to/my/executable"
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS)
+  }
+
+  ["relative path"] {
+    resolve("file:///path/to/dir/PklProject", "foo/bar")
+  }
+
+  ["absolute path"] {
+    resolve("file:///path/to/dir/PklProject", "/foo/bar")
+  }
+
+  ["enclosing URI has spaces"] {
+    resolve("file:///path/to/dir%20with%20spaces/PklProject", "foo/bar")
+  }
+
+  ["relative path with dot segments"] {
+    resolve("file:///path/to/dir/PklProject", "../my/module/path")
+  }
+
+  ["relative path with dot segments 2"] {
+    resolve("file:///path/to/dir/PklProject", "../../my/module/path")
+  }
+
+  ["relative path with dot segments 3"] {
+    resolve("file:///path/to/dir/PklProject", ".")
+  }
+
+  ["relative path with dot segments 4"] {
+    resolve("file:///path/to/dir/PklProject", "./")
+  }
+
+  ["relative path with dot segments 5"] {
+    resolve("file:///path/to/dir/PklProject", "../../../../../../../../")
+  }
+
+  ["file:/ instead of file:///"] {
+    resolve("file:/path/to/dir/PklProject", "foo/bar")
+  }
+
+  ["executable with simple name is not resolved"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          executable = "my-reader"
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS).externalModuleReaders!!["foo"]
+      .executable
+  }
+
+  ["executable with path segments is resolved against enclosingUri"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          executable = "path/to/reader"
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS).externalModuleReaders!!["foo"]
+      .executable
+  }
+
+  ["workingDir defaults to enclosingUri"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = null
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS).externalModuleReaders!!["foo"]
+      .workingDir
+  }
+
+  ["workingDir with relative path"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = "."
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS).externalModuleReaders!!["foo"]
+      .workingDir
+  }
+
+  ["workingDir with absolute path"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = "/foo/bar"
+        }
+      }
+    }
+    settings.resolveForOs("file:///path/to/dir/PklProject", macOS).externalModuleReaders!!["foo"]
+      .workingDir
+  }
+}

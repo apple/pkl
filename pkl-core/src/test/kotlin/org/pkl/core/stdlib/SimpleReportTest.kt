@@ -16,19 +16,18 @@
 package org.pkl.core.stdlib
 
 import java.io.StringWriter
-import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.core.TestResults
 import org.pkl.core.TestResults.TestResult
 import org.pkl.core.TestResults.TestSectionResults
-import org.pkl.core.stdlib.test.report.SimpleReport
+import org.pkl.core.stdlib.test.report.SpecReporter
 
 class SimpleReportTest {
 
   @Test
   fun `summarize method should generate correct output`() {
-    var resultsBuilder = TestResults.Builder("module1", "module1")
+    val resultsBuilder = TestResults.Builder("module1", "module1")
     resultsBuilder.setFactsSection(
       TestSectionResults(
         TestResults.TestSectionName.FACTS,
@@ -60,7 +59,7 @@ class SimpleReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val simpleReport = SimpleReport(false)
+    val simpleReport = SpecReporter(false)
     simpleReport.summarize(testResults, writer)
 
     val expectedOutput =

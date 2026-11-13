@@ -36,6 +36,21 @@ Example: `generateSpringBootConfig = true` +
 Whether to generate config classes for use with Spring Boot.
 ====
 
+.springBootConfigurationProperties: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `springBootConfigurationProperties = ["my.mod": "", "my.mod#Server": "server"]` +
+Explicitly configures which generated classes receive the Spring Boot `@ConfigurationProperties` annotation, and with what prefix.
+Only applies if `generateSpringBootConfig` is `true`.
+
+The key is the Pkl class name (for example, `my.mod` for a module class, or `my.mod#Server` for a class within a module), and the value is the annotation's prefix.
+An empty value generates a bare `@ConfigurationProperties` annotation.
+
+If this property is empty, the annotations are inferred from the structure of the input modules.
+If this property is set, no annotations are inferred, and only the specified classes are annotated.
+====
+
 .implementSerializable: Property<Boolean>
 [%collapsible]
 ====

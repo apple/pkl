@@ -19,61 +19,76 @@ plugins {
   id("pklNativeLifecycle")
 }
 
+val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
+
 dependencies {
   implementation(projects.pklCore)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
 
   testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.wiremock)
+
+  externalReaderFixtureConfiguration(project(":pkl-core", "externalReaderFixture"))
 }
 
-tasks.test { exclude("**/NativeServerTest.*") }
+tasks.test {
+  configureTest()
+  exclude("**/NativeServerTest.*")
+}
+
+private fun Test.configureTest() {
+  dependsOn(externalReaderFixtureConfiguration)
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
+}
 
 private fun Test.configureNativeTest() {
+  configureTest()
   testClassesDirs = files(tasks.test.get().testClassesDirs)
   classpath = tasks.test.get().classpath
   include("**/NativeServerTest.*")
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
 }
 
-val testMacExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testMacExecutableAarch64 =
+  tasks.register<Test>("testMacExecutableAarch64") {
     dependsOn(":pkl-cli:macExecutableAarch64")
     configureNativeTest()
   }
 
-val testMacExecutableAmd64 by
-  tasks.registering(Test::class) {
-    dependsOn(":pkl-cli:macExecutableAmd64")
-    configureNativeTest()
-  }
-
-val testLinuxExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAmd64 =
+  tasks.register<Test>("testLinuxExecutableAmd64") {
     dependsOn(":pkl-cli:linuxExecutableAmd64")
     configureNativeTest()
   }
 
-val testLinuxExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAarch64 =
+  tasks.register<Test>("testLinuxExecutableAarch64") {
     dependsOn(":pkl-cli:linuxExecutableAarch64")
     configureNativeTest()
   }
 
-val testAlpineExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testAlpineExecutableAmd64 =
+  tasks.register<Test>("testAlpineExecutableAmd64") {
     dependsOn(":pkl-cli:alpineExecutableAmd64")
     configureNativeTest()
   }
 
-val testWindowsExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testWindowsExecutableAmd64 =
+  tasks.register<Test>("testWindowsExecutableAmd64") {
     dependsOn(":pkl-cli:windowsExecutableAmd64")
     configureNativeTest()
   }
 
 tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
-
-tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
 
 tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
 

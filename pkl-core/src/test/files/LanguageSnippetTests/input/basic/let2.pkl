@@ -1,0 +1,27 @@
+hidden bar {
+  new {
+    name = "fooey"
+  }
+  new {
+    name = "quxxey"
+  }
+}
+
+res1 = (bar) {
+  [[let (x = "foo") this.name.startsWith(x)]] {
+    name = "bob"
+  }
+  [[let (y = "qux") this.name.startsWith(y)]] {
+    name = "bob"
+  }
+}
+
+res2 = (bar) {
+  [[let (x = this) x.name.startsWith("foo")]] {
+    name = "bob"
+  }
+}
+
+function isPositive(num: Int(let (q = 0) this > q)) = true
+
+res3: Int(isPositive(this)) = 5

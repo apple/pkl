@@ -66,7 +66,7 @@ constructor(
     try {
       return builder
         .apply {
-          for ((idx, sourceModule) in resolvedSourceModules.withIndex()) {
+          for ((idx, sourceModule) in options.base.normalizedSourceModules.withIndex()) {
             addExternalProperty("pkl.analyzeImports.$idx", sourceModule.toString())
           }
         }

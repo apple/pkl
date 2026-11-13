@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Version;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 /**
  * Parser for JSON.
@@ -85,7 +85,7 @@ public final class Json {
     }
     var ret = handler.value;
     if (!(ret instanceof JsObject jsObject)) {
-      throw new FormatException("object", ret.getClass());
+      throw new FormatException("object", ret == null ? Void.class : ret.getClass());
     }
     return jsObject;
   }
@@ -156,7 +156,7 @@ public final class Json {
   }
 
   private static class Handler extends JsonHandler<JsArray, JsObject> {
-    Object value;
+    @Nullable Object value;
 
     @Override
     public void endString(String string) {
@@ -188,12 +188,14 @@ public final class Json {
     }
 
     @Override
-    public void endArrayValue(JsArray array) {
+    public void endArrayValue(@Nullable JsArray array) {
+      assert array != null;
       array.add(value);
     }
 
     @Override
-    public void endArray(JsArray array) {
+    public void endArray(@Nullable JsArray array) {
+      assert array != null;
       value = array;
     }
 
@@ -203,18 +205,20 @@ public final class Json {
     }
 
     @Override
-    public void endObjectValue(JsObject object, String name) {
+    public void endObjectValue(@Nullable JsObject object, String name) {
+      assert object != null;
       object.put(name, value);
     }
 
     @Override
-    public void endObject(JsObject object) {
+    public void endObject(@Nullable JsObject object) {
+      assert object != null;
       value = object;
     }
   }
 
-  public static class JsObject implements Map<String, Object> {
-    private final Map<String, Object> delegate;
+  public static class JsObject implements Map<String, @Nullable Object> {
+    private final Map<String, @Nullable Object> delegate;
 
     public JsObject() {
       this.delegate = new HashMap<>();
@@ -362,17 +366,17 @@ public final class Json {
     }
 
     @Override
-    public @Nullable Object put(String key, Object value) {
+    public @Nullable Object put(String key, @Nullable Object value) {
       return delegate.put(key, value);
     }
 
     @Override
-    public Object remove(Object key) {
+    public @Nullable Object remove(Object key) {
       return delegate.remove(key);
     }
 
     @Override
-    public void putAll(Map<? extends String, ?> m) {
+    public void putAll(Map<? extends String, ? extends @Nullable Object> m) {
       delegate.putAll(m);
     }
 
@@ -387,12 +391,12 @@ public final class Json {
     }
 
     @Override
-    public Collection<Object> values() {
+    public Collection<@Nullable Object> values() {
       return delegate.values();
     }
 
     @Override
-    public Set<Entry<String, Object>> entrySet() {
+    public Set<Entry<String, @Nullable Object>> entrySet() {
       return delegate.entrySet();
     }
 
@@ -402,8 +406,8 @@ public final class Json {
     }
   }
 
-  public static class JsArray implements List<Object> {
-    private final List<Object> delegate;
+  public static class JsArray implements List<@Nullable Object> {
+    private final List<@Nullable Object> delegate;
 
     public JsArray() {
       this.delegate = new ArrayList<>();
@@ -429,7 +433,7 @@ public final class Json {
     }
 
     @Override
-    public Iterator<Object> iterator() {
+    public Iterator<@Nullable Object> iterator() {
       return delegate.iterator();
     }
 
@@ -444,7 +448,7 @@ public final class Json {
     }
 
     @Override
-    public boolean add(Object o) {
+    public boolean add(@Nullable Object o) {
       return delegate.add(o);
     }
 
@@ -490,17 +494,17 @@ public final class Json {
     }
 
     @Override
-    public Object set(int index, Object element) {
+    public @Nullable Object set(int index, @Nullable Object element) {
       return delegate.set(index, element);
     }
 
     @Override
-    public void add(int index, Object element) {
+    public void add(int index, @Nullable Object element) {
       delegate.add(index, element);
     }
 
     @Override
-    public Object remove(int index) {
+    public @Nullable Object remove(int index) {
       return delegate.remove(index);
     }
 
@@ -515,17 +519,17 @@ public final class Json {
     }
 
     @Override
-    public ListIterator<Object> listIterator() {
+    public ListIterator<@Nullable Object> listIterator() {
       return delegate.listIterator();
     }
 
     @Override
-    public ListIterator<Object> listIterator(int index) {
+    public ListIterator<@Nullable Object> listIterator(int index) {
       return delegate.listIterator(index);
     }
 
     @Override
-    public List<Object> subList(int fromIndex, int toIndex) {
+    public List<@Nullable Object> subList(int fromIndex, int toIndex) {
       return delegate.subList(fromIndex, toIndex);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,12 @@
  */
 package org.pkl.core.runtime;
 
-import org.pkl.core.util.Nullable;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import org.jspecify.annotations.Nullable;
 
 public abstract class VmValue {
+  private final VmValueRenderer vmValueRenderer = VmValueRenderer.multiLine(Integer.MAX_VALUE);
+
   public abstract VmClass getVmClass();
 
   public VmTyped getPrototype() {
@@ -42,6 +45,10 @@ public abstract class VmValue {
 
   public boolean isTyped() {
     return this instanceof VmTyped;
+  }
+
+  public boolean isReference() {
+    return this instanceof VmReference;
   }
 
   /**
@@ -90,4 +97,16 @@ public abstract class VmValue {
   /** Enables calling `vmValue.equals()` when not behind a Truffle boundary. */
   @Override
   public abstract boolean equals(Object obj);
+
+  @TruffleBoundary
+  public abstract String toPklString();
+
+  /**
+   * Override default implementation because it calls {@link #hashCode()}, which will do object eval
+   * on certain types.
+   */
+  @Override
+  public final String toString() {
+    return vmValueRenderer.render(this);
+  }
 }

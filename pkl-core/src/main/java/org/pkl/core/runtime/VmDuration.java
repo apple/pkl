@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.util.DurationUtils;
-import org.pkl.core.util.Nullable;
 
 @ValueType
 public final class VmDuration extends VmValue implements Comparable<VmDuration> {
@@ -148,11 +149,13 @@ public final class VmDuration extends VmValue implements Comparable<VmDuration> 
 
   @Override
   public int hashCode() {
-    return Double.hashCode(getValue(DurationUnit.NANOS));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(getValue(DurationUnit.NANOS) + 0.0);
   }
 
   @Override
-  public String toString() {
+  @TruffleBoundary
+  public String toPklString() {
     return DurationUtils.toPklString(value, unit);
   }
 }

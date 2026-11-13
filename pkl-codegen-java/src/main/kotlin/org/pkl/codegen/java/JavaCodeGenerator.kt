@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
+@file:Suppress("unused", "CanConvertToMultiDollarString")
 
 package org.pkl.codegen.java
 
@@ -36,6 +36,7 @@ import kotlin.let
 import kotlin.takeIf
 import kotlin.to
 import org.pkl.commons.NameMapper
+import org.pkl.commons.isValidConfigurationPropertiesPrefix
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -96,7 +97,24 @@ data class JavaCodeGeneratorOptions(
    * from the corresponding name derived from the Pkl module declaration .
    */
   val renames: Map<String, String> = emptyMap(),
-)
+
+  /**
+   * The mapping of Pkl class names to the spring boot `@ConfigurationProperties` prefix name, when
+   * [generateSpringBootConfig] is enabled.
+   *
+   * Setting this field is optional, and by default is inferred through the schema of the input
+   * modules.
+   */
+  val springBootConfigurationProperties: Map<String, String> = emptyMap(),
+) {
+  init {
+    for (value in springBootConfigurationProperties.values) {
+      require(value.isEmpty() || value.isValidConfigurationPropertiesPrefix) {
+        "Invalid value in `springBootConfigurationProperties`: expected a valid ConfigurationProperties prefix, but got '$value'."
+      }
+    }
+  }
+}
 
 /** Entrypoint for the Java code generator API. */
 class JavaCodeGenerator(
@@ -172,7 +190,7 @@ class JavaCodeGenerator(
       val annotation = codegenOptions.nonNullAnnotation
       val className =
         if (annotation == null) {
-          ClassName.get("org.pkl.config.java.mapper", "NonNull")
+          ClassName.get("org.jspecify.annotations", "NonNull")
         } else {
           toClassName(annotation)
         }
@@ -522,7 +540,25 @@ class JavaCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      if (isModuleClass) {
+      if (codegenOptions.springBootConfigurationProperties.isNotEmpty()) {
+        val configurationPropertyPrefix =
+          codegenOptions.springBootConfigurationProperties[pClass.displayName] ?: return
+        val annotation =
+          with(
+            AnnotationSpec.builder(
+              ClassName.get(
+                "org.springframework.boot.context.properties",
+                "ConfigurationProperties",
+              )
+            )
+          ) {
+            if (!configurationPropertyPrefix.isEmpty()) {
+              addMember("value", "\$S", configurationPropertyPrefix)
+            }
+            build()
+          }
+        builder.addAnnotation(annotation)
+      } else if (isModuleClass) {
         builder.addAnnotation(
           ClassName.get("org.springframework.boot.context.properties", "ConfigurationProperties")
         )
@@ -540,7 +576,11 @@ class JavaCodeGenerator(
             }
             propertyType is PType.Class && propertyType.pClass == pClass
           }
-        if (modulePropertiesWithMatchingType.size == 1) {
+
+        val singleProperty = modulePropertiesWithMatchingType.singleOrNull()
+        if (
+          singleProperty != null && singleProperty.simpleName.isValidConfigurationPropertiesPrefix
+        ) {
           // exactly one module property has this type -> make it available for direct injection
           // (potential improvement: make type available for direct injection if it occurs exactly
           // once in property tree)
@@ -751,6 +791,12 @@ class JavaCodeGenerator(
     when (this) {
       PType.UNKNOWN -> OBJECT.nullableIf(nullable)
       PType.NOTHING -> TypeName.VOID
+      PType.MODULE,
+      PType.THIS ->
+        // TODO: support self types: `class Foo<T extends Foo<T>>`
+        throw JavaCodeGeneratorException(
+          "Pkl `${this}` types are not supported by the Java code generator."
+        )
       is PType.StringLiteral -> STRING.nullableIf(nullable)
       is PType.Class -> {
         // if in doubt, spell it out
@@ -834,6 +880,7 @@ class JavaCodeGenerator(
           PClassInfo.Class -> PCLASS.nullableIf(nullable)
           PClassInfo.Regex -> PATTERN.nullableIf(nullable)
           PClassInfo.Version -> VERSION.nullableIf(nullable)
+          PClassInfo.Url -> URI.nullableIf(nullable)
           else ->
             when {
               !classInfo.isStandardLibraryClass -> pClass.toJavaPoetName().nullableIf(nullable)

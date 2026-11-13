@@ -16,15 +16,20 @@
 package org.pkl.executor;
 
 import java.net.URI;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Options for {@link Executor#evaluatePath}.
@@ -32,6 +37,8 @@ import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
  * <p>To create {@code ExecutorOptions}, use its {@linkplain #builder builder}.
  */
 public final class ExecutorOptions {
+  private static final Logger logger = LoggerFactory.getLogger(ExecutorOptions.class);
+
   private final List<String> allowedModules;
 
   private final List<String> allowedResources;
@@ -58,13 +65,50 @@ public final class ExecutorOptions {
 
   private final Map<URI, URI> httpRewrites;
 
+  private final Map<String, Map<String, List<String>>> httpHeaders;
+
   private final int testPort; // -1 means disabled
 
   private final int spiOptionsVersion; // -1 means use latest
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
-    return Path.of(System.getProperty("user.home"), ".pkl", "cache");
+    return defaultModuleCacheDir(
+        Path.of(System.getProperty("user.home")), isWindowsOs(), System.getenv());
+  }
+
+  // Package-private; injectable so tests can exercise the Windows code path on a Unix CI box.
+  static Path defaultModuleCacheDir(
+      Path home, boolean isWindows, Map<String, String> environmentVariables) {
+    // Keep in sync with org.pkl.core.util.IoUtils.getSystemModuleCacheDir (pkl-executor cannot
+    // depend on pkl-core).
+    //
+    // On Unix prefer the XDG-style `~/.cache/pkl`.
+    // On Windows prefer `%LOCALAPPDATA%/pkl/Cache`.
+    var xdgConfig = environmentVariables.get("XDG_CACHE_HOME");
+    if (xdgConfig != null && !xdgConfig.isEmpty()) {
+      try {
+        return Path.of(xdgConfig).resolve("pkl");
+      } catch (InvalidPathException e) {
+        logger.warn("'XDG_CACHE_HOME' is an invalid path: {}", e.getMessage());
+      }
+    }
+    if (isWindows) {
+      var localAppData = environmentVariables.get("LOCALAPPDATA");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        try {
+          return Path.of(localAppData).resolve("pkl/Cache");
+        } catch (InvalidPathException e) {
+          logger.warn("'LOCALAPPDATA' is an invalid path: {}", e.getMessage());
+        }
+      }
+    }
+    return home.resolve(".cache/pkl");
+  }
+
+  private static boolean isWindowsOs() {
+    var osName = System.getProperty("os.name");
+    return osName != null && osName.toLowerCase(Locale.ROOT).contains("windows");
   }
 
   public static Builder builder() {
@@ -92,6 +136,7 @@ public final class ExecutorOptions {
     private Map<URI, URI> httpRewrites = Map.of();
     private int testPort = -1; // -1 means disabled
     private int spiOptionsVersion = -1; // -1 means use latest
+    private Map<String, Map<String, List<String>>> httpHeaders = Map.of();
 
     private Builder() {}
 
@@ -215,6 +260,18 @@ public final class ExecutorOptions {
       return this;
     }
 
+    /**
+     * API equivalent of the {@code --http-header} CLI option.
+     *
+     * <p>This option is ignored on Pkl 0.31 and older.
+     *
+     * @since 0.32.0
+     */
+    public Builder httpHeaders(Map<String, Map<String, List<String>>> httpHeaders) {
+      this.httpHeaders = httpHeaders;
+      return this;
+    }
+
     /** Internal test option. -1 means disabled. */
     Builder testPort(int testPort) {
       this.testPort = testPort;
@@ -242,6 +299,7 @@ public final class ExecutorOptions {
           certificateFiles,
           certificateBytes,
           httpRewrites,
+          httpHeaders,
           testPort,
           spiOptionsVersion);
     }
@@ -291,6 +349,7 @@ public final class ExecutorOptions {
         List.of(),
         List.of(),
         Map.of(),
+        Map.of(),
         -1,
         -1);
   }
@@ -309,6 +368,7 @@ public final class ExecutorOptions {
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
       Map<URI, URI> httpRewrites,
+      Map<String, Map<String, List<String>>> httpHeaders,
       int testPort,
       int spiOptionsVersion) {
 
@@ -325,6 +385,7 @@ public final class ExecutorOptions {
     this.certificateFiles = List.copyOf(certificateFiles);
     this.certificateBytes = List.copyOf(certificateBytes);
     this.httpRewrites = Map.copyOf(httpRewrites);
+    this.httpHeaders = Map.copyOf(httpHeaders);
     this.testPort = testPort;
     this.spiOptionsVersion = spiOptionsVersion;
   }
@@ -425,6 +486,7 @@ public final class ExecutorOptions {
         && Objects.equals(certificateFiles, other.certificateFiles)
         && Objects.equals(certificateBytes, other.certificateBytes)
         && Objects.equals(httpRewrites, other.httpRewrites)
+        && Objects.equals(httpHeaders, other.httpHeaders)
         && testPort == other.testPort
         && spiOptionsVersion == other.spiOptionsVersion;
   }
@@ -445,6 +507,7 @@ public final class ExecutorOptions {
         certificateFiles,
         certificateBytes,
         httpRewrites,
+        httpHeaders,
         testPort,
         spiOptionsVersion);
   }
@@ -478,6 +541,8 @@ public final class ExecutorOptions {
         + certificateBytes
         + ", httpRewrites="
         + httpRewrites
+        + ", httpHeaders="
+        + httpHeaders
         + ", testPort="
         + testPort
         + ", spiOptionsVersion="
@@ -487,7 +552,24 @@ public final class ExecutorOptions {
 
   ExecutorSpiOptions toSpiOptions() {
     return switch (spiOptionsVersion) {
-      case -1, 3 ->
+      case -1, 4 ->
+          new ExecutorSpiOptions4(
+              allowedModules,
+              allowedResources,
+              environmentVariables,
+              externalProperties,
+              modulePath,
+              rootDir,
+              timeout,
+              outputFormat,
+              moduleCacheDir,
+              projectDir,
+              certificateFiles,
+              certificateBytes,
+              testPort,
+              httpRewrites,
+              httpHeaders);
+      case 3 ->
           new ExecutorSpiOptions3(
               allowedModules,
               allowedResources,

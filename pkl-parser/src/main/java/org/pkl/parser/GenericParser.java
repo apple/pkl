@@ -19,6 +19,24 @@ import org.pkl.parser.syntax.generic.Node;
 
 public final class GenericParser {
   public Node parseModule(String source) {
-    return new GenericParserImpl(source).parseModule();
+    var parser = new GenericParserImpl(source);
+    try {
+      return parser.parseModule();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toGenericParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
+  }
+
+  public Node parseExpressionInput(String source) {
+    var parser = new GenericParserImpl(source);
+    try {
+      return parser.parseExpressionInput();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toGenericParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
   }
 }

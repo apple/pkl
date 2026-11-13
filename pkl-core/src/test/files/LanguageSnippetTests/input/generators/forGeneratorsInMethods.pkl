@@ -1,0 +1,15 @@
+local function myFunc(foo: String, bar: String, baz: String): Any = new Listing {
+  for (
+    qux in new Listing {
+      for (param1 in List(1)) {
+        List("\(param1) \(foo) \(bar) \(baz)")
+      }
+    }
+  ) {
+    for (param2 in qux) {
+      "Hello \(foo) \(bar) \(baz) \(param2)"
+    }
+  }
+}
+
+res = myFunc("arg1", "arg2", "arg3")

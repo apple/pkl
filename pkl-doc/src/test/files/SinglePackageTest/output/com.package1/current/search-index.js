@@ -1,0 +1,1 @@
+searchData='[{"name":"com.package1.minimal","kind":1,"url":"minimal/index.html"},{"name":"greeting","kind":5,"url":"minimal/index.html#greeting","sig":": String","parId":0},{"name":"Person","kind":3,"url":"minimal/Person.html","parId":0},{"name":"name","kind":5,"url":"minimal/Person.html#name","sig":": String","parId":2}]';

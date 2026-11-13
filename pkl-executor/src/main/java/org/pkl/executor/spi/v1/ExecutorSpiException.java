@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
  */
 package org.pkl.executor.spi.v1;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ExecutorSpiException extends RuntimeException {
-  public ExecutorSpiException(String message, Throwable cause) {
+  public ExecutorSpiException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 }

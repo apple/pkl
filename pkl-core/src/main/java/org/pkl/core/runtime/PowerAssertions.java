@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
@@ -38,7 +39,6 @@ import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.type.GetParentForTypeNode;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Lexer;
 import org.pkl.parser.Parser;
@@ -83,6 +83,7 @@ public class PowerAssertions {
       SourceSection sourceSection,
       Map<Node, List<Object>> trackedValues,
       @Nullable Consumer<AnsiStringBuilder> firstFrameSuffix) {
+    assert sourceSection.isAvailable() : "Power assertions require an available source section";
     out.appendSandboxed(
         () -> {
           var lines = lines(sourceSection);
@@ -204,8 +205,8 @@ public class PowerAssertions {
   }
 
   // tries to find the parser node for this node
-  private static @Nullable org.pkl.parser.syntax.Node findParserNode(
-      Node node, @Nullable org.pkl.parser.syntax.Node parserNode, int offset) {
+  private static org.pkl.parser.syntax.@Nullable Node findParserNode(
+      Node node, org.pkl.parser.syntax.@Nullable Node parserNode, int offset) {
     if (!node.getSourceSection().isAvailable()) {
       return null;
     }

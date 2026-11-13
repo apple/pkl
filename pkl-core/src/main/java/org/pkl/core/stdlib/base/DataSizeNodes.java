@@ -29,12 +29,12 @@ public final class DataSizeNodes {
   @ImportStatic(MathUtils.class)
   @PklName("value")
   public abstract static class valueProperty extends ExternalPropertyNode {
-    @Specialization(guards = "isMathematicalInteger(self.getValue())")
+    @Specialization(guards = "isMathematicalIntegerFittingLong(self.getValue())")
     protected long evalInt(VmDataSize self) {
       return (long) self.getValue();
     }
 
-    @Specialization(guards = "!isMathematicalInteger(self.getValue())")
+    @Specialization(guards = "!isMathematicalIntegerFittingLong(self.getValue())")
     protected double evalFloat(VmDataSize self) {
       return self.getValue();
     }

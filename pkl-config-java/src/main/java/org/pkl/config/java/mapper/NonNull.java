@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Indicates that a type does not accept {@code null} as a value. */
+/**
+ * Indicates that a type does not accept {@code null} as a value.
+ *
+ * <p>This annotation is deprecated, and any usage should be replaced with {@link
+ * org.jspecify.annotations.NonNull}.
+ *
+ * @deprecated since 0.32.0
+ */
 @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.CLASS)
 @Documented
+@Deprecated(forRemoval = true)
 public @interface NonNull {}

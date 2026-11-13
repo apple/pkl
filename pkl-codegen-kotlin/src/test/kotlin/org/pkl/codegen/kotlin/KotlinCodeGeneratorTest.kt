@@ -142,6 +142,7 @@ class KotlinCodeGeneratorTest {
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
       implementSerializable: Boolean = false,
+      springBootConfigurationProperties: Map<String, String> = emptyMap(),
     ): KotlinSourceCode {
 
       val module = Evaluator.preconfigured().evaluateSchema(ModuleSource.text(pklCode))
@@ -153,6 +154,7 @@ class KotlinCodeGeneratorTest {
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
             implementSerializable = implementSerializable,
+            springBootConfigurationProperties = springBootConfigurationProperties,
           ),
         )
       return KotlinSourceCode(generator.kotlinFile)
@@ -1187,6 +1189,52 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `pkl_net Url`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module mod
+
+        import "pkl:net"
+
+        url: net.Url
+        nullableUrl: net.Url?
+        listing: Listing<net.Url>
+        mapping: Mapping<String, net.Url>
+
+        class Foo {
+          url: net.Url
+        }
+        """
+          .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        import java.net.URI
+        import kotlin.String
+        import kotlin.collections.List
+        import kotlin.collections.Map
+
+        data class Mod(
+          val url: URI,
+          val nullableUrl: URI?,
+          val listing: List<URI>,
+          val mapping: Map<String, URI>
+        ) {
+          data class Foo(
+            val url: URI
+          )
+        }
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `user defined type aliases`() {
     val kotlinCode =
       generateKotlinCode(
@@ -1468,6 +1516,92 @@ class KotlinCodeGeneratorTest {
       it.contains("ConfigurationProperties")
     }
     assertThat(kotlinCodeWithoutSpringAnnotations).compilesSuccessfully()
+  }
+
+  @Test
+  fun `spring boot -- single module property has type but invalid prefix`() {
+    val javaCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        fooBar: FooBar
+
+        class FooBar
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+      )
+    // "fooBar" is not a valid prefix for `@ConfigurationProperties` annotations, so no
+    // annotation is added
+    assertThat(javaCode)
+      .contains(
+        """
+        |
+        |  data class FooBar
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- single module property has type and valid prefix`() {
+    val javaCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |  @ConfigurationProperties("server")
+        |  data class Server
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- explicitly configured ConfigurationProperties`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+        springBootConfigurationProperties =
+          mapOf("my.mod" to "", "my.mod#Server" to "my-server-prefix"),
+      )
+    assertThat(kotlinCode).contains("@ConfigurationProperties\ndata class Mod")
+    assertThat(kotlinCode).contains("@ConfigurationProperties(\"my-server-prefix\")")
+  }
+
+  @Test
+  fun `spring boot -- explicitly configured properties disables inference`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+        springBootConfigurationProperties = mapOf("foo" to "foo"),
+      )
+    assertThat(kotlinCode).doesNotContain("@ConfigurationProperties")
   }
 
   @Test
@@ -2052,6 +2186,23 @@ class KotlinCodeGeneratorTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `block comment escaping in doc comments`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        class Person {
+          /// This doc coment needs */ escaping
+          foo: Int
+        }
+        """
+          .trimIndent(),
+        generateKdoc = true,
+      )
+
+    assertThat(kotlinCode).compilesSuccessfully().contains("*&#47;")
   }
 
   private fun Map<String, String>.validateContents(

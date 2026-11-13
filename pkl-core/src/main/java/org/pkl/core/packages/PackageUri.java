@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@ package org.pkl.core.packages;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.Version;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public final class PackageUri {
   private final URI uri;
@@ -60,6 +60,13 @@ public final class PackageUri {
     if (path == null || path.isEmpty()) {
       throw new URISyntaxException(
           uri.toString(), ErrorMessages.create("missingPathInPackageUri", uri));
+    }
+    // reject `..` segments, percent-encoded or not
+    for (var segment : path.split("/", -1)) {
+      if (segment.equals("..")) {
+        throw new URISyntaxException(
+            uri.toString(), ErrorMessages.create("invalidRelativePathInPackageUri"));
+      }
     }
     var versionIdx = path.lastIndexOf('@');
     if (versionIdx == -1) {
@@ -111,7 +118,7 @@ public final class PackageUri {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

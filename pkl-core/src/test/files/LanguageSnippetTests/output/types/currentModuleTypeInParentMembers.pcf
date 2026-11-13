@@ -1,0 +1,8 @@
+check {
+  a {}
+  b {}
+}
+`local` {
+  a = true
+  b = true
+}

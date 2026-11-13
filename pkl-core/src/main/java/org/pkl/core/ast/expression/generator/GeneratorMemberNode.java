@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.Identifier;
@@ -63,7 +64,13 @@ public abstract class GeneratorMemberNode extends PklNode {
     if (classProperty == null) {
       var exception =
           exceptionBuilder()
-              .cannotFindProperty(clazz.getPrototype(), memberName, false, false)
+              .cannotFindProperty(
+                  clazz.getPrototype(),
+                  clazz.getPrototype(),
+                  memberName,
+                  false,
+                  MemberLookupMode.EXPLICIT_RECEIVER,
+                  null)
               .build();
       if (member.getHeaderSection().isAvailable()) {
         exception

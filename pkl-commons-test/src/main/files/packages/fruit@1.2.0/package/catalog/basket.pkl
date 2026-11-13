@@ -1,0 +1,6 @@
+amends "../Fruits.pkl"
+
+fruits {
+  import("apple.pkl")
+  import("pineapple.pkl")
+}

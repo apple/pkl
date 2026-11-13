@@ -16,8 +16,10 @@
 package org.pkl.gradle;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -26,8 +28,10 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -67,6 +71,12 @@ public class PklPlugin implements Plugin<Project> {
 
   private static final String MIN_GRADLE_VERSION = "8.2";
 
+  /** Gradle task group for code generation tasks. */
+  public static final String CODEGEN_GROUP = "codegen";
+
+  /** Gradle task group for documentation tasks. */
+  public static final String DOCUMENTATION_GROUP = "documentation";
+
   @Override
   public void apply(Project project) {
 
@@ -104,8 +114,10 @@ public class PklPlugin implements Plugin<Project> {
                 task.getProjectDirectories().from(spec.getProjectDirectories());
                 task.getOutputPath().set(spec.getOutputPath());
                 task.getSkipPublishCheck().set(spec.getSkipPublishCheck());
+                task.getInstall().set(spec.getInstall());
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
+                task.getTestReporter().set(spec.getTestReporter());
               });
           project
               .getPluginManager()
@@ -138,11 +150,13 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(project, spec);
           spec.getOutputFormat().convention(OutputFormat.PCF.toString());
           var analyzeImportsTask = createTask(project, AnalyzeImportsTask.class, spec);
+          var layout = project.getLayout();
+          var providers = project.getProviders();
           analyzeImportsTask.configure(
               task -> {
                 task.getOutputFormat().set(spec.getOutputFormat());
                 task.getOutputFile().set(spec.getOutputFile());
-                configureModulesTask(project, task, spec, null);
+                configureModulesTask(layout, providers, task, spec, null, null);
               });
         });
   }
@@ -200,6 +214,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, JavaCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Java code from Pkl modules.");
+                    task.setGroup(CODEGEN_GROUP);
                     configureCodeGenTask(task, spec);
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
@@ -230,6 +246,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, KotlinCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Kotlin code from Pkl modules.");
+                    task.setGroup(CODEGEN_GROUP);
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
                   });
@@ -262,6 +280,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, PkldocTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Pkldoc documentation from Pkl modules.");
+                    task.setGroup(DOCUMENTATION_GROUP);
                     task.getOutputDir().set(spec.getOutputDir());
                     task.getNoSymlinks().set(spec.getNoSymlinks());
                   });
@@ -278,8 +298,11 @@ public class PklPlugin implements Plugin<Project> {
           var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(
               task -> {
+                task.setDescription("Runs Pkl tests.");
+                task.setGroup(LifecycleBasePlugin.VERIFICATION_GROUP);
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
+                task.getTestReporter().set(spec.getTestReporter());
               });
 
           project
@@ -302,7 +325,9 @@ public class PklPlugin implements Plugin<Project> {
                 "repl:", "file:", "modulepath:", "https:", "pkl:", "package:", "projectpackage:"));
 
     spec.getAllowedResources()
-        .convention(List.of("env:", "prop:", "file:", "modulepath:", "https:", "package:"));
+        .convention(
+            List.of(
+                "env:", "prop:", "file:", "modulepath:", "https:", "package:", "projectpackage:"));
 
     spec.getEvalRootDir().convention(project.getRootProject().getLayout().getProjectDirectory());
 
@@ -312,13 +337,24 @@ public class PklPlugin implements Plugin<Project> {
     // Therefore, we don't set any initial value for the environmentVariables property.
 
     // Not using `convention()` to allow the user to unset this property, disabling the cache.
-    spec.getModuleCacheDir().set(IoUtils.getDefaultModuleCacheDir().toFile());
+    var systemCacheDir = IoUtils.getSystemModuleCacheDir();
+    if (systemCacheDir != null) {
+      spec.getModuleCacheDir().set(systemCacheDir.toFile());
+    }
 
     spec.getNoCache().convention(false);
 
     spec.getTestPort().convention(-1);
 
     spec.getHttpNoProxy().convention(List.of());
+
+    var gradleProjectDir =
+        project.provider(
+            () -> project.getLayout().getProjectDirectory().getAsFile().getAbsolutePath());
+    spec.getExternalModuleReaders()
+        .configureEach(reader -> reader.getWorkingDir().convention(gradleProjectDir));
+    spec.getExternalResourceReaders()
+        .configureEach(reader -> reader.getWorkingDir().convention(gradleProjectDir));
   }
 
   private void configureCodeGenSpec(Project project, CodeGenSpec spec) {
@@ -345,6 +381,8 @@ public class PklPlugin implements Plugin<Project> {
     spec.getIndent().convention("  ");
 
     spec.getGenerateSpringBootConfig().convention(false);
+
+    spec.getSpringBootConfigurationProperties().convention(Collections.emptyMap());
 
     spec.getImplementSerializable().convention(false);
 
@@ -447,7 +485,7 @@ public class PklPlugin implements Plugin<Project> {
                         + spec.getName()
                         + "'. Either apply a JVM plugin (e.g. 'java') or set the sourceSet property explicitly.");
               }
-              if (sourceSet.getName().toLowerCase().contains("test")) {
+              if (sourceSet.getName().toLowerCase(Locale.ROOT).contains("test")) {
                 module.getTestSources().from(append(module.getTestSources().getFiles(), outputDir));
               } else {
                 module.setSourceDirs(append(module.getSourceDirs(), outputDir));
@@ -459,14 +497,15 @@ public class PklPlugin implements Plugin<Project> {
     task.getIndent().set(spec.getIndent());
     task.getOutputDir().set(spec.getOutputDir());
     task.getGenerateSpringBootConfig().set(spec.getGenerateSpringBootConfig());
+    task.getSpringBootConfigurationProperties().set(spec.getSpringBootConfigurationProperties());
     task.getImplementSerializable().set(spec.getImplementSerializable());
     task.getAddGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
     task.getRenames().set(spec.getRenames());
   }
 
   private <T extends BasePklTask, S extends BasePklSpec> void configureBaseTask(
-      Project project, T task, S spec) {
-    task.getWorkingDir().set(project.getLayout().getProjectDirectory());
+      ProjectLayout layout, ProviderFactory providers, T task, S spec) {
+    task.getWorkingDir().set(layout.getProjectDirectory());
     task.getAllowedModules().set(spec.getAllowedModules());
     task.getAllowedResources().set(spec.getAllowedResources());
     task.getEnvironmentVariables().set(spec.getEnvironmentVariables());
@@ -481,16 +520,22 @@ public class PklPlugin implements Plugin<Project> {
     task.getTestPort().set(spec.getTestPort());
     task.getHttpProxy().set(spec.getHttpProxy());
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
+    task.getHttpHeaders().set(spec.getHttpHeaders());
     task.getHttpRewrites().set(spec.getHttpRewrites());
+    task.getExternalModuleReaders()
+        .set(providers.provider(() -> spec.getExternalModuleReaders().getAsMap()));
+    task.getExternalResourceReaders()
+        .set(providers.provider(() -> spec.getExternalResourceReaders().getAsMap()));
   }
 
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
-      Project project,
+      ProjectLayout layout,
+      ProviderFactory providers,
       T task,
       S spec,
       @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask,
       @Nullable Transformer<List<?>, List<?>> mapSourceModules) {
-    configureBaseTask(project, task, spec);
+    configureBaseTask(layout, providers, task, spec);
     if (mapSourceModules != null) {
       task.getSourceModules().set(spec.getSourceModules().map(mapSourceModules));
     } else {
@@ -513,21 +558,12 @@ public class PklPlugin implements Plugin<Project> {
     }
   }
 
-  private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
-      Project project,
-      T task,
-      S spec,
-      @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
-    configureModulesTask(project, task, spec, analyzeImportsTask, null);
-  }
-
-  private TaskProvider<AnalyzeImportsTask> createAnalyzeImportsTask(
+  private TaskProvider<AnalyzeImportsTask> createGatherImportsTask(
       Project project, ModulesSpec spec) {
+    var layout = project.getLayout();
     var outputFile =
-        project
-            .getLayout()
-            .getBuildDirectory()
-            .file("pkl-gradle/imports/" + spec.getName() + ".json");
+        layout.getBuildDirectory().file("pkl-gradle/imports/" + spec.getName() + ".json");
+    var providers = project.getProviders();
     return project
         .getTasks()
         .register(
@@ -535,7 +571,8 @@ public class PklPlugin implements Plugin<Project> {
             AnalyzeImportsTask.class,
             task -> {
               configureModulesTask(
-                  project,
+                  layout,
+                  providers,
                   task,
                   spec,
                   null,
@@ -550,7 +587,10 @@ public class PklPlugin implements Plugin<Project> {
                               (it) ->
                                   it.getScheme() == null || it.getScheme().equalsIgnoreCase("file"))
                           .toList());
-              task.setDescription("Compute the set of imports declared by input modules");
+              task.setDescription(
+                  "Compute the set of imports declared by input modules of "
+                      + spec.getName()
+                      + " Pkl operation");
               task.setGroup("build");
               task.getOutputFormat().set(OutputFormat.JSON.toString());
               task.getOutputFile().set(outputFile);
@@ -570,20 +610,25 @@ public class PklPlugin implements Plugin<Project> {
    */
   private <T extends ModulesTask> TaskProvider<T> createModulesTask(
       Project project, Class<T> taskClass, ModulesSpec spec) {
-    var analyzeImportsTask = createAnalyzeImportsTask(project, spec);
+    var gatherImportsTask = createGatherImportsTask(project, spec);
+    var layout = project.getLayout();
+    var providers = project.getProviders();
     return project
         .getTasks()
         .register(
             spec.getName(),
             taskClass,
-            task -> configureModulesTask(project, task, spec, analyzeImportsTask));
+            task -> configureModulesTask(layout, providers, task, spec, gatherImportsTask, null));
   }
 
   private <T extends BasePklTask> TaskProvider<T> createTask(
       Project project, Class<T> taskClass, BasePklSpec spec) {
+    var layout = project.getLayout();
+    var providers = project.getProviders();
     return project
         .getTasks()
-        .register(spec.getName(), taskClass, task -> configureBaseTask(project, task, spec));
+        .register(
+            spec.getName(), taskClass, task -> configureBaseTask(layout, providers, task, spec));
   }
 
   private <T> Set<T> append(Set<? extends T> set1, T element) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,26 +22,29 @@ import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.SimpleRootNode;
-import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
+import org.pkl.core.ast.frame.ReadExactFrameSlotNodeGen;
 import org.pkl.core.ast.member.FunctionNode;
 import org.pkl.core.ast.member.Lambda;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 public final class AmendFunctionNode extends PklNode {
   private final boolean isCustomThisScope;
   private final PklRootNode initialFunctionRootNode;
   @CompilationFinal private int customThisSlot = -1;
+  private final boolean hasObjectParams;
 
   public AmendFunctionNode(ObjectLiteralNode hostNode, TypeNode[] parameterTypeNodes) {
     super(hostNode.getSourceSection());
 
     isCustomThisScope = hostNode.isCustomThisScope;
+    hasObjectParams = parameterTypeNodes.length > 0;
 
     var builder = FrameDescriptor.newBuilder();
     var hostDescriptor = hostNode.parametersDescriptor;
@@ -68,7 +71,7 @@ public final class AmendFunctionNode extends PklNode {
             new AmendFunctionBodyNode(
                 sourceSection,
                 hostNode.copy(
-                    ReadFrameSlotNodeGen.create(
+                    ReadExactFrameSlotNodeGen.create(
                         hostNode.getParentNode().getSourceSection(), objectToAmendSlot)),
                 parameterSlots,
                 objectToAmendSlot,
@@ -85,10 +88,11 @@ public final class AmendFunctionNode extends PklNode {
               parameterTypeNodes,
               null,
               true,
+              new TypeParameterNode[0],
               new AmendFunctionBodyNode(
                   sourceSection,
                   hostNode.copy(
-                      ReadFrameSlotNodeGen.create(
+                      ReadExactFrameSlotNodeGen.create(
                           hostNode.getParentNode().getSourceSection(), objectToAmendSlot)),
                   parameterSlots,
                   objectToAmendSlot,
@@ -108,7 +112,9 @@ public final class AmendFunctionNode extends PklNode {
         isCustomThisScope ? frame.getAuxiliarySlot(customThisSlot) : VmUtils.getReceiver(frame),
         functionToAmend.getParameterCount(),
         initialFunctionRootNode,
-        new Context(functionToAmend, null));
+        new Context(functionToAmend, null),
+        true,
+        hasObjectParams);
   }
 
   private static class AmendFunctionBodyNode extends ExpressionNode {

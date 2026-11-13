@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package org.pkl.core;
 import java.io.Serial;
 import java.util.List;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#TypeAlias} value. */
 public final class TypeAlias extends Member implements Value {
@@ -28,6 +28,7 @@ public final class TypeAlias extends Member implements Value {
   private final String moduleName;
   private final String qualifiedName;
   private final List<TypeParameter> typeParameters;
+  private final PClass moduleClass;
 
   @LateInit private PType aliasedType;
 
@@ -39,14 +40,17 @@ public final class TypeAlias extends Member implements Value {
       String simpleName,
       String moduleName,
       String qualifiedName,
-      List<TypeParameter> typeParameters) {
+      List<TypeParameter> typeParameters,
+      PClass moduleClass) {
     super(docComment, sourceLocation, modifiers, annotations, simpleName);
     this.moduleName = moduleName;
     this.qualifiedName = qualifiedName;
     this.typeParameters = typeParameters;
+    this.moduleClass = moduleClass;
   }
 
   public void initAliasedType(PType type) {
+    //noinspection ConstantValue
     assert aliasedType == null;
     aliasedType = type;
   }
@@ -78,8 +82,13 @@ public final class TypeAlias extends Member implements Value {
     return typeParameters;
   }
 
+  public PClass getModuleClass() {
+    return moduleClass;
+  }
+
   /** Returns the type that this type alias stands for. */
   public PType getAliasedType() {
+    //noinspection ConstantValue
     assert aliasedType != null;
     return aliasedType;
   }

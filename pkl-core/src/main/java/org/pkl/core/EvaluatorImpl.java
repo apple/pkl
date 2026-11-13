@@ -15,7 +15,10 @@
  */
 package org.pkl.core;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
@@ -28,14 +31,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessageBufferPacker;
 import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.evaluatorSettings.TraceMode;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.resource.ResourceReader;
@@ -56,7 +62,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.IoUtils;
 
 public final class EvaluatorImpl implements Evaluator {
   private final StackFrameTransformer frameTransformer;
@@ -69,6 +75,7 @@ public final class EvaluatorImpl implements Evaluator {
   private final BufferedLogger logger;
   private final PackageResolver packageResolver;
   private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(1000);
+  private final @Nullable URI projectFileUri;
   private @Nullable MessageBufferPacker messagePacker;
 
   public EvaluatorImpl(
@@ -94,6 +101,11 @@ public final class EvaluatorImpl implements Evaluator {
     moduleResolver = new ModuleResolver(factories);
     this.logger = new BufferedLogger(logger);
     packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
+    if (projectDependencies != null) {
+      this.projectFileUri = projectDependencies.projectFileUri();
+    } else {
+      this.projectFileUri = null;
+    }
     polyglotContext =
         VmUtils.createContext(
             () -> {
@@ -184,7 +196,9 @@ public final class EvaluatorImpl implements Evaluator {
         (module) -> {
           var output = VmUtils.readModuleOutput(module);
           return VmUtils.readFilesProperty(
-              output, (fileOutput) -> new FileOutputImpl(this, fileOutput));
+              output,
+              (fileOutput) -> new FileOutputImpl(this, fileOutput),
+              IndirectCallNode.getUncached());
         });
   }
 
@@ -296,11 +310,12 @@ public final class EvaluatorImpl implements Evaluator {
                   reservedFlagShortNames,
                   (fileOutput) -> new FileOutputImpl(this, fileOutput));
           run.accept(commandRunner.parse(module));
-          return null;
+          return true; // return value is not used; returning null would violate nullness
         });
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T> T evaluateOutputValueAs(ModuleSource moduleSource, PClassInfo<T> classInfo) {
     return doEvaluate(
         moduleSource,
@@ -311,10 +326,8 @@ public final class EvaluatorImpl implements Evaluator {
           if (valueClassInfo.equals(classInfo)) {
             if (value instanceof VmValue vmValue) {
               vmValue.force(false);
-              //noinspection unchecked
               return (T) vmValue.export();
             }
-            //noinspection unchecked
             return (T) value;
           }
           throw moduleOutputValueTypeMismatch(module, classInfo, value, output);
@@ -424,10 +437,37 @@ public final class EvaluatorImpl implements Evaluator {
     return evalResult;
   }
 
+  /** Resolve dependency notation URIs (e.g. `@foo/bar.pkl`) to its resolved absolute URI. */
+  private ModuleSource normalizeModuleSource(ModuleSource moduleSource) {
+    if (moduleSource.getContents() != null
+        || moduleSource.getUri().isAbsolute()
+        || !moduleSource.getUri().getPath().startsWith("@")) {
+      return moduleSource;
+    }
+    try {
+      if (projectFileUri != null) {
+        var moduleKey = moduleResolver.resolve(projectFileUri);
+        var uri = IoUtils.resolve(securityManager, moduleKey, moduleSource.getUri());
+        return ModuleSource.uri(uri);
+      } else {
+        throw new PackageLoadError("cannotResolveDependencyNoProject");
+      }
+    } catch (URISyntaxException e) {
+      // impossible condition
+      throw PklBugException.unreachableCode();
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorLoadingModule", moduleSource.getUri())
+          .build();
+    } catch (ExternalReaderProcessException | SecurityManagerException | PackageLoadError e) {
+      throw new VmExceptionBuilder().withCause(e).build();
+    }
+  }
+
   private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
         () -> {
-          var moduleKey = moduleResolver.resolve(moduleSource);
+          var moduleKey = moduleResolver.resolve(normalizeModuleSource(moduleSource));
           var module = VmLanguage.get(null).loadModule(moduleKey);
           return doEvaluate.apply(module);
         });

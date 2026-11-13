@@ -10,11 +10,11 @@ fixed job {
   permissions {
     contents = "write"
   }
-  needs = "deploy-release"
+  needs = module.needs
   steps {
     (catalog.`actions/download-artifact@v6`) {
       with {
-        pattern = "executable-**"
+        pattern = "deploy-artifacts-**"
         `merge-multiple` = true
       }
     }
@@ -29,10 +29,8 @@ fixed job {
       // language=bash
       run =
         #"""
-        # exclude build_artifacts.txt from publish
-        rm -f */build/executable/*.build_artifacts.txt
-        find */build/executable/* -type d | xargs rm -rf
         gh release create ${TAG_NAME} \
+          --draft \
           --title "${TAG_NAME}" \
           --target "${GIT_SHA}" \
           --verify-tag \

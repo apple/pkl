@@ -1,13 +1,13 @@
 –– Pkl Error ––
 Type constraint `firstOneIsSandy` violated.
-Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+Value: new Listing { new constraintDetails1#Bird { name = "Bob" }; new constraintDet...
 
     (it: Listing<Bird>) -> it[0].name == "Sandy"
                            │ │   │    │
                            │ │   │    false
                            │ │   "Bob"
-                           │ new Bird { name = "Bob" }
-                           new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+                           │ new constraintDetails1#Bird { name = "Bob" }
+                           new Listing { new constraintDetails1#Bird { name = "Bob" }; new constraintDetails1#Bird { name = ...
 
 x | birds: Listing(firstOneIsSandy) = new {
                    ^^^^^^^^^^^^^^^

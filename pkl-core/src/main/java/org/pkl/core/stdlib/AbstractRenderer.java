@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -33,6 +34,8 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
@@ -42,7 +45,6 @@ import org.pkl.core.runtime.VmValueConverter;
 import org.pkl.core.runtime.VmValueVisitor;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.Nullable;
 
 public abstract class AbstractRenderer implements VmValueVisitor {
 
@@ -67,6 +69,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   /** The (closest) {@link SourceSection} of the value being visited, for better error messages. */
   protected @Nullable SourceSection currSourceSection = null;
+
+  /** Whether we are visiting an entry key or not. */
+  private boolean isVisitingEntryKey;
 
   protected AbstractRenderer(
       String name, PklConverter converter, boolean skipNullProperties, boolean skipNullEntries) {
@@ -117,9 +122,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     try {
       VmValueVisitor.super.visit(value);
     } catch (VmUndefinedValueException e) {
-      // Only fill in the path if rendering the leaf member that threw the error. We know we are
-      // at a leaf if the error's receiver is the same as `value`.
-      if (e.getReceiver() == value) {
+      // Only fill in a hint if we are not visiting an entry key; when visiting an entry key,
+      // `currPath` is not tracked from the actual root value (see `visitEntryKeyValue`).
+      if (e.getReceiver() == value && !isVisitingEntryKey) {
         throw e.fillInHint(currPath, topLevelValue);
       }
       throw e;
@@ -192,18 +197,17 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          if (member.isClass() || member.isTypeAlias()) return true;
-          assert member.isProp();
-          doVisitProperty(
-              (Identifier) memberKey,
-              memberValue,
-              value.getVmClass().getProperty((Identifier) memberKey),
-              member.getSourceSection(),
-              isFirst);
-          return true;
-        });
+    for (var cursor = value.properties(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var member = cursor.member();
+      if (member.isClass() || member.isTypeAlias()) continue;
+      assert member.isProp();
+      doVisitProperty(
+          (Identifier) cursor.key(),
+          cursor.cachedValue(),
+          value.getVmClass().getProperty((Identifier) cursor.key()),
+          cursor.member().getSourceSection(),
+          isFirst);
+    }
 
     enclosingValue = prevEnclosingValue;
     endTyped(value, isFirst.get());
@@ -219,21 +223,20 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     var isFirst = new MutableBoolean(true);
     var canRenderPropertyOrEntry = canRenderPropertyOrEntryOf(value);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          var sourceSection = member.getSourceSection();
-          if (member.isProp()) {
-            if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
-            doVisitProperty((Identifier) memberKey, memberValue, null, sourceSection, isFirst);
-          } else if (member.isEntry()) {
-            if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
-            doVisitEntry(memberKey, memberValue, sourceSection, isFirst);
-          } else {
-            doVisitElement((long) memberKey, memberValue, sourceSection, isFirst.getAndSetFalse());
-          }
-          return true;
-        });
-
+    for (var cursor = value.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var memberKey = cursor.key();
+      var memberValue = cursor.cachedValue();
+      var sourceSection = cursor.member().getSourceSection();
+      if (cursor.isProperty()) {
+        if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
+        doVisitProperty((Identifier) memberKey, memberValue, null, sourceSection, isFirst);
+      } else if (cursor.isEntry()) {
+        if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
+        doVisitEntry(memberKey, memberValue, sourceSection, isFirst);
+      } else {
+        doVisitElement((long) memberKey, memberValue, sourceSection, isFirst.getAndSetFalse());
+      }
+    }
     enclosingValue = prevEnclosingValue;
     endDynamic(value, isFirst.get());
   }
@@ -258,13 +261,13 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          assert member.isElement();
-          doVisitElement(
-              (long) memberKey, memberValue, member.getSourceSection(), isFirst.getAndSetFalse());
-          return true;
-        });
+    for (var cursor = value.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      doVisitElement(
+          (long) cursor.key(),
+          cursor.cachedValue(),
+          cursor.member().getSourceSection(),
+          isFirst.getAndSetFalse());
+    }
 
     enclosingValue = prevEnclosingValue;
     endListing(value, isFirst.get());
@@ -279,12 +282,10 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          assert member.isEntry();
-          doVisitEntry(memberKey, memberValue, member.getSourceSection(), isFirst);
-          return true;
-        });
+    for (var cursor = value.entries(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      assert cursor.member().isEntry();
+      doVisitEntry(cursor.key(), cursor.cachedValue(), cursor.member().getSourceSection(), isFirst);
+    }
 
     enclosingValue = prevEnclosingValue;
     endMapping(value, isFirst.get());
@@ -379,7 +380,12 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   protected void visitEntryKeyValue(
       Object key, boolean isFirst, Deque<Object> valuePath, Object value) {
     currPath = new ArrayDeque<>();
-    visitEntryKey(key, isFirst);
+    isVisitingEntryKey = true;
+    try {
+      visitEntryKey(key, isFirst);
+    } finally {
+      isVisitingEntryKey = false;
+    }
     currPath = valuePath;
     visitEntryValue(value);
   }
@@ -395,6 +401,11 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     visitElement(index, convertedValue, isFirst);
     currPath.pop();
     currSourceSection = prevSourceSection;
+  }
+
+  @Override
+  public void visitReference(VmReference value) {
+    cannotRenderTypeAddConverter(value);
   }
 
   protected void cannotRenderTypeAddConverter(VmValue value) {

@@ -1,0 +1,13 @@
+module fruit.Fruits
+
+import "Fruit.pkl"
+
+fruits: Listing<Fruit>
+
+output {
+  files {
+    for (fruit in fruits) {
+      [fruit.name] = fruit.output
+    }
+  }
+}

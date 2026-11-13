@@ -1,0 +1,15 @@
+class Foo {
+  bar: Int
+}
+
+const function chk2(i: Int): Boolean = i > 0
+
+const function mk(f: Foo): Listing<Int> = new {
+  f.bar
+}
+
+class C {
+  xs: Listing<Int(chk2(this))> = mk(new { bar = 2 })
+}
+
+c: C = new {}

@@ -255,7 +255,7 @@ public final class MapNodes {
         throw exceptionBuilder().evalError("notASubclassOfTyped", clazz).build();
       }
 
-      VmUtils.checkIsInstantiable(clazz, null);
+      VmUtils.checkIsInstantiable(clazz, this, this);
 
       var result =
           new VmTyped(

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` type from const property `currentModuleType4g#waldo`.
+
+x | hidden const waldo = (x: module) -> true
+                             ^^^^^^
+at currentModuleType4g#waldo.<function#1> (file:///$snippetsDir/input/types/currentModuleType4g.pkl)

@@ -1,0 +1,5 @@
+open module typeAliasOpenModule
+
+const function isValid(s: String): Boolean = s.startsWith("Bob")
+
+typealias ValidString = String(isValid(this))

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,27 @@
  */
 package org.pkl.core.runtime;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.concurrent.GuardedBy;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
   private final SourceSection sourceSection;
@@ -45,20 +46,18 @@ public final class VmTypeAlias extends VmValue {
   private final String simpleName;
   private final VmTyped module;
   private final String qualifiedName;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final MaterializedFrame enclosingFrame;
 
-  @LateInit private TypeNode typeNode;
+  private @Nullable TypeNode typeNode;
 
-  @LateInit
   @GuardedBy("pTypeAliasLock")
-  private TypeAlias __pTypeAlias;
+  private @Nullable TypeAlias __pTypeAlias;
 
   private final Object pTypeAliasLock = new Object();
 
-  @LateInit
   @GuardedBy("mirrorLock")
-  private VmTyped __mirror;
+  private @Nullable VmTyped __mirror;
 
   private final Object mirrorLock = new Object();
 
@@ -71,7 +70,7 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -86,7 +85,6 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public void initTypeCheckNode(TypeNode typeNode) {
-    assert this.typeNode == null;
     this.typeNode = typeNode;
   }
 
@@ -100,6 +98,7 @@ public final class VmTypeAlias extends VmValue {
    */
   @TruffleBoundary
   public SourceSection getBaseTypeSection() {
+    assert typeNode != null;
     if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
       return constrainedTypeNode.getBaseTypeSection();
     }
@@ -116,6 +115,7 @@ public final class VmTypeAlias extends VmValue {
    */
   @TruffleBoundary
   public SourceSection getConstraintSection() {
+    assert typeNode != null;
     if (typeNode instanceof ConstrainedTypeNode) {
       return ((ConstrainedTypeNode) typeNode).getFirstConstraintSection();
     }
@@ -136,6 +136,10 @@ public final class VmTypeAlias extends VmValue {
 
   public List<VmTyped> getAnnotations() {
     return annotations;
+  }
+
+  public VmClass getModuleClass() {
+    return module.getVmClass();
   }
 
   public String getModuleName() {
@@ -165,10 +169,11 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
   }
 
   public TypeNode getTypeNode() {
+    assert typeNode != null;
     return typeNode;
   }
 
@@ -178,26 +183,49 @@ public final class VmTypeAlias extends VmValue {
 
   @TruffleBoundary
   public TypeNode instantiate(TypeNode[] typeArgumentNodes) {
+    assert typeNode != null;
     // Cloning the type node means that the entire type check remains within a single root node,
     // which should be good for interpreted and compiled performance alike:
     // * Fewer root nodes to call
     // * ControlFlowException used to implement union types doesn't escape root node
+
+    if (typeParameters.length == 0) return deepCopy(typeNode);
+
+    // handle if alias root is itself a type variable (https://github.com/apple/pkl/issues/1711)
+    if (typeNode instanceof TypeVariableNode typeVarNode) {
+      // no need to run validation since the arg itself has already been checked
+      return typeArgumentNodes.length == 0
+          ? new UnknownTypeNode(sourceSection)
+          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
+    }
+
     var clone = (TypeNode) typeNode.deepCopy();
-
-    if (typeParameters.isEmpty()) return clone;
-
     clone.accept(
-        node -> {
-          if (node instanceof TypeVariableNode typeVarNode) {
-            int index = typeVarNode.getTypeParameterIndex();
-            // should not need to clone type argument node because it is not used by its original
-            // root node
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
+        new NodeVisitor() {
+          @Override
+          public boolean visit(com.oracle.truffle.api.nodes.Node node) {
+            if (node instanceof TypeVariableNode typeVarNode) {
+              var index = typeVarNode.getTypeParameter().index();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnknownTypeNode(sourceSection)
+                      : deepCopy(typeArgumentNodes[index]));
+            } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+              // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
+              // are still unresolved at instantiation time. Replace them with a resolved
+              // unresolved type node that returns the concrete type argument.
+              var index = unresolvedTypeVar.getTypeParameter().index();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnresolvedTypeNode.Unknown(sourceSection)
+                      : new UnresolvedTypeNode.Resolved(
+                          sourceSection, deepCopy(typeArgumentNodes[index])));
+            } else if (node instanceof ExecuteCustomThisWithRootNode customThisNode) {
+              // A constraint with frame slots runs in a separate root, outside this tree.
+              customThisNode.getExpressionNode().accept(this);
+            }
+            return true;
           }
-          return true;
         });
 
     return clone;
@@ -214,6 +242,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @Override
+  @TruffleBoundary
   public TypeAlias export() {
     synchronized (pTypeAliasLock) {
       if (__pTypeAlias == null) {
@@ -228,9 +257,10 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                typeParameters);
+                TypeParameter.export(typeParameters),
+                module.getVmClass().export());
 
-        for (var parameter : typeParameters) {
+        for (var parameter : __pTypeAlias.getTypeParameters()) {
           parameter.initOwner(__pTypeAlias);
         }
 
@@ -264,6 +294,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public VmTyped getTypeMirror() {
+    assert typeNode != null;
     return typeNode.getMirror();
   }
 
@@ -288,7 +319,11 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return qualifiedName.startsWith("pkl.base#") ? simpleName : qualifiedName;
+  }
+
+  private static TypeNode deepCopy(TypeNode typeArgumentNode) {
+    return (TypeNode) typeArgumentNode.deepCopy();
   }
 }

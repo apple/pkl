@@ -10,10 +10,4 @@ hidden property2: Float = 3.14159265359
 /*
 /// Property with `external` modifier.
 external property3: Float
-
-/// Property with `abstract` modifier.
-abstract property4: Float
-
-/// Property with multiple modifiers.
-abstract external hidden property5: Float
 */

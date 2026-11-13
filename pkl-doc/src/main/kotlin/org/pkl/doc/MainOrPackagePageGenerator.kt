@@ -21,8 +21,9 @@ import kotlinx.html.*
 internal abstract class MainOrPackagePageGenerator<S>(
   docsiteInfo: DocsiteInfo,
   pageScope: S,
+  isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
-) : PageGenerator<S>(docsiteInfo, pageScope, consoleOut) where S : PageScope {
+) : PageGenerator<S>(docsiteInfo, pageScope, isSinglePackageSite, consoleOut) where S : PageScope {
   protected fun UL.renderModuleOrPackage(
     name: String,
     moduleOrPackageScope: DocScope,

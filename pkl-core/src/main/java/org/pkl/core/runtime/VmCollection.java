@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.Iterator;
 import org.organicdesign.fp.xform.Xform;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 
 public abstract class VmCollection extends VmValue implements Iterable<Object> {
   public interface Builder<T extends VmCollection> {
@@ -126,18 +129,15 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
     return VmList.create(result);
   }
 
-  @TruffleBoundary
-  public final VmCollection flatten() {
+  public final VmCollection flatten(VirtualFrame frame, ReadCursorValueNode readCursorValueNode) {
     var builder = builder();
     for (var elem : this) {
       if (elem instanceof Iterable<?> iterable) {
         builder.addAll(iterable);
       } else if (elem instanceof VmListing listing) {
-        listing.forceAndIterateMemberValues(
-            (key, member, value) -> {
-              builder.add(value);
-              return true;
-            });
+        for (var cursor = listing.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+          builder.add(readCursorValueNode.execute(frame, cursor));
+        }
       } else {
         CompilerDirectives.transferToInterpreter();
         throw new VmExceptionBuilder()
@@ -161,22 +161,7 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
   }
 
   @TruffleBoundary
-  public final String join(String separator) {
-    if (isEmpty()) return "";
-
-    var iter = iterator();
-    var builder = new StringBuilder();
-    builder.append(iter.next());
-
-    while (iter.hasNext()) {
-      builder.append(separator);
-      builder.append(iter.next());
-    }
-
-    return builder.toString();
-  }
-
-  public final String toString() {
+  public final String toPklString() {
     return VmValueRenderer.multiLine(Integer.MAX_VALUE).render(this);
   }
 }

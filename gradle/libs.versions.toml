@@ -3,72 +3,77 @@ assertj = "3.27.7"
 checksumPlugin = "1.4.0"
 # 5.0.3 is the last version compatible with Kotlin 2.2
 clikt = "5.0.3"
-commonMark = "0.28.0"
+commonMark = "0.30.0"
 diffx = "0.9.0"
 downloadTaskPlugin = "5.7.0"
-errorProne = "2.49.0"
+eclipseCdtFormat = "12.2"
+errorProne = "2.50.0"
 errorPronePlugin = "5.1.0"
-geantyref = "1.3.16"
+geantyref = "2.0.1"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
-# 25.0.2 no longer supports macos-x64
-graalVm = "25.0.1"
+graalVm = "25.2.4"
+graalVmJdkVersion = "25.0.4"
 #noinspection UnusedVersionCatalogEntry
-graalVmJdkVersion = "25.0.1"
+graalVmInnovation = "2"
 # slightly hacky but convenient place so we remember to update the checksum
+# pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-x64 = "a3d895b4cd1c783badbd277ec70409806bd4102fca0d2a60dbaeb0bab41aec30"
+graalVmSha256-macos-x64 = "unavailable"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-aarch64 = "066339f24a8ab5c161548491a9400f7344e7761a1e46f8979e76c7ef11d5bc76"
+graalVmSha256-macos-aarch64 = "507330fff8907de51b8621c95a21a491fa9b0d8c240de184594f40f83add3bfa"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-x64 = "01e39fe1a87f28b842a3e4e3b77be9b544dca3a58fa6e93b924a6106c8bac7fb"
+graalVmSha256-linux-x64 = "3f4a89de8eaa96f2ed677f09957c7e872cd8467aad3537f8b5394c1b8c4b942e"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811decbc1a13093fc8ae2"
+graalVmSha256-linux-aarch64 = "22286f7ecd21b9aedb3226b9bf797469e1bd3eefc491e12ef3dd49b452d230b7"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
+graalVmSha256-windows-x64 = "789d2af1c06c3c24f402d2d4a711bdbb19b36f7d8c74afe6a959492fd121ef33"
 # pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
 ideaExtPlugin = "1.4.1"
 izumiReflect = "2.3.10"
-javaPoet = "0.14.0"
+javaPoet = "0.17.0"
 javaxInject = "1"
+jextractPlugin = "1.+"
 jimfs = "1.3.1"
-jline = "4.0.12"
+jline = "4.4.6"
 jmh = "1.37"
 jmhPlugin = "0.7.3"
+jna = "5.19.1"
 jspecify = "1.0.0"
-jsr305 = "3.0.2"
-junit = "6.0.3"
+junit = "6.1.3"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.0"
 kotlinStdLib = "2.2.21"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
-kotlinToolchain = "2.3.21"
+kotlinToolchain = "2.4.0"
 kotlinxHtml = "0.12.0"
 # 1.9.0 is the last version compatible with Kotlin 2.2
 kotlinxSerialization = "1.9.0"
-kotlinxCoroutines = "1.10.2"
+kotlinxCoroutines = "1.11.0"
 #noinspection UnusedVersionCatalogEntry
 ktfmt = "0.62"
 # replaces nuValidator's log4j dependency
 # 2.17.1 is the last version compatible with nuValidator
 log4j = "2.17.1"
-msgpack = "0.9.11"
+msgpack = "0.9.12"
 nexusPublishPlugin = "2.0.0"
-nullaway = "0.13.4"
+nullaway = "0.13.7"
 nullawayPlugin = "3.0.0"
-nuValidator = "26.4.16"
+nuValidator = "26.7.3"
 paguro = "3.10.3"
+protobufPlugin = "0.10.0"
+protobuf = "4.35.1"
 scala = "3.3.7"
 scalafmt = "3.10.0"
 scalaTest = "3.2.19"
 scalaTestPlusJunit = "3.2.19.0"
-shadowPlugin = "9.4.1"
-slf4j = "2.0.17"
+shadowPlugin = "9.5.1"
+slf4j = "2.0.20"
 snakeYaml = "3.0.1"
-spotlessPlugin = "8.4.0"
+spotlessPlugin = "8.8.0"
 wiremock = "3.13.2"
 
 [libraries] # ordered alphabetically
@@ -81,6 +86,7 @@ diffx = { group = "com.softwaremill.diffx", name = "diffx-scalatest-should_3", v
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
+errorProneAnnotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 errorPronePlugin = { group = "net.ltgt.gradle", name = "gradle-errorprone-plugin", version.ref = "errorPronePlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
@@ -93,9 +99,10 @@ jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
 jlineTerminalJni = { group = "org.jline", name = "jline-terminal-jni", version.ref = "jline" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+jnaPlatform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 #noinspection UnusedVersionCatalogEntry
 jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
-jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
@@ -120,6 +127,8 @@ nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "null
 nullawayPlugin = { group = "net.ltgt.gradle", name = "gradle-nullaway-plugin", version.ref = "nullawayPlugin" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
+protobuf = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
+protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
 scalaLibrary = { group = "org.scala-lang", name = "scala3-library_3", version.ref = "scala" }
 scalaTest = { group = "org.scalatest", name = "scalatest_3", version.ref = "scalaTest" }
@@ -129,10 +138,11 @@ slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeYaml" }
 spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin"}
-svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
+svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVmJdkVersion" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
+truffleProfiler = { group = "org.graalvm.tools", name = "profiler-tool", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
-truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVm" }
+truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVmJdkVersion" }
 truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
 wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
@@ -141,9 +151,11 @@ checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
+jextract = { id = "de.infolektuell.jextract", version.ref = "jextractPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinToolchain" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
 #noinspection UnusedVersionCatalogEntry
 nullaway = { id = "net.ltgt.nullaway", version.ref = "nullawayPlugin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }

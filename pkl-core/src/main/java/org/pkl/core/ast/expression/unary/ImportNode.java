@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "import")
 public final class ImportNode extends AbstractImportNode {
   private final VmLanguage language;
 
-  @CompilationFinal @LateInit private VmTyped importedModule;
+  @CompilationFinal private @Nullable VmTyped importedModule;
 
   public ImportNode(
       VmLanguage language,
@@ -55,7 +55,7 @@ public final class ImportNode extends AbstractImportNode {
         context.getSecurityManager().checkImportModule(currentModule.getUri(), importUri);
         var moduleToImport = context.getModuleResolver().resolve(importUri, this);
         importedModule = language.loadModule(moduleToImport, this);
-      } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
+      } catch (SecurityManagerException | PackageLoadError | HttpClientException e) {
         throw exceptionBuilder().withCause(e).build();
       }
     }

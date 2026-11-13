@@ -20,6 +20,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
@@ -33,6 +34,7 @@ import org.pkl.core.project.Project
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.settings.PklSettings
+import org.pkl.core.util.DebugLogger
 import org.pkl.core.util.IoUtils
 
 /** Building block for CLI commands. Configured programmatically to allow for embedding. */
@@ -67,9 +69,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   protected val settings: PklSettings by lazy {
     try {
       if (cliOptions.normalizedSettingsModule != null) {
-        PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule))
+        PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule), cliModuleCacheDir)
       } else {
-        PklSettings.loadFromPklHomeDir()
+        PklSettings.loadFromSystem(cliModuleCacheDir)
       }
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
@@ -84,36 +86,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     } else {
       cliOptions.normalizedProjectFile?.let { loadProject(it) }
     }
-  }
-
-  protected fun resolveModuleUri(uri: URI): URI =
-    if (uri.isAbsolute) uri
-    else { // must be @dep/mod.pkl notation!!
-      if (!uri.path.startsWith('@'))
-        throw CliBugException(
-          RuntimeException("tried to resolve project URI `$uri` with no @ prefix")
-        )
-      if (project == null)
-        throw CliBugException(
-          RuntimeException("tried to resolve project URI `$uri` with no project present")
-        )
-      val dep = uri.path.substringBefore('/').drop(1)
-      val path = uri.path.dropWhile { it != '/' }
-      if (path.isEmpty()) throw CliException("Invalid project dependency URI `$uri`.")
-
-      val remoteDep =
-        project!!.dependencies.remoteDependencies()[dep]
-          ?: if (project!!.dependencies.localDependencies().containsKey(dep))
-            throw CliException(
-              "Only remote project dependencies may be referenced using @-notation. Dependency `@$dep` is a local dependency."
-            )
-          else throw CliException("Project does not contain dependency `@$dep`.")
-      remoteDep.packageUri.toPackageAssetUri(path).uri
-    }
-
-  protected val resolvedSourceModules: List<URI> by lazy {
-    if (project == null) cliOptions.normalizedSourceModules
-    else cliOptions.normalizedSourceModules.map(::resolveModuleUri)
   }
 
   protected fun loadProject(projectFile: Path): Project {
@@ -135,12 +107,22 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       stackFrameTransformer,
       envVars,
       cliOptions.powerAssertionsEnabled,
+      cliModuleCacheDir,
     )
+  }
+
+  /**
+   * The module cache dir as determined by CLI options alone. Used to evaluate the settings and
+   * project files, which are loaded before project evaluator settings are known.
+   */
+  private val cliModuleCacheDir: Path? by lazy {
+    if (cliOptions.noCache) null
+    else cliOptions.normalizedModuleCacheDir ?: IoUtils.getSystemModuleCacheDir()
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
     @Suppress("PklCliDirectProjectEvaluatorSettingsAccess")
-    if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
+    if (cliOptions.omitProjectSettings) null else project?.resolvedEvaluatorSettings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
@@ -176,7 +158,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
         ?: evaluatorSettings?.let { settings ->
           if (settings.noCache == true) null else settings.moduleCacheDir
         }
-        ?: IoUtils.getDefaultModuleCacheDir()
+        ?: IoUtils.getSystemModuleCacheDir()
   }
 
   protected val modulePath: List<Path> by lazy {
@@ -215,15 +197,19 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   protected val httpRewrites: Map<URI, URI>? by lazy {
-    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites()
+    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites
+  }
+
+  private val httpHeaders: Map<String, Map<String, List<String>>>? by lazy {
+    cliOptions.httpHeaders ?: evaluatorSettings?.http?.headers ?: settings.http?.headers
   }
 
   protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (evaluatorSettings?.externalModuleReaders ?: emptyMap()) + cliOptions.externalModuleReaders
+    cliOptions.externalModuleReaders ?: evaluatorSettings?.externalModuleReaders ?: mapOf()
   }
 
   protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (evaluatorSettings?.externalResourceReaders ?: emptyMap()) + cliOptions.externalResourceReaders
+    cliOptions.externalResourceReaders ?: evaluatorSettings?.externalResourceReaders ?: mapOf()
   }
 
   private val externalProcesses:
@@ -241,17 +227,20 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
-    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
+    val caCertsDir = IoUtils.getSystemCaCertsDir()
     var certsAdded = false
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir)
-        .filter { it.isRegularFile() }
+        .filter { it.isRegularFile() && !it.fileName.toString().startsWith(".") }
         .forEach { cert ->
           certsAdded = true
           addCertificates(cert)
         }
     }
-    if (!certsAdded) {
+    if (certsAdded) {
+      DebugLogger.log("Loading CA certificates from ${caCertsDir.normalize().absolutePathString()}")
+    } else {
+      DebugLogger.log("Using built-in CA certificates")
       val defaultCerts =
         this@CliCommand.javaClass.classLoader.getResourceAsStream(
           "org/pkl/commons/cli/PklCARoots.pem"
@@ -277,6 +266,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
         setProxy(proxyAddress, noProxy ?: listOf())
       }
       httpRewrites?.let(::setRewrites)
+      httpHeaders?.let(::setHeaders)
       // Lazy building significantly reduces execution time of commands that do minimal work.
       // However, it means that HTTP client initialization errors won't surface until an HTTP
       // request is made.
@@ -307,6 +297,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ResourceReaders.modulePath(modulePathResolver))
       add(ResourceReaders.pkg())
       add(ResourceReaders.projectpackage())
+      addAll(ResourceReaders.fromServiceProviders())
       add(ResourceReaders.file())
       add(ResourceReaders.http())
       add(ResourceReaders.https())

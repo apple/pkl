@@ -1,0 +1,27 @@
+extends ".../pklbinaryTest.pkl"
+
+dynamic: Dynamic = new {
+  local foo = new Test {}
+  bar = foo
+}
+
+listing: Listing = new {
+  local foo = new Test {}
+  foo
+}
+
+mapping: Mapping = new {
+  local foo = new Test {}
+  ["bar"] = foo
+}
+
+`class`: MyClass = new {
+  local foo = new Test {}
+  bar = foo
+}
+
+class MyClass {
+  bar: Test
+}
+
+class Test

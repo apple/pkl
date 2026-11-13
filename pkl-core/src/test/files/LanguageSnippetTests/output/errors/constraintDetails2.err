@@ -1,18 +1,18 @@
 –– Pkl Error ––
 Type constraint `let (myself: Listing<Bird> = this)
       myself[0].name == "Sandy"` violated.
-Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+Value: new Listing { new constraintDetails2#Bird { name = "Bob" }; new constraintDet...
 
     let (myself: Listing<Bird> = this)
                                  │
-                                 new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+                                 new Listing { new constraintDetails2#Bird { name = "Bob" }; new constraintDetails2#Bird { name = ...
 
     myself[0].name == "Sandy"
     │     │   │    │
     │     │   │    false
     │     │   "Bob"
-    │     new Bird { name = "Bob" }
-    new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+    │     new constraintDetails2#Bird { name = "Bob" }
+    new Listing { new constraintDetails2#Bird { name = "Bob" }; new constraintDetails2#Bird { name = ...
 
 x | let (myself: Listing<Bird> = this)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

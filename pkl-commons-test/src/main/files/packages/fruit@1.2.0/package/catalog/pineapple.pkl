@@ -1,0 +1,3 @@
+amends "../Fruit.pkl"
+
+name = "Pineapple 🍍"

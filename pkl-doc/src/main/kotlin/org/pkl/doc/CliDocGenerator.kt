@@ -159,7 +159,7 @@ class CliDocGenerator(
     val regularModuleUris = mutableListOf<URI>()
     val pklProjectPaths = mutableSetOf<Path>()
     val packageUris = mutableListOf<PackageUri>()
-    for (moduleUri in resolvedSourceModules) {
+    for (moduleUri in options.base.normalizedSourceModules) {
       if (moduleUri.scheme == "file") {
         val dir = moduleUri.toPath().parent
         val projectFile = dir.getProjectFile(options.base.normalizedRootDir)

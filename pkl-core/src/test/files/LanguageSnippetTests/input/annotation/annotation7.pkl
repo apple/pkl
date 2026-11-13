@@ -1,0 +1,34 @@
+import "pkl:reflect"
+
+const function plusThree(it) = it + 3
+const function plusFour(it) = it + 4
+
+local const myProp = "myProp"
+
+class MyClass {
+  @MyAnnotation {
+    func = (it) -> plusThree(it)
+    prop = myProp
+  }
+  foo: Int
+}
+
+@MyAnnotation {
+  func = (it) -> plusFour(it)
+  prop = myProp
+}
+hidden qux: Int
+
+class MyAnnotation extends Annotation {
+  func: ((Any) -> Any)
+
+  prop: Any
+}
+
+local nestedAnnotation = reflect.Class(MyClass).properties["foo"].annotations.first as MyAnnotation
+local moduleAnnotation = reflect.Module(module).moduleClass.properties["qux"].annotations.first as MyAnnotation
+
+res1 = nestedAnnotation.func.apply(15)
+res2 = nestedAnnotation.prop
+res3 = moduleAnnotation.func.apply(15)
+res4 = moduleAnnotation.prop

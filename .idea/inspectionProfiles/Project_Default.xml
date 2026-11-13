@@ -12,6 +12,7 @@
       <option name="REPORT_FIELDS" value="true" />
     </inspection_tool>
     <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="ClassEscapesItsScope" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="CustomRegExpInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myConfigurations">
         <list>
@@ -27,12 +28,19 @@
                   <option name="searchContext" value="ANY" />
                   <option name="replacement" value="evaluatorSettings" />
                 </InspectionPattern>
+                <InspectionPattern>
+                  <option name="regExp" value="project\?\.resolvedEvaluatorSettings" />
+                  <option name="_fileType" value="Kotlin" />
+                  <option name="searchContext" value="ANY" />
+                  <option name="replacement" value="evaluatorSettings" />
+                </InspectionPattern>
               </list>
             </option>
           </RegExpInspectionConfiguration>
         </list>
       </option>
     </inspection_tool>
+    <inspection_tool class="FieldAccessNotGuarded" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="FieldMayBeFinal" enabled="true" level="INFORMATION" enabled_by_default="true">
       <scope name="AllExceptTruffleAst" level="WARNING" enabled="true" />
     </inspection_tool>
@@ -89,11 +97,15 @@
       <option name="REPORT_NULLS_PASSED_TO_NON_ANNOTATED_METHOD" value="true" />
     </inspection_tool>
     <inspection_tool class="SameParameterValue" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="ShellCheck" enabled="true" level="ERROR" enabled_by_default="true">
+      <shellcheck_settings value="SC2129" />
+    </inspection_tool>
     <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
       <option name="processCode" value="true" />
       <option name="processLiterals" value="true" />
       <option name="processComments" value="true" />
     </inspection_tool>
+    <inspection_tool class="StringToUpperWithoutLocale" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="WARNING_ATTRIBUTES" />
     <inspection_tool class="dd497f47-d38f-3fab-9ed7-eabe699620c8" enabled="true" level="ERROR" enabled_by_default="true" editorAttributes="ERRORS_ATTRIBUTES" />
   </profile>
 </component>

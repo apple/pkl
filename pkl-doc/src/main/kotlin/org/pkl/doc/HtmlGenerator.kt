@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ internal class HtmlGenerator(
   importResolver: (URI) -> ModuleSchema,
   private val outputDir: Path,
   private val isTestMode: Boolean,
+  private val isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
 ) : AbstractGenerator(consoleOut) {
   private val siteScope =
@@ -35,14 +36,25 @@ internal class HtmlGenerator(
 
   suspend fun generate(docPackage: DocPackage) = coroutineScope {
     val packageScope = siteScope.getPackage(docPackage.docPackageInfo)
-    launch { PackagePageGenerator(docsiteInfo, docPackage, packageScope, consoleOut).run() }
+    launch {
+      PackagePageGenerator(docsiteInfo, docPackage, packageScope, isSinglePackageSite, consoleOut)
+        .run()
+    }
 
     for (docModule in docPackage.docModules) {
       if (docModule.isUnlisted) continue
 
       val moduleScope = packageScope.getModule(docModule.name)
       launch {
-        ModulePageGenerator(docsiteInfo, docPackage, docModule, moduleScope, isTestMode, consoleOut)
+        ModulePageGenerator(
+            docsiteInfo,
+            docPackage,
+            docModule,
+            moduleScope,
+            isTestMode,
+            isSinglePackageSite,
+            consoleOut,
+          )
           .run()
       }
 
@@ -56,6 +68,7 @@ internal class HtmlGenerator(
               clazz,
               ClassScope(clazz, moduleScope.url, moduleScope),
               isTestMode,
+              isSinglePackageSite,
               consoleOut,
             )
             .run()
@@ -65,7 +78,9 @@ internal class HtmlGenerator(
   }
 
   suspend fun generateSite(packages: List<PackageData>) = coroutineScope {
-    launch { MainPageGenerator(docsiteInfo, packages, siteScope, consoleOut).run() }
+    launch {
+      MainPageGenerator(docsiteInfo, packages, siteScope, isSinglePackageSite, consoleOut).run()
+    }
     launch { generateStaticResources() }
   }
 

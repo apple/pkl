@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,39 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(language = "Pkl")
 @TypeSystemReference(VmTypes.class)
 public abstract class PklRootNode extends RootNode {
+  private final boolean propagateTypeMismatchExceptions;
+
+  static {
+    // Eagerly init the VmStackOverflowException class.
+    // Otherwise, it's possible that `new VmStackOverflowException(e)` inside the catch block within
+    // `execute` can trigger another StackOverflowException during class loading for
+    // `VmStackOverflowException`.
+    var loader = PklRootNode.class.getClassLoader();
+    try {
+      Class.forName("org.pkl.core.runtime.VmStackOverflowException", true, loader);
+    } catch (ClassNotFoundException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
   protected PklRootNode(@Nullable VmLanguage language, FrameDescriptor descriptor) {
+    this(language, descriptor, false);
+  }
+
+  protected PklRootNode(
+      @Nullable VmLanguage language,
+      FrameDescriptor descriptor,
+      boolean propagateTypeMismatchExceptions) {
     super(language, descriptor);
+    this.propagateTypeMismatchExceptions = propagateTypeMismatchExceptions;
   }
 
   public abstract SourceSection getSourceSection();
@@ -46,7 +70,7 @@ public abstract class PklRootNode extends RootNode {
       return executeImpl(frame);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
-      throw e.toVmException();
+      throw propagateTypeMismatchExceptions ? e : e.toVmException();
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       throw e;

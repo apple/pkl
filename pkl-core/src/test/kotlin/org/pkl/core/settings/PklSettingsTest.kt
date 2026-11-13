@@ -17,6 +17,7 @@ package org.pkl.core.settings
 
 import java.net.URI
 import java.nio.file.Path
+import java.util.Base64
 import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -42,7 +43,7 @@ class PklSettingsTest {
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, null))
   }
 
@@ -64,12 +65,23 @@ class PklSettingsTest {
         rewrites {
           ["https://foo.com/"] = "https://bar.com/"
         }
+        headers {
+          ["https://foo.com/**"] {
+            ["x-foo"] = "bar"
+          }
+          ["https://bar.com/**"] {
+            ["x-bar"] {
+              "bar"
+              "baz"
+            }
+          }
+        }
       }
       """
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     val expectedHttp =
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(
@@ -77,7 +89,12 @@ class PklSettingsTest {
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
         mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        mapOf(
+          "https://foo.com/**" to mapOf("x-foo" to listOf("bar")),
+          "https://bar.com/**" to mapOf("x-bar" to listOf("bar", "baz")),
+        ),
       )
+
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
 
@@ -97,10 +114,11 @@ class PklSettingsTest {
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     val expectedHttp =
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(URI("http://localhost:8080"), listOf()),
+        null,
         null,
       )
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
@@ -152,10 +170,64 @@ class PklSettingsTest {
   @Test
   fun `invalid settings file`(@TempDir tempDir: Path) {
     val settingsFile = tempDir.resolve("settings.pkl").apply { writeString("foo = 1") }
-    assertThatCode { PklSettings.loadFromPklHomeDir(tempDir) }
+    assertThatCode { PklSettings.loadFromSettingsDir(tempDir) }
       .hasMessageContaining(
         "Expected `output.value` of module `${settingsFile.toUri()}` to be of type `pkl.settings`, but got type `settings`."
       )
+  }
+
+  @Test
+  fun `load user settings with netRcHeaders`(@TempDir tempDir: Path) {
+    val netrcFile = tempDir.resolve(".netrc")
+    netrcFile.writeString(
+      """
+      machine github.com
+        login octocat
+        password secret_pass
+      """
+        .trimIndent()
+    )
+
+    val settingsPath = tempDir.resolve("settings.pkl")
+    settingsPath.writeString(
+      """
+      amends "pkl:settings"
+
+      http {
+        headers = netRcHeaders(read("${netrcFile.toUri()}"))
+      }
+      """
+        .trimIndent()
+    )
+
+    val settings = PklSettings.load(ModuleSource.path(settingsPath))
+    val expectedAuth =
+      "Basic " + Base64.getEncoder().encodeToString("octocat:secret_pass".toByteArray())
+    val expectedHttp =
+      PklEvaluatorSettings.Http(
+        null,
+        null,
+        mapOf("http{,s}://github.com/**" to mapOf("Authorization" to listOf(expectedAuth))),
+      )
+
+    assertThat(settings.http()).isEqualTo(expectedHttp)
+  }
+
+  @Test
+  fun `test import EvaluatorSettings`() {
+    val evaluator = Evaluator.preconfigured()
+    val module =
+      evaluator.evaluate(
+        ModuleSource.text(
+          """
+          import "pkl:EvaluatorSettings"
+
+          res = (new EvaluatorSettings.Http {}).netRcHeaders("")
+          """
+            .trimIndent()
+        )
+      )
+    assertThat(module.getProperty("res")).isNotNull
   }
 
   private fun checkEquals(expected: Editor, actual: PObject) {

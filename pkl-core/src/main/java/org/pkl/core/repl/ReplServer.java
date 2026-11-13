@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.ast.*;
@@ -45,11 +46,11 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
@@ -58,9 +59,12 @@ import org.pkl.parser.syntax.ClassProperty;
 import org.pkl.parser.syntax.Expr;
 import org.pkl.parser.syntax.ImportClause;
 import org.pkl.parser.syntax.ModuleDecl;
+import org.pkl.parser.syntax.Node;
 import org.pkl.parser.syntax.ReplInput;
 
 public class ReplServer implements AutoCloseable {
+  private static final String expressionPreamble = "`THE REPL TEXT EXPR` = ";
+
   private final IndirectCallNode callNode = Truffle.getRuntime().createIndirectCallNode();
   private final Context polyglotContext;
   private final VmLanguage language;
@@ -72,6 +76,7 @@ public class ReplServer implements AutoCloseable {
   private final PackageResolver packageResolver;
   private final @Nullable ProjectDependenciesManager projectDependenciesManager;
   private final boolean color;
+  private final Parser parser = new Parser();
 
   public ReplServer(
       SecurityManager securityManager,
@@ -178,7 +183,88 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings({"StatementWithEmptyBody"})
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void handleNode(
+      ReplState replState,
+      List<Object> results,
+      URI uri,
+      Node node,
+      String srcText,
+      boolean evalDefinitions,
+      boolean forceResults) {
+    var pair = VmUtils.buildSyntheticModuleText(node, replState.module, srcText);
+    var syntheticModuleText = pair.first;
+    var adjustedNode = pair.second;
+    var module = ModuleKeys.synthetic(uri, workingDir.toUri(), uri, syntheticModuleText, false);
+    ResolvedModuleKey resolved;
+    try {
+      resolved = module.resolve(securityManager);
+    } catch (SecurityManagerException e) {
+      throw new VmExceptionBuilder().withCause(e).build();
+    } catch (IOException e) {
+      // resolving a synthetic module should never cause IOException
+      throw new AssertionError(e);
+    }
+    var builder =
+        new AstBuilder(
+            VmUtils.loadSource(resolved),
+            language,
+            replState.module.getModuleInfo(),
+            moduleResolver);
+    var mod = parser.parseModule(syntheticModuleText);
+    try {
+      builder.visitModule(mod);
+      if (adjustedNode instanceof Expr expr) {
+        var exprNode = builder.visitExpr(expr);
+        evaluateExpr(replState, exprNode, forceResults, results);
+      } else if (adjustedNode instanceof ImportClause importClause) {
+        addStaticModuleProperty(builder.visitImportClause(importClause));
+      } else if (adjustedNode instanceof ClassProperty classProperty) {
+        var propertyNode = builder.visitClassProperty(classProperty);
+        var property = addModuleProperty(propertyNode);
+        if (evalDefinitions) {
+          evaluateMemberDef(replState, property, forceResults, results);
+        }
+      } else if (adjustedNode instanceof Class clazz) {
+        addStaticModuleProperty(builder.visitClass(clazz));
+      } else if (adjustedNode instanceof org.pkl.parser.syntax.TypeAlias typeAlias) {
+        addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
+      } else if (adjustedNode instanceof org.pkl.parser.syntax.ClassMethod classMethod) {
+        addModuleMethodDef(builder.visitClassMethod(classMethod));
+      } else if (adjustedNode instanceof ModuleDecl) {
+        // do nothing for now
+      } else {
+        results.add(
+            new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
+      }
+    } catch (VmException e) {
+      e.setForExpressionInput(true);
+      // TODO: patch stack trace for constants
+      results.add(new EvalError(errorRenderer.render(e)));
+    }
+  }
+
+  /**
+   * Strip out the {@code `THE REPL TEXT EXPR` = } preamble that we insert in front of expressions;
+   */
+  private String renderException(VmException e) {
+    var rendered = errorRenderer.render(e);
+    var sb = new StringBuilder();
+    var lines = rendered.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.contains(expressionPreamble)) {
+        sb.append(line.replace(expressionPreamble, "")).append('\n');
+        var decoration = lines[i + 1];
+        sb.append(decoration.replace(" ".repeat(expressionPreamble.length()), "")).append('\n');
+        i++;
+      } else {
+        sb.append(line).append('\n');
+      }
+    }
+    return sb.toString();
+  }
+
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -198,53 +284,9 @@ public class ReplServer implements AutoCloseable {
     }
 
     var results = new ArrayList<>();
-    var module = ModuleKeys.synthetic(uri, workingDir.toUri(), uri, text, false);
-    ResolvedModuleKey resolved;
-    try {
-      resolved = module.resolve(securityManager);
-    } catch (SecurityManagerException e) {
-      throw new VmExceptionBuilder().withCause(e).build();
-    } catch (IOException e) {
-      // resolving a synthetic module should never cause IOException
-      throw new AssertionError(e);
-    }
-
-    var builder =
-        new AstBuilder(
-            VmUtils.loadSource(resolved),
-            language,
-            replState.module.getModuleInfo(),
-            moduleResolver);
 
     for (var tree : replInputContext.getNodes()) {
-      try {
-        if (tree instanceof Expr expr) {
-          var exprNode = builder.visitExpr(expr);
-          evaluateExpr(replState, exprNode, forceResults, results);
-        } else if (tree instanceof ImportClause importClause) {
-          addStaticModuleProperty(builder.visitImportClause(importClause));
-        } else if (tree instanceof ClassProperty classProperty) {
-          var propertyNode = builder.visitClassProperty(classProperty);
-          var property = addModuleProperty(propertyNode);
-          if (evalDefinitions) {
-            evaluateMemberDef(replState, property, forceResults, results);
-          }
-        } else if (tree instanceof Class clazz) {
-          addStaticModuleProperty(builder.visitClass(clazz));
-        } else if (tree instanceof org.pkl.parser.syntax.TypeAlias typeAlias) {
-          addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
-        } else if (tree instanceof org.pkl.parser.syntax.ClassMethod classMethod) {
-          addModuleMethodDef(builder.visitClassMethod(classMethod));
-        } else if (tree instanceof ModuleDecl) {
-          // do nothing for now
-        } else {
-          results.add(
-              new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
-        }
-      } catch (VmException e) {
-        // TODO: patch stack trace for constants
-        results.add(new EvalError(errorRenderer.render(e)));
-      }
+      handleNode(replState, results, uri, tree, text, evalDefinitions, forceResults);
     }
 
     return results;
@@ -426,12 +468,8 @@ public class ReplServer implements AutoCloseable {
             moduleKey,
             resolvedModuleKey,
             false);
-    var module =
-        new VmTyped(
-            VmUtils.createEmptyMaterializedFrame(),
-            null, // set by initSuperclass()
-            null,
-            moduleMembers);
+    // clazz will be initialized by initSuperclass() later
+    var module = new VmTyped(VmUtils.createEmptyMaterializedFrame(), null, moduleMembers);
     module.setExtraStorage(moduleInfo);
     var clazz =
         new VmClass(
@@ -441,7 +479,7 @@ public class ReplServer implements AutoCloseable {
             List.of(),
             VmModifier.NONE,
             classInfo,
-            List.of(),
+            new TypeParameter[0],
             module);
     if (parent != null) {
       var superclass = parent.getVmClass();

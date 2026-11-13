@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,18 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
-import java.util.List;
-import org.pkl.core.TypeParameter;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
+import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 public final class TypeAliasNode extends ExpressionNode {
   private final SourceSection headerSection;
@@ -36,7 +38,7 @@ public final class TypeAliasNode extends ExpressionNode {
   private final int modifiers;
   private final String simpleName;
   private final String qualifiedName;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private @Child UnresolvedTypeNode typeAnnotationNode;
 
   // use same caching scheme as ClassNode
@@ -50,7 +52,7 @@ public final class TypeAliasNode extends ExpressionNode {
       int modifiers,
       String simpleName,
       String qualifiedName,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       UnresolvedTypeNode typeAnnotationNode) {
     super(sourceSection);
     this.headerSection = headerSection;
@@ -85,9 +87,27 @@ public final class TypeAliasNode extends ExpressionNode {
             typeParameters,
             frame.materialize());
 
-    VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
-    cachedTypeAlias.initTypeCheckNode(typeAnnotationNode.execute(frame));
+    VmUtils.evaluateAnnotations(frame, this, annotationNodes, annotations);
+    initTypeAliasModule(typeAnnotationNode, module);
+    var bodyTypeNode = typeAnnotationNode.execute(frame);
+    cachedTypeAlias.initTypeCheckNode(bodyTypeNode);
 
     return cachedTypeAlias;
+  }
+
+  private static void initTypeAliasModule(Node node, VmTyped module) {
+    node.accept(
+        n -> {
+          if (n instanceof GetTypeAliasModuleNode getTypeAliasModuleNode) {
+            getTypeAliasModuleNode.lateInitModule(module);
+            // `node.accept` won't walk past root nodes, but this can happen if we have a
+            // let expression in a constraint.
+            //
+            // If we encounter `ExecuteCustomThisWithRootNode`; walk its expression node directly.
+          } else if (n instanceof ExecuteCustomThisWithRootNode executeCustomThisWithRootNode) {
+            initTypeAliasModule(executeCustomThisWithRootNode.getExpressionNode(), module);
+          }
+          return true;
+        });
   }
 }

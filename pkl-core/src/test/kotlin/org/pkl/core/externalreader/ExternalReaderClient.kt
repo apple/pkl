@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 package org.pkl.core.externalreader
 
 import java.io.IOException
+import org.jspecify.annotations.Nullable
 import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.Messages
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
-import org.pkl.core.util.Nullable
 
 /** An implementation of the client side of the external reader flow */
 class ExternalReaderClient(

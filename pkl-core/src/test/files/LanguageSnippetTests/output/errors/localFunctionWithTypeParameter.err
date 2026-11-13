@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Only standard library members can have type parameters.
-
-x | local function x<T>() = x
-                     ^
-at localFunctionWithTypeParameter (file:///$snippetsDir/input/errors/localFunctionWithTypeParameter.pkl)

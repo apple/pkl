@@ -1,0 +1,11 @@
+foo {
+  new {
+    prop = 1
+  }
+}
+
+res = (foo) {
+  [[this.prop is Int(let (q = 0) this > q)]] {
+    prop = 2
+  }
+}

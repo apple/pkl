@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.Set;
-import org.pkl.core.TypeParameter;
+import java.util.ArrayList;
+import java.util.List;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
-import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetModuleOwnerNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
@@ -39,7 +40,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
     private final VmLanguage language;
     @Child UnresolvedTypeNode childNode;
-    TypeConstraintNode[] constraintCheckNodes;
+    @Children TypeConstraintNode[] constraintCheckNodes;
 
     public Constrained(
         SourceSection sourceSection,
@@ -89,22 +90,42 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   /** The `module` type. */
   public static final class Module extends UnresolvedTypeNode {
-    @Child private ExpressionNode getModuleNode;
+    @Child private ExpressionNode getModuleOwnerNode;
 
     public Module(SourceSection sourceSection) {
       super(sourceSection);
-      getModuleNode = new GetModuleNode(sourceSection);
+      getModuleOwnerNode = new GetModuleOwnerNode(sourceSection);
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      var module = (VmTyped) getModuleOwnerNode.executeGeneric(frame);
       var moduleClass = module.getVmClass();
       return moduleClass.isClosed()
-          ? new FinalModuleTypeNode(sourceSection, moduleClass)
-          : new NonFinalModuleTypeNode(sourceSection, moduleClass);
+          ? FinalSelfTypeNode.moduleType(sourceSection, moduleClass)
+          : NonFinalSelfTypeNode.moduleType(sourceSection, moduleClass);
+    }
+  }
+
+  /** The `this` type. */
+  public static final class This extends UnresolvedTypeNode {
+    @Child private ExpressionNode getClassNode;
+
+    public This(SourceSection sourceSection, ExpressionNode getClassNode) {
+      super(sourceSection);
+      this.getClassNode = getClassNode;
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreter();
+
+      var clazz = (VmClass) getClassNode.executeGeneric(frame);
+      return clazz.isClosed()
+          ? FinalSelfTypeNode.thisType(sourceSection, clazz)
+          : NonFinalSelfTypeNode.thisType(sourceSection, clazz);
     }
   }
 
@@ -178,13 +199,13 @@ public abstract class UnresolvedTypeNode extends PklNode {
             case "Int16":
               return new Int16TypeAliasTypeNode();
             case "UInt16":
-              return new UIntTypeAliasTypeNode(alias, 0x000000000000FFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x000000000000FFFFL);
             case "Int32":
               return new Int32TypeAliasTypeNode();
             case "UInt32":
-              return new UIntTypeAliasTypeNode(alias, 0x00000000FFFFFFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x00000000FFFFFFFFL);
             case "UInt":
-              return new UIntTypeAliasTypeNode(alias, 0x7FFFFFFFFFFFFFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x7FFFFFFFFFFFFFFFL);
           }
         }
 
@@ -278,13 +299,19 @@ public abstract class UnresolvedTypeNode extends PklNode {
           return FunctionNClassTypeNodeGen.create(sourceSection, resolvedTypeArgumentNodes);
         }
 
-        // erase `x: Class<Foo>` to `x: Class` for now (cf. function types)
         if (clazz.isClassClass()) {
-          return new FinalClassTypeNode(sourceSection, clazz);
+          return ClassClassTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isVarArgsClass()) {
           return new VarArgsTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
+        }
+
+        if (clazz.isReferenceClass()) {
+          return ReferenceTypeNodeGen.create(
+              sourceSection,
+              typeArgumentNodes[0].execute(frame),
+              typeArgumentNodes[1].execute(frame));
         }
 
         throw exceptionBuilder()
@@ -338,6 +365,8 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class Union extends UnresolvedTypeNode {
+    private static final int MAX_EXPLODE_LOOP = 20;
+
     @Children private final UnresolvedTypeNode[] unresolvedElementTypeNodes;
     private final int defaultIndex;
 
@@ -354,25 +383,78 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var elementTypeNodes = new TypeNode[unresolvedElementTypeNodes.length];
-      var skipElementTypeChecks = true;
+      var isUnionOfStringLiterals = true;
 
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = unresolvedElementTypeNodes[i].execute(frame);
+        if (!isStringOrUnionOfStringLiterals(elementTypeNode)) {
+          isUnionOfStringLiterals = false;
+        }
         elementTypeNodes[i] = elementTypeNode;
-        skipElementTypeChecks &= elementTypeNode.isNoopTypeCheck();
       }
+      // Don't use `@ExplodeLoop` variant of union type of union is too large;
+      // this can easily turn into too many IR nodes; the compiler will spend too much time
+      // compiling these code paths.
+      //
+      // This is especially true for typealiases of unions, because they get inlined into their
+      // usage sites.
+      var ret =
+          elementTypeNodes.length > MAX_EXPLODE_LOOP
+              ? new UnionTypeNodeLooped(sourceSection, defaultIndex, elementTypeNodes)
+              : new UnionTypeNodeExploded(sourceSection, defaultIndex, elementTypeNodes);
+      return isUnionOfStringLiterals ? unionOfStringLiterals(elementTypeNodes, ret) : ret;
+    }
 
-      return new UnionTypeNode(
-          sourceSection, defaultIndex, elementTypeNodes, skipElementTypeChecks);
+    private boolean isStringOrUnionOfStringLiterals(TypeNode typeNode) {
+      return typeNode instanceof StringLiteralTypeNode
+          || typeNode instanceof UnionOfStringLiteralsTypeNode
+          || typeNode instanceof TypeAliasTypeNode typeAliasTypeNode
+              && isStringOrUnionOfStringLiterals(typeAliasTypeNode.getAliasedTypeNode());
+    }
+
+    /**
+     * Adds {@code typeNode}'s string literals to {@code literals}, and returns the corresponding
+     * default index.
+     */
+    private int collectStringLiteralAndGetDefaultIndex(TypeNode typeNode, List<String> literals) {
+      if (typeNode instanceof StringLiteralTypeNode stringTypeNode) {
+        literals.add(stringTypeNode.getLiteral());
+        return 0;
+      }
+      if (typeNode instanceof UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
+        literals.addAll(unionOfStringLiteralsTypeNode.getDeclaredStringLiterals());
+        return unionOfStringLiteralsTypeNode.getDefaultIndex();
+      }
+      if (typeNode instanceof TypeAliasTypeNode typeAliasTypeNode) {
+        return collectStringLiteralAndGetDefaultIndex(
+            typeAliasTypeNode.getAliasedTypeNode(), literals);
+      }
+      throw PklBugException.unreachableCode();
+    }
+
+    private TypeNode unionOfStringLiterals(TypeNode[] elementTypeNodes, TypeNode originalTypeNode) {
+      var stringLiterals = new ArrayList<String>(elementTypeNodes.length);
+      var computedDefaultIdx = -1;
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        var offsetBeforeElement = stringLiterals.size();
+        var elementDefaultIdx =
+            collectStringLiteralAndGetDefaultIndex(elementTypeNodes[i], stringLiterals);
+        if (i == defaultIndex) {
+          computedDefaultIdx =
+              elementDefaultIdx == -1 ? -1 : offsetBeforeElement + elementDefaultIdx;
+        }
+      }
+      return new UnionOfStringLiteralsTypeNode(
+          sourceSection, computedDefaultIdx, stringLiterals, originalTypeNode);
     }
   }
 
   public static final class UnionOfStringLiterals extends UnresolvedTypeNode {
-    private final Set<String> stringLiterals;
+    private final List<String> stringLiterals;
     private final int defaultIndex;
 
     public UnionOfStringLiterals(
-        SourceSection sourceSection, int defaultIndex, Set<String> stringLiterals) {
+        SourceSection sourceSection, int defaultIndex, List<String> stringLiterals) {
       super(sourceSection);
       this.stringLiterals = stringLiterals;
       this.defaultIndex = defaultIndex;
@@ -382,7 +464,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new UnionOfStringLiteralsTypeNode(sourceSection, defaultIndex, stringLiterals);
+      return new UnionOfStringLiteralsTypeNode(sourceSection, defaultIndex, stringLiterals, null);
     }
   }
 
@@ -416,17 +498,48 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   public static final class TypeVariable extends UnresolvedTypeNode {
     private final TypeParameter typeParameter;
+    private final int levelsUp;
+    private final TypeParameter.OwnerType ownerType;
 
-    public TypeVariable(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariable(
+        SourceSection sourceSection,
+        TypeParameter typeParameter,
+        TypeParameter.OwnerType ownerType,
+        int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.ownerType = ownerType;
+      this.levelsUp = levelsUp;
+    }
+
+    public TypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new TypeVariableNode(sourceSection, typeParameter);
+      return new TypeVariableNode(sourceSection, typeParameter, ownerType, levelsUp);
+    }
+  }
+
+  /**
+   * An unresolved type node that is pre-resolved to a concrete type node. Used during type alias
+   * instantiation to replace type variable references inside constraint expressions (e.g., {@code
+   * every((it) -> it is T)}) with the corresponding concrete type argument.
+   */
+  public static final class Resolved extends UnresolvedTypeNode {
+    @Child private TypeNode typeNode;
+
+    public Resolved(SourceSection sourceSection, TypeNode typeNode) {
+      super(sourceSection);
+      this.typeNode = typeNode;
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      return typeNode;
     }
   }
 }

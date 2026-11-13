@@ -1,0 +1,7 @@
+open class A {
+  function foo<A>() = null
+}
+
+class B extends A {
+  function foo<A, B>() = null
+}

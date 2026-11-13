@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// An XML renderer.
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 module pkl.xml
 
 /// Renders values as XML.
@@ -77,7 +77,7 @@ class Property extends ConvertProperty {
 /// Use this method to directly define an XML element
 /// instead of relying on the default rendering of Pkl values.
 ///
-/// To define the XML element's attributes, set the [attributes] property of the `Element` object:
+/// To define the XML element's attributes, set the `attributes` property of the `Element` object:
 /// ```
 /// order = xml.Element("order") {
 ///   attributes {

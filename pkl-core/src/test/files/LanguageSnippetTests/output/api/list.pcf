@@ -438,4 +438,19 @@ examples {
     List(3.d, "Pigeon", 1)
     List()
   }
+  ["join()"] {
+    "1.s, 2.s"
+    "1.mb, 2.gb"
+    """
+    { The bird named Sally }
+    { The bird named Bob }
+    """
+    """
+    1
+    true
+    1.ms
+    { The bird named Sally }
+    { The bird named Bob }
+    """
+  }
 }

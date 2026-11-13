@@ -19,11 +19,11 @@ plugins {
   id("pklPublishLibrary")
 }
 
-val pklConfigJava: Configuration by configurations.creating
+val pklConfigJava: Configuration = configurations.create("pklConfigJava")
 
-val pklConfigJavaAll: Configuration by configurations.creating
+val pklConfigJavaAll: Configuration = configurations.create("pklConfigJavaAll")
 
-val pklCodegenKotlin: Configuration by configurations.creating
+val pklCodegenKotlin: Configuration = configurations.create("pklCodegenKotlin")
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
@@ -49,8 +49,8 @@ dependencies {
   testImplementation(libs.geantyref)
 }
 
-val generateTestConfigClasses by
-  tasks.registering(JavaExec::class) {
+val generateTestConfigClasses =
+  tasks.register<JavaExec>("generateTestConfigClasses") {
     val outputDir = layout.buildDirectory.dir("testConfigClasses")
     outputs.dir(outputDir)
     inputs.dir("src/test/resources/codegenPkl")

@@ -25,9 +25,9 @@ plugins {
   signing
 }
 
-val placeholder: SourceSet by sourceSets.creating
+val placeholder = sourceSets.create("placeholder")
 
-val firstPartySourcesJars by configurations.existing
+val firstPartySourcesJars = configurations.named("firstPartySourcesJars")
 
 // Note: pkl-tools cannot (easily) contain pkl-config-kotlin
 // because pkl-tools ships with a shaded Kotlin stdlib.
@@ -48,19 +48,25 @@ dependencies {
   firstPartySourcesJars(project(":pkl-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-codegen-java", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-codegen-kotlin", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-config-java", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-doc", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-server", "sourcesJar"))
 }
 
 // TODO: need to figure out how to properly generate javadoc here.
 // For now, we'll include a placeholder javadoc jar.
-val javadocPlaceholder by tasks.registering(Javadoc::class) { source = placeholder.allJava }
+val javadocPlaceholder =
+  tasks.register<Javadoc>("javadocPlaceholder") { source = placeholder.allJava }
 
 java { withJavadocJar() }
 
-val javadocJar by
-  tasks.existing(Jar::class) {
+val javadocJar =
+  tasks.named<Jar>("javadocJar") {
     from(javadocPlaceholder)
     archiveBaseName.set("pkl-tools-all")
     archiveClassifier.set("javadoc")
@@ -105,8 +111,8 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
   }
 }
 
-val testStartFatJar by
-  tasks.registering(Exec::class) { configureTestStartFatJar(buildInfo.javaTestLauncher) }
+val testStartFatJar =
+  tasks.register<Exec>("testStartFatJar") { configureTestStartFatJar(buildInfo.javaTestLauncher) }
 
 tasks.validateFatJar { dependsOn(testStartFatJar) }
 

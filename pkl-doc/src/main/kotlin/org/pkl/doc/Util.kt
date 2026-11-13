@@ -115,7 +115,7 @@ internal val String.uriEncoded
   get(): String = replace(Regex("([^;/?:@&=+$,#]+)")) { it.value.uriEncodedComponent }
 
 fun getModulePath(moduleName: String, packagePrefix: String): String =
-  moduleName.substring(packagePrefix.length).replace('.', '/')
+  moduleName.removePrefix(packagePrefix).replace('.', '/')
 
 /**
  * Turns `"foo.bar.baz-biz"` into ``"foo.bar.`baz-biz`"``.
@@ -136,6 +136,6 @@ fun OutputStream.write(str: String) = write(str.toByteArray(Charsets.UTF_8))
 
 fun OutputStream.writeLine(str: String) = write((str + "\n").toByteArray(Charsets.UTF_8))
 
-operator fun <A, B> org.pkl.core.util.Pair<A, B>.component1(): A = first
+operator fun <A : Any, B : Any> org.pkl.core.util.Pair<A, B>.component1(): A = first
 
-operator fun <A, B> org.pkl.core.util.Pair<A, B>.component2(): B = second
+operator fun <A : Any, B : Any> org.pkl.core.util.Pair<A, B>.component2(): B = second

@@ -53,7 +53,6 @@ gw pkl-cli:buildNative  # build native executable for current platform
 
 pkl-cli/build/executable/jpkl                   # run Java executable
 pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
-pkl-cli/build/executable/pkl-macos-amd64        # run Intel Mac executable
 pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
 pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
 pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 
@@ -93,6 +92,14 @@ Example: `./gradlew test -Djvmdebug=true`
 There is an IntelliJ plugin meant for development on the Pkl project itself located in https://github.com/apple/pkl-project-commons[pkl-project-commons].
 
 See https://github.com/apple/pkl-project-commons?tab=readme-ov-file#internal-intellij-plugin[its readme] for instructions on how to set it up.
+
+== Working on libpkl
+
+libpkl is a native library written in C, and is best written in CLion, or VSCode.
+
+IntelliJ has limited support for editing C sources.
+
+There is a CMakeLists.txt file whose only job is to configure CLion with proper include paths.
 
 == Resources
 

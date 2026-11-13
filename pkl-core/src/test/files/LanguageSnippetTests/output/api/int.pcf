@@ -90,6 +90,7 @@ examples {
     "0"
     "0"
     "0"
+    "-9223372036854775808"
     "Type constraint `this.isBetween(2, 36)` violated. Value: -1"
     "Type constraint `this.isBetween(2, 36)` violated. Value: 64"
   }

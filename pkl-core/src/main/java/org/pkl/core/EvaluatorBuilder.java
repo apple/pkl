@@ -19,6 +19,7 @@ import com.oracle.truffle.api.TruffleOptions;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.evaluatorSettings.TraceMode;
@@ -33,7 +34,6 @@ import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.LoggerImpl;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** A builder for an {@link Evaluator}. Can be reused to build multiple evaluators. */
 @SuppressWarnings({"UnusedReturnValue", "unused"})
@@ -56,9 +56,9 @@ public final class EvaluatorBuilder {
 
   private final Map<String, String> externalProperties = new HashMap<>();
 
-  private @Nullable java.time.Duration timeout;
+  private java.time.@Nullable Duration timeout;
 
-  private @Nullable Path moduleCacheDir = IoUtils.getDefaultModuleCacheDir();
+  private @Nullable Path moduleCacheDir = IoUtils.getSystemModuleCacheDir();
 
   private @Nullable String outputFormat;
 
@@ -386,7 +386,7 @@ public final class EvaluatorBuilder {
   /**
    * Sets an evaluation timeout to be enforced by the {@link Evaluator}'s {@code evaluate} methods.
    */
-  public EvaluatorBuilder setTimeout(@Nullable java.time.Duration timeout) {
+  public EvaluatorBuilder setTimeout(java.time.@Nullable Duration timeout) {
     this.timeout = timeout;
     return this;
   }
@@ -488,7 +488,7 @@ public final class EvaluatorBuilder {
    */
   public EvaluatorBuilder applyFromProject(Project project) {
     this.dependencies = project.getDependencies();
-    var settings = project.getEvaluatorSettings();
+    var settings = project.getResolvedEvaluatorSettings();
     if (securityManager != null) {
       throw new IllegalStateException(
           "Cannot call both `setSecurityManager` and `setProject`, because both define security manager settings. Call `setProjectOnly` if the security manager is desired.");
@@ -556,6 +556,9 @@ public final class EvaluatorBuilder {
       }
       if (settings.http().rewrites() != null) {
         httpClientBuilder.setRewrites(settings.http().rewrites());
+      }
+      if (settings.http().headers() != null) {
+        httpClientBuilder.setHeaders(settings.http().headers());
       }
       setHttpClient(httpClientBuilder.buildLazily());
     }

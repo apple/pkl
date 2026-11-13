@@ -23,14 +23,35 @@ public final class Parser {
   public Parser() {}
 
   public Module parseModule(String source) {
-    return new ParserImpl(source).parseModule();
+    var parser = new ParserImpl(source);
+    try {
+      return parser.parseModule();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
   }
 
   public Expr parseExpressionInput(String source) {
-    return new ParserImpl(source).parseExpressionInput();
+    var parser = new ParserImpl(source);
+    try {
+      return parser.parseExpressionInput();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
   }
 
   public ReplInput parseReplInput(String source) {
-    return new ParserImpl(source).parseReplInput();
+    var parser = new ParserImpl(source);
+    try {
+      return parser.parseReplInput();
+    } catch (MaxBacktrackCountError err) {
+      throw err.toParserError();
+    } catch (StackOverflowError err) {
+      throw parser.tooDeeplyNested();
+    }
   }
 }

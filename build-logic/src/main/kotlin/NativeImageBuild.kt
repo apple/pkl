@@ -13,52 +13,82 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import javax.inject.Inject
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectories
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.withNormalizer
 import org.gradle.process.ExecOperations
 
-enum class Architecture {
-  AMD64,
-  AARCH64,
-}
-
 abstract class NativeImageBuildService : BuildService<BuildServiceParameters.None>
 
 abstract class NativeImageBuild : DefaultTask() {
-  @get:Input abstract val imageName: Property<String>
+  @get:Input abstract val outputName: Property<String>
 
   @get:Input abstract val extraNativeImageArgs: ListProperty<String>
 
-  @get:Input abstract val arch: Property<Architecture>
+  @get:Input abstract val arch: Property<Target.Arch>
 
-  @get:Input abstract val mainClass: Property<String>
+  /**
+   * Names of extra directories, relative to the native-image working directory, that should be
+   * copied into [outputDir] after a successful build.
+   */
+  @get:Input abstract val additionalOutputDirectoryNames: SetProperty<String>
+
+  /**
+   * The main class entrypoint for the executable.
+   *
+   * This option is not necessary if [sharedLibrary] is true.
+   */
+  @get:Optional @get:Input abstract val mainClass: Property<String>
+
+  /** Create a shared library, instead of an executable. */
+  @get:Input abstract val sharedLibrary: Property<Boolean>
 
   @get:InputFiles abstract val classpath: ConfigurableFileCollection
 
-  private val outputDir = project.layout.buildDirectory.dir("executable")
+  @get:Input abstract val envVars: MapProperty<String, String>
 
-  @get:OutputFile val outputFile = outputDir.flatMap { it.file(imageName) }
+  @get:InputFile @get:Optional abstract val nativeCompilerPath: RegularFileProperty
+
+  @get:Internal abstract val compiledClassesFile: RegularFileProperty
+
+  @get:Internal abstract val outputDir: DirectoryProperty
 
   @get:Inject protected abstract val execOperations: ExecOperations
 
+  @get:Inject protected abstract val objectFactory: ObjectFactory
+
   private val graalVm: Provider<BuildInfo.GraalVm> = arch.map { a ->
     when (a) {
-      Architecture.AMD64 -> buildInfo.graalVmAmd64
-      Architecture.AARCH64 -> buildInfo.graalVmAarch64
+      Target.Arch.AMD64 -> buildInfo.graalVmAmd64
+      Target.Arch.AARCH64 -> buildInfo.graalVmAarch64
     }
   }
 
@@ -88,6 +118,10 @@ abstract class NativeImageBuild : DefaultTask() {
     // CPU resources).
     usesService(buildService)
 
+    sharedLibrary.convention(false)
+
+    outputDir.convention(project.layout.buildDirectory.dir("executable"))
+
     group = "build"
 
     inputs
@@ -98,37 +132,117 @@ abstract class NativeImageBuild : DefaultTask() {
       .files(nativeImageExecutable)
       .withPropertyName("graalVmNativeImage")
       .withPathSensitivity(PathSensitivity.ABSOLUTE)
+    if (nativeCompilerPath.isPresent) {
+      inputs.file(nativeCompilerPath)
+    }
   }
 
-  @TaskAction
   @Suppress("unused")
+  @OutputFiles
+  fun getEffectiveOutputFiles(): FileCollection {
+    return objectFactory
+      .fileCollection()
+      .from(
+        sharedLibrary.map { isLibrary ->
+          val dir = outputDir.get()
+          val libraryName = outputName.get()
+          // if building a library, native-image outputs the shared library plus four headers
+          // (and, on Windows, an import library); otherwise, it outputs just the one file
+          if (isLibrary) {
+            val sharedLibraryExtension = buildInfo.os.sharedLibraryExtension
+            val staticLibraryExtension = buildInfo.os.staticLibraryExtension
+            dir.files(
+              buildList {
+                add("$libraryName.$sharedLibraryExtension")
+                if (buildInfo.os.isWindows) {
+                  // the DLL's import library, which consumers must link against instead of
+                  // the .dll itself
+                  add("$libraryName.$staticLibraryExtension")
+                  // a genuine, self-contained static archive with no runtime DLL dependency,
+                  // produced by build_windows.bat
+                  add("${libraryName}_s.$staticLibraryExtension")
+                } else {
+                  // a genuine, self-contained static archive with no runtime dependency,
+                  // produced by build_unix.sh
+                  add("$libraryName.$staticLibraryExtension")
+                }
+                add("$libraryName.h")
+                add("${libraryName}_dynamic.h")
+                add("graal_isolate.h")
+                add("graal_isolate_dynamic.h")
+              }
+            )
+          } else {
+            val executableName = if (buildInfo.os.isWindows) "${libraryName}.exe" else libraryName
+            dir.file(executableName)
+          }
+        }
+      )
+  }
+
+  @Suppress("unused")
+  @OutputDirectories
+  fun getEffectiveOutputDirectories(): FileCollection =
+    objectFactory
+      .fileCollection()
+      .from(additionalOutputDirectoryNames.map { names -> names.map { outputDir.get().dir(it) } })
+
+  @TaskAction
   protected fun run() {
-    execOperations.exec {
+    val workingDir =
+      project.layout.buildDirectory
+        .dir("tmp/native-image-build/${name}")
+        .get()
+        .asFile
+        .toPath()
+        .also { it.createDirectories() }
+    val reportsDir = workingDir.resolve("reports")
+    // reports are timestamped and never cleaned up by native-image; make sure we read a fresh one
+    reportsDir
+      .toFile()
+      .listFiles { f -> f.name.startsWith(COMPILATION_REPORT_PREFIX) }
+      ?.forEach { it.delete() }
+    val execResult = execOperations.exec {
       val exclusions =
         listOf(buildInfo.libs.findLibrary("graalSdk").get()).map { it.get().module.name }
 
       executable = nativeImageExecutable.get()
-      workingDir(outputDir)
+      workingDir(workingDir)
 
       args = buildList {
+        add("--color=always")
         // must be emitted before any experimental options are used
         add("-H:+UnlockExperimentalVMOptions")
+        // emit `reports/universe_compilation_*.txt`, listing all compiled methods
+        add("-H:+PrintUniverse")
         // currently gives a deprecation warning, but we've been told
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         add("--initialize-at-build-time=")
         // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
         add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
+        // prevent storing `homeDir` in native image
+        add("--initialize-at-run-time=org.pkl.core.util.BaseDirectory")
+        add("--initialize-at-run-time=org.pkl.core.util.BaseDirectories")
+        // prevent storing `isEnabled`
+        add("--initialize-at-run-time=org.pkl.core.util.DebugLogger")
         // needed for jline-terminal-jni
         add("--initialize-at-run-time=org.jline.nativ,org.jline.terminal.impl.jni")
+        // needed for protobuf-java
+        add("--initialize-at-run-time=com.google.protobuf.UnsafeUtil")
         add("--no-fallback")
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResources=org/jline/utils/.*")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResourceBundles=org.pkl.parser.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
-        add("-H:Class=${mainClass.get()}")
+        if (mainClass.isPresent) {
+          add("-H:Class=${mainClass.get()}")
+        }
+        if (sharedLibrary.get()) {
+          add("--shared")
+        }
         add("-o")
-        add(imageName.get())
+        add(outputName.get())
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to
         // compensate for Truffle's own nodes)
         add("-H:MaxRuntimeCompileMethods=1800")
@@ -138,10 +252,11 @@ abstract class NativeImageBuild : DefaultTask() {
         // disable automatic support for JVM CLI options (puts our main class in full control of
         // argument parsing)
         add("-H:-ParseRuntimeOptions")
-        // quick build mode: 40% faster compilation, 20% smaller (but presumably also slower)
-        // executable
         if (!buildInfo.isReleaseBuild) {
-          add("-Ob")
+          // disable all optimizations
+          add("-O0")
+          // generate debugging information
+          add("-g")
         }
         if (buildInfo.isNativeArch) {
           add("-march=native")
@@ -157,14 +272,73 @@ abstract class NativeImageBuild : DefaultTask() {
         // make sure dev machine stays responsive (15% slowdown on my laptop)
         val processors =
           Runtime.getRuntime().availableProcessors() /
-            if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
+            if (buildInfo.os.isMacOS && !buildInfo.isCiBuild) 4 else 1
         add("-J-XX:ActiveProcessorCount=${processors}")
+        addAll(envVars.get().entries.map { "-E${it.key}=${it.value}" })
+        if (nativeCompilerPath.isPresent) {
+          add("--native-compiler-path=${nativeCompilerPath.get().asFile}")
+        }
         // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed
-        // tools.
-        addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
+        // tools, and `DEVELOPER_DIR` so that `cc` on macOS uses the selected Xcode toolchain.
+        addAll(
+          environment.keys
+            .filter { it.startsWith("HOMEBREW_") || it == "DEVELOPER_DIR" }
+            .map { "-E$it" }
+        )
         addAll(extraNativeImageArgs.get())
         addAll(extraArgsFromProperties)
       }
     }
+
+    if (execResult.exitValue == 0) {
+      val outputFileNames = getEffectiveOutputFiles().files.map { it.name }
+      for (fileName in outputFileNames) {
+        val sourceFile = workingDir.resolve(fileName)
+        val targetFile = outputDir.get().asFile.toPath().resolve(fileName)
+        if (!sourceFile.exists()) {
+          throw GradleException("Expected to find $fileName in the working dir but didn't")
+        }
+        Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING)
+      }
+      for (dirName in additionalOutputDirectoryNames.get()) {
+        val sourceDir = workingDir.resolve(dirName).toFile()
+        if (!sourceDir.exists()) {
+          throw GradleException("Expected to find directory $dirName in the working dir but didn't")
+        }
+        val targetDir = outputDir.get().asFile.resolve(dirName)
+        targetDir.deleteRecursively()
+        sourceDir.copyRecursively(targetDir, overwrite = true)
+      }
+      writeCompiledClasses(reportsDir.toFile())
+    }
+  }
+
+  private fun writeCompiledClasses(reportsDir: java.io.File) {
+    val report =
+      reportsDir
+        .listFiles { f -> f.name.startsWith(COMPILATION_REPORT_PREFIX) }
+        ?.maxByOrNull { it.lastModified() }
+        ?: throw GradleException("Expected to find $COMPILATION_REPORT_PREFIX*.txt in $reportsDir")
+    // Method lines look like `336 2232 apple.security.AppleProvider$Service.newInstance(...): ...`
+    // (offset, size, qualified method name, signature).
+    val methodLine = Regex("""^\s*\d+\s+\d+\s+([^\s(]+)\(""")
+    val classNames = sortedSetOf<String>()
+    report.useLines { lines ->
+      for (line in lines) {
+        val method = methodLine.find(line)?.groupValues?.get(1) ?: continue
+        // Nested, hidden, and lambda classes all live in their top-level class' source file.
+        classNames.add(method.substringBeforeLast('.').substringBefore('$').substringBefore('/'))
+      }
+    }
+    if (classNames.isEmpty()) {
+      throw GradleException("Found no compiled methods in $report")
+    }
+    val file = compiledClassesFile.get().asFile
+    file.parentFile.mkdirs()
+    file.writeText(classNames.joinToString("\n", postfix = "\n"))
+  }
+
+  private companion object {
+    const val COMPILATION_REPORT_PREFIX = "universe_compilation_"
   }
 }

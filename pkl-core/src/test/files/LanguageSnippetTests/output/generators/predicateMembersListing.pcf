@@ -153,3 +153,45 @@ res12 {
     age = 33
   }
 }
+res13 {
+  new {
+    name = "Pigeon"
+    age = 99
+  }
+  new {
+    name = "Barn Owl"
+    age = 21
+  }
+  new {
+    name = "Parrot"
+    age = 33
+  }
+}
+res14 {
+  new {
+    name = "Pigeon"
+    age = 1
+  }
+  new {
+    name = "Barn Owl"
+    age = 1
+  }
+  new {
+    name = "Parrot"
+    age = 1
+  }
+}
+res15 {
+  new {
+    name = "Pigeon"
+    age = 1
+  }
+  new {
+    name = "Barn Owl"
+    age = 1
+  }
+  new {
+    name = "Parrot"
+    age = 1
+  }
+}

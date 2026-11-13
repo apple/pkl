@@ -507,6 +507,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
@@ -522,6 +526,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
@@ -549,6 +557,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
@@ -773,7 +785,11 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(moduleType)")
       }
-      is StringConstantType -> renderStringConstantType(type)
+      is ThisType -> {
+        buf.append(tab)
+        buf.append("(thisType)")
+      }
+      is StringLiteralType -> renderStringLiteralType(type)
       is DeclaredType -> renderDeclaredType(type)
       is ParenthesizedType -> renderParenthesizedType(type)
       is NullableType -> renderNullableType(type)
@@ -783,9 +799,9 @@ class SexpRenderer {
     }
   }
 
-  fun renderStringConstantType(type: StringConstantType) {
+  fun renderStringLiteralType(type: StringLiteralType) {
     buf.append(tab)
-    buf.append("(stringConstantType")
+    buf.append("(stringLiteralType")
     val oldTab = increaseTab()
     buf.append('\n')
     renderStringConstant(type.str)
@@ -954,6 +970,7 @@ class SexpRenderer {
     buf.append("(identifier)")
     val tparList = method.typeParameterList
     if (tparList !== null) {
+      buf.append('\n')
       renderTypeParameterList(tparList)
     }
     buf.append('\n')

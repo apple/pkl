@@ -20,7 +20,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.TruffleStackTrace;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.source.Source;
@@ -37,6 +39,7 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
+import org.jspecify.annotations.Nullable;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PClassInfo;
@@ -50,20 +53,23 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.Pair;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.syntax.Expr;
+import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ModuleDecl;
 
 public final class VmUtils {
   /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
@@ -73,13 +79,23 @@ public final class VmUtils {
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
 
-  private static final Engine PKL_ENGINE =
-      Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  public static final Object CUSTOM_THIS_FRAME_SLOT_ID =
+      new Object() {
+        @Override
+        public String toString() {
+          return "customThisSlot";
+        }
+      };
 
+  public static final int REGEX_FLAGS = Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE;
+
+  // must be a singleton because stdlib modules are singletons; otherwise we get "invalid sharing of
+  // AST Nodes"
+  private static final Engine PKL_ENGINE = makePklEngine();
+
+  @SuppressWarnings("MagicConstant")
   private static final Pattern DOC_COMMENT_LINE_START =
-      Pattern.compile(
-          "(?:^|\n|\r\n?)[ \t\f]*///[ \t\f]?",
-          Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE);
+      Pattern.compile("(?:^|\n|\r\n?)[ \t\f]*///[ \t\f]?", REGEX_FLAGS);
 
   private static final SourceSection UNAVAILABLE_SOURCE_SECTION =
       Source.newBuilder("pkl", "", "unavailable")
@@ -92,15 +108,31 @@ public final class VmUtils {
   private static final DecimalFormatSymbols ROOT_DECIMAL_FORMAT_SYMBOLS =
       DecimalFormatSymbols.getInstance(Locale.ROOT);
 
+  public static final String EXPRESSION_PREAMBLE = "`THE REPL TEXT EXPR` = ";
+
+  private static final Parser parser = new Parser();
+
   private VmUtils() {}
 
+  public static Engine getEngine() {
+    return PKL_ENGINE;
+  }
+
+  private static Engine makePklEngine() {
+    return Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  }
+
+  public static void closeEngine() {
+    PKL_ENGINE.close(true);
+  }
+
   static VmTyped createEmptyModule() {
-    return new VmTyped(createEmptyMaterializedFrame(), null, null, EconomicMaps.create());
+    return new VmTyped(createEmptyMaterializedFrame(), null, EconomicMaps.create());
   }
 
   @TruffleBoundary
   public static MaterializedFrame createEmptyMaterializedFrame() {
-    return Truffle.getRuntime().createMaterializedFrame(new Object[] {null, null});
+    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null});
   }
 
   public static Context createContext(Runnable initializer) {
@@ -143,8 +175,27 @@ public final class VmUtils {
     return (VmObjectLike) getReceiver(frame);
   }
 
+  public static VmObjectLike getObjectReceiver(VirtualFrame frame, int levelsUp) {
+    return (VmObjectLike) getReceiver(frame, levelsUp);
+  }
+
   public static VmTyped getTypedObjectReceiver(Frame frame) {
     return (VmTyped) getReceiver(frame);
+  }
+
+  /** Returns the type arguments of the currently executing code. */
+  public static @Nullable VmTypeArgument getTypeArgumentOrNull(Frame frame, int slot) {
+    if (slot < 0) return null;
+    return (VmTypeArgument) frame.getObject(slot);
+  }
+
+  public static @Nullable VmTypeArgument getTypeArgumentOrNull(
+      Frame frame, int slot, int levelsUp) {
+    if (slot < 0) return null;
+    if (levelsUp == 0) {
+      return getTypeArgumentOrNull(frame, slot);
+    }
+    return getTypeArgumentOrNull(getEnclosingFrame(getOwner(frame), levelsUp), slot);
   }
 
   /** Returns the owner of the currently executing code. */
@@ -157,6 +208,56 @@ public final class VmUtils {
     var result = getOwnerOrNull(frame);
     assert result != null;
     return result;
+  }
+
+  public static VmObjectLike getOwner(VirtualFrame frame, int levelsUp) {
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return owner;
+    }
+    return getOwner(getEnclosingFrame(owner, levelsUp));
+  }
+
+  public static Object getReceiver(VirtualFrame frame, int levelsUp) {
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return getReceiver(frame);
+    }
+    return getReceiver(getEnclosingFrame(owner, levelsUp));
+  }
+
+  public static MaterializedFrame getEnclosingFrame(VmObjectLike owner, int levelsUp) {
+    assert !(levelsUp == 0 && !owner.isParseTimeInvisibleScope())
+        : "Must check for levelsUp == 0 && owner.isParseTimeInvisibleScope() before calling this method";
+    var isInvisibleScope = owner.isParseTimeInvisibleScope();
+    var enclosingFrame = owner.getEnclosingFrame();
+    var remainingLevels = isInvisibleScope ? levelsUp : levelsUp - 1;
+    return doGetFrame(enclosingFrame, remainingLevels);
+  }
+
+  private static MaterializedFrame doGetFrame(MaterializedFrame frame, int levelsUp) {
+    frame = skipInvisibleScopes(frame);
+    if (levelsUp == 0) {
+      return frame;
+    }
+    var owner = getOwner(frame);
+    for (var i = 0; i < levelsUp; i++) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+      if (owner.isParseTimeInvisibleScope()) {
+        i--;
+      }
+    }
+    return frame;
+  }
+
+  private static MaterializedFrame skipInvisibleScopes(MaterializedFrame frame) {
+    var owner = getOwner(frame);
+    while (owner.isParseTimeInvisibleScope()) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+    }
+    return frame;
   }
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
@@ -209,44 +310,48 @@ public final class VmUtils {
   }
 
   public static Map<String, FileOutput> readFilesProperty(
-      VmObjectLike receiver, Function<VmTyped, FileOutput> fileOutputFactory) {
-    var filesOrNull = VmUtils.readMember(receiver, Identifier.FILES);
+      VmObjectLike receiver,
+      Function<VmTyped, FileOutput> fileOutputFactory,
+      IndirectCallNode callNode) {
+    var filesOrNull = VmUtils.readMember(receiver, Identifier.FILES, callNode);
     if (filesOrNull instanceof VmNull) {
       return Map.of();
     }
     var files = (VmMapping) filesOrNull;
     var result = new LinkedHashMap<String, FileOutput>();
-    files.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          assert member.isEntry();
-          result.put((String) key, fileOutputFactory.apply((VmTyped) value));
-          return true;
-        });
+    for (var cursor = files.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var key = cursor.key();
+      var member = cursor.member();
+      assert member.isEntry();
+      var value = (VmTyped) cursor.value(callNode);
+      result.put((String) key, fileOutputFactory.apply(value));
+    }
     return result;
   }
 
-  @TruffleBoundary
   public static Object readMember(VmObjectLike receiver, Object memberKey) {
     var result = readMemberOrNull(receiver, memberKey);
     if (result != null) return result;
 
+    CompilerDirectives.transferToInterpreter();
     throw new VmExceptionBuilder().cannotFindMember(receiver, memberKey).build();
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType) {
     return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached());
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
     return readMemberOrNull(receiver, memberKey, true, callNode);
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
+    var cachedValue = receiver.getCachedValue(memberKey);
+    if (cachedValue != null) {
+      return cachedValue;
+    }
     return readMemberOrNull(receiver, memberKey, true, IndirectCallNode.getUncached());
   }
 
@@ -254,17 +359,16 @@ public final class VmUtils {
    * Before calling this method, always try `VmObject.getCachedValue()`. (This method writes to the
    * cache, but doesn't read from it.)
    */
-  @TruffleBoundary
   public static Object doReadMember(
       VmObjectLike receiver, VmObjectLike owner, Object memberKey, ObjectMember member) {
     return doReadMember(receiver, owner, memberKey, member, true, IndirectCallNode.getUncached());
   }
 
-  @TruffleBoundary
   public static Object readMember(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
     var result = readMemberOrNull(receiver, memberKey, true, callNode);
     if (result != null) return result;
+    CompilerDirectives.transferToInterpreter();
 
     throw new VmExceptionBuilder()
         .cannotFindMember(receiver, memberKey)
@@ -272,13 +376,12 @@ public final class VmUtils {
         .build();
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType, IndirectCallNode callNode) {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
-    final var cachedValue = receiver.getCachedValue(memberKey);
+    var cachedValue = receiver.getCachedValue(memberKey);
     if (cachedValue != null) return cachedValue;
 
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
@@ -294,7 +397,6 @@ public final class VmUtils {
    * Before calling this method, always try `VmObject.getCachedValue()`. (This method writes to the
    * cache, but doesn't read from it.)
    */
-  @TruffleBoundary
   public static Object doReadMember(
       VmObjectLike receiver,
       VmObjectLike owner,
@@ -309,9 +411,16 @@ public final class VmUtils {
     // can be re-used for all children in the amends chain.
     if (member.isConst() && owner != receiver) {
       assert member.isProp();
+      // `const` properties can possibly be declared on non-prototypes, but they must be also
+      // declared `local`; and that code path goes through `Read*LocalPropertyNode`.
+      // thus, this assertion is correct here.
       assert owner.isPrototype();
-      var result = readMemberOrNull(owner, memberKey, checkType, callNode);
-      assert result != null;
+      var cachedValue = owner.getCachedValue(memberKey);
+      if (cachedValue != null) {
+        receiver.setCachedValue(memberKey, cachedValue);
+        return cachedValue;
+      }
+      var result = doReadMember(owner, owner, memberKey, member, checkType, callNode);
       receiver.setCachedValue(memberKey, result);
       return result;
     }
@@ -345,7 +454,7 @@ public final class VmUtils {
           && owner instanceof VmListingOrMapping) {
         // `owner instanceof VmListingOrMapping` guards against
         // PropertiesRenderer amending VmDynamic with VmListing (hack?)
-        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member, null);
+        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member);
       }
 
       receiver.setCachedValue(memberKey, result);
@@ -364,49 +473,42 @@ public final class VmUtils {
   }
 
   /**
-   * Copies {@code numberOfLocalsToCopy} locals from {@code sourceFrame}, starting at {@code
-   * firstSourceSlot}, to {@code firstSourceSlot}, starting at {@code firstTargetSlot}.
+   * Copies the slots specified by {@code slotsToCopy} locals from {@code sourceFrame} into {@code
+   * targetFrame}.
    */
   public static void copyLocals(
-      VirtualFrame sourceFrame,
-      int firstSourceSlot,
-      VirtualFrame targetFrame,
-      int firstTargetSlot,
-      int numberOfLocalsToCopy) {
+      VirtualFrame sourceFrame, VirtualFrame targetFrame, int[] slotsToCopy) {
+    if (slotsToCopy.length == 0) return;
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
-    // Alternatively, locals could be copied with `numberOfLocalsToCopy`
-    // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
-    for (int i = 0; i < numberOfLocalsToCopy; i++) {
-      var sourceSlot = firstSourceSlot + i;
-      var targetSlot = firstTargetSlot + i;
+    for (var slot : slotsToCopy) {
       // If, for a particular call site of this method,
       // slot kinds of `sourceDescriptor` will reach a steady state,
       // then slot kinds of `targetDescriptor` will too.
-      var slotKind = sourceDescriptor.getSlotKind(sourceSlot);
+      var slotKind = sourceDescriptor.getSlotKind(slot);
       switch (slotKind) {
         case Boolean -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Boolean);
-          targetFrame.setBoolean(targetSlot, sourceFrame.getBoolean(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Boolean);
+          targetFrame.setBoolean(slot, sourceFrame.getBoolean(slot));
         }
         case Long -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Long);
-          targetFrame.setLong(targetSlot, sourceFrame.getLong(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Long);
+          targetFrame.setLong(slot, sourceFrame.getLong(slot));
         }
         case Double -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Double);
-          targetFrame.setDouble(targetSlot, sourceFrame.getDouble(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Double);
+          targetFrame.setDouble(slot, sourceFrame.getDouble(slot));
         }
         case Object -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Object);
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Object);
           targetFrame.setObject(
-              targetSlot,
+              slot,
               sourceFrame instanceof MaterializedFrame
                   // Even though sourceDescriptor.getSlotKind is now Object,
                   // it may have been a primitive kind when `sourceFrame`'s local was written.
-                  // Hence we need to read the local with getValue() instead of getObject().
-                  ? sourceFrame.getValue(sourceSlot)
-                  : sourceFrame.getObject(sourceSlot));
+                  // Hence, we need to read the local with getValue() instead of getObject().
+                  ? sourceFrame.getValue(slot)
+                  : sourceFrame.getObject(slot));
         }
         default -> {
           CompilerDirectives.transferToInterpreter();
@@ -467,6 +569,7 @@ public final class VmUtils {
   }
 
   // implements same behavior as AnyNodes#getClass
+  @Idempotent
   public static VmClass getClass(Object value) {
     if (value instanceof VmValue vmValue) {
       return vmValue.getVmClass();
@@ -513,6 +616,11 @@ public final class VmUtils {
   @TruffleBoundary
   public static void appendToBuilder(StringBuilder builder, String string) {
     builder.append(string);
+  }
+
+  @TruffleBoundary
+  public static void appendToBuilder(StringBuilder builder, Object object) {
+    builder.append(object);
   }
 
   @TruffleBoundary
@@ -605,17 +713,18 @@ public final class VmUtils {
   }
 
   public static List<VmTyped> evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes) {
     var result = new ArrayList<VmTyped>(annotationNodes.length);
-    evaluateAnnotations(frame, annotationNodes, result);
+    evaluateAnnotations(frame, node, annotationNodes, result);
     return result;
   }
 
   @ExplodeLoop
   public static void evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes, List<VmTyped> result) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes, List<VmTyped> result) {
 
     for (var annotationNode : annotationNodes) {
+      TruffleSafepoint.poll(node);
       var annotation = (VmTyped) annotationNode.executeGeneric(frame);
       // do not force annotations here because running other code
       // during class resolution will likely cause evaluation cycles
@@ -637,13 +746,14 @@ public final class VmUtils {
     var charOffset = startIndex;
 
     while (charOffset < length && codePointOffset > 0) {
-      if (Character.isHighSurrogate(string.charAt(charOffset++))
+      var ch = string.charAt(charOffset);
+      charOffset++;
+      if (Character.isHighSurrogate(ch)
           && charOffset < length
-          && !Character.isLowSurrogate(string.charAt(charOffset++))) {
-        codePointOffset -= 2;
-      } else {
-        codePointOffset -= 1;
+          && Character.isLowSurrogate(string.charAt(charOffset))) {
+        charOffset++;
       }
+      codePointOffset--;
     }
 
     return codePointOffset != 0 ? -1 : charOffset;
@@ -654,13 +764,14 @@ public final class VmUtils {
     var charOffset = string.length();
 
     while (charOffset > 0 && codePointOffset > 0) {
-      if (Character.isLowSurrogate(string.charAt(--charOffset))
+      charOffset--;
+      char ch = string.charAt(charOffset);
+      if (Character.isLowSurrogate(ch)
           && charOffset > 0
-          && !Character.isHighSurrogate(string.charAt(--charOffset))) {
-        codePointOffset -= 2;
-      } else {
-        codePointOffset -= 1;
+          && Character.isHighSurrogate(string.charAt(charOffset - 1))) {
+        charOffset--;
       }
+      codePointOffset--;
     }
 
     return codePointOffset != 0 ? -1 : charOffset;
@@ -784,7 +895,9 @@ public final class VmUtils {
   }
 
   public static TypeNode[] resolveParameterTypes(
-      VirtualFrame frame, FrameDescriptor descriptor, UnresolvedTypeNode[] parameterTypeNodes) {
+      VirtualFrame frame,
+      FrameDescriptor descriptor,
+      @Nullable UnresolvedTypeNode[] parameterTypeNodes) {
 
     var resolvedNodes = new TypeNode[parameterTypeNodes.length];
 
@@ -806,7 +919,15 @@ public final class VmUtils {
     return resolvedNodes;
   }
 
-  public static void checkIsInstantiable(VmClass parentClass, @Nullable Node parentNode) {
+  public static TypeParameterNode[] resolveTypeParameters(TypeParameter[] typeParameters) {
+    var typeParameterNodes = new TypeParameterNode[typeParameters.length];
+    for (var i = 0; i < typeParameters.length; i++) {
+      typeParameterNodes[i] = new TypeParameterNode(typeParameters[i]);
+    }
+    return typeParameterNodes;
+  }
+
+  public static void checkIsInstantiable(VmClass parentClass, Node parentNode, Node callerNode) {
     if (parentClass.isInstantiable()) return;
 
     CompilerDirectives.transferToInterpreter();
@@ -814,21 +935,23 @@ public final class VmUtils {
     if (parentClass.isAbstract()) {
       throw new VmExceptionBuilder()
           .evalError("cannotInstantiateAbstractClass", parentClass)
-          .withOptionalLocation(parentNode)
+          .withOptionalLocation(
+              parentNode.getSourceSection().isAvailable() ? parentNode : callerNode)
           .build();
     }
 
     assert parentClass.isExternal();
     throw new VmExceptionBuilder()
         .evalError("cannotInstantiateExternalClass", parentClass)
-        .withOptionalLocation(parentNode)
+        .withOptionalLocation(parentNode.getSourceSection().isAvailable() ? parentNode : callerNode)
         .build();
   }
 
   @TruffleBoundary
   public static Pattern compilePattern(String pattern, Node location) {
     try {
-      return Pattern.compile(pattern, Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE);
+      //noinspection MagicConstant
+      return Pattern.compile(pattern, REGEX_FLAGS);
     } catch (PatternSyntaxException e) {
       throw new VmExceptionBuilder()
           .withLocation(location)
@@ -848,22 +971,28 @@ public final class VmUtils {
   }
 
   public static String getDisplayUri(SourceSection section, StackFrameTransformer transformer) {
-    var sourceUri = section.getSource().getURI();
-    var frame =
-        new StackFrame(
-            sourceUri.toString(),
-            null,
-            List.of(),
-            section.getStartLine(),
-            section.getStartColumn(),
-            section.getEndLine(),
-            section.getEndColumn());
-    StackFrame transformed = transformer.apply(frame);
-    return transformed.getModuleUri();
+    return getDisplayUri(
+        section.getSource().getURI().toString(),
+        section.getStartLine(),
+        section.getStartColumn(),
+        section.getEndLine(),
+        section.getEndColumn(),
+        transformer);
   }
 
   public static String getDisplayUri(URI moduleUri, StackFrameTransformer transformer) {
-    var frame = new StackFrame(moduleUri.toString(), null, List.of(), 1, 1, 1, 1);
+    return getDisplayUri(moduleUri.toString(), 1, 1, 1, 1, transformer);
+  }
+
+  public static String getDisplayUri(
+      String moduleUri,
+      int startLine,
+      int startColumn,
+      int endLine,
+      int endColumn,
+      StackFrameTransformer transformer) {
+    var frame =
+        new StackFrame(moduleUri, null, List.of(), startLine, startColumn, endLine, endColumn);
     StackFrame transformed = transformer.apply(frame);
     return transformed.getModuleUri();
   }
@@ -896,12 +1025,69 @@ public final class VmUtils {
     }
   }
 
+  /**
+   * Create a fake module that declares all the local properties that exist in {@code module}, so
+   * that AstBuilder can correctly resolve variables.
+   *
+   * <p>Additionally, return a {@link org.pkl.parser.syntax.Node} with its span calculated in terms
+   * of this fake module.
+   *
+   * <p>This created module is never executed.
+   */
+  public static Pair<String, org.pkl.parser.syntax.Node> buildSyntheticModuleText(
+      org.pkl.parser.syntax.Node syntaxNode, VmTyped module, String srcText) {
+    if (syntaxNode instanceof ModuleDecl) {
+      return Pair.of(srcText, syntaxNode);
+    }
+    var sb = new StringBuilder();
+    var nodeText = syntaxNode.text(srcText.toCharArray());
+    var adjustedNode = syntaxNode;
+    if (syntaxNode instanceof Expr) {
+      sb.append(EXPRESSION_PREAMBLE).append(nodeText).append('\n');
+    } else {
+      sb.append(nodeText).append('\n');
+    }
+    var mod = parser.parseModule(sb.toString());
+    if (syntaxNode instanceof Expr) {
+      adjustedNode = mod.getProperties().get(0).getExpr();
+    } else if (syntaxNode instanceof ImportClause) {
+      adjustedNode = mod.getImports().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassProperty) {
+      adjustedNode = mod.getProperties().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.Class) {
+      adjustedNode = mod.getClasses().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.TypeAlias) {
+      adjustedNode = mod.getTypeAliases().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassMethod) {
+      adjustedNode = mod.getMethods().get(0);
+    }
+    var cursor = EconomicMaps.getEntries(module.getMembers());
+    while (cursor.advance()) {
+      var key = cursor.getKey();
+      var value = cursor.getValue();
+      if (value.isLocal()) {
+        sb.append("local ").append(key).append(" = Undefined()\n\n");
+      }
+    }
+    assert adjustedNode != null;
+    return Pair.of(sb.toString(), adjustedNode);
+  }
+
   public static Object evaluateExpression(
       VmTyped module,
       String expression,
       SecurityManager securityManager,
       ModuleResolver moduleResolver) {
-    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, expression);
+    org.pkl.parser.syntax.Node node;
+    try {
+      node = parser.parseExpressionInput(expression);
+    } catch (ParserError e) {
+      throw toVmException(e, expression, REPL_TEXT_URI, "");
+    }
+    var pair = buildSyntheticModuleText(node, module, expression);
+    var syntheticModuleText = pair.first;
+    var adjustedNode = pair.second;
+    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, syntheticModuleText);
     ResolvedModuleKey resolvedModule;
     try {
       resolvedModule = syntheticModule.resolve(securityManager);
@@ -922,24 +1108,33 @@ public final class VmUtils {
             false);
     var language = VmLanguage.get(null);
     var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
-    var parsedExpression = parseExpressionNode(expression, source);
-    var exprNode = builder.visitExpr(parsedExpression);
+    var mod = parser.parseModule(syntheticModuleText);
+    builder.visitModule(mod);
+    var exprNode = builder.visitExpr((Expr) adjustedNode);
     var rootNode =
         new SimpleRootNode(
-            language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
+            language,
+            builder.buildModuleFrameDescriptor(),
+            exprNode.getSourceSection(),
+            "",
+            exprNode);
     var callNode = Truffle.getRuntime().createIndirectCallNode();
-    return callNode.call(rootNode.getCallTarget(), module, module);
+    try {
+      return callNode.call(rootNode.getCallTarget(), module, module);
+    } catch (VmException e) {
+      e.setForExpressionInput(true);
+      throw e;
+    }
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
-    return frame
-        .getFrameDescriptor()
-        .getAuxiliarySlots()
-        .getOrDefault(CustomThisScope.FRAME_SLOT_ID, -1);
+    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CUSTOM_THIS_FRAME_SLOT_ID);
+    assert result != null;
+    return result;
   }
 
   @TruffleBoundary
-  public static <K, V> V getMapValue(Map<K, V> map, K key) {
+  public static <K, V> @Nullable V getMapValue(Map<K, V> map, K key) {
     return map.get(key);
   }
 
@@ -977,6 +1172,18 @@ public final class VmUtils {
     return value;
   }
 
+  public static String toPklString(Object value) {
+    if (value instanceof VmValue vmValue) {
+      return vmValue.toPklString();
+    }
+    return toString(value);
+  }
+
+  @TruffleBoundary
+  private static String toString(Object value) {
+    return value.toString();
+  }
+
   public static boolean isPklBug(VmStackOverflowException e) {
     // There's no good way to tell if a StackOverflowError came from Pkl, or from our
     // implementation.
@@ -984,5 +1191,34 @@ public final class VmUtils {
     // if there's less than 100 truffle frames is due to our own doing.
     var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
     return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
+  }
+
+  /** Removes `_` from numbers to be parsed. Returns the string unmodified if it's invalid. */
+  public static String removeUnderscoresFromNumber(String number, boolean allowExponents) {
+    if (number.indexOf('_') < 0) return number;
+
+    var builder = new StringBuilder();
+    var numberStart = true;
+    for (var i = 0; i < number.length(); i++) {
+      var c = number.charAt(i);
+      if (c != '_') {
+        builder.append(c);
+      } else if (numberStart) {
+        // invalid: _ at start or after [.eE]
+        return number;
+      }
+
+      numberStart = c == '.' || (allowExponents && (c == 'e' || c == 'E'));
+    }
+
+    return builder.toString();
+  }
+
+  public static boolean sourceSectionContains(SourceSection thisSource, SourceSection otherSource) {
+    if (!thisSource.getSource().equals(otherSource.getSource())) {
+      return false;
+    }
+    return thisSource.getCharIndex() <= otherSource.getCharIndex()
+        && thisSource.getCharEndIndex() >= otherSource.getCharEndIndex();
   }
 }

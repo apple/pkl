@@ -562,5 +562,10 @@ examples {
     Barn Owl
     Parrot
     """
+    """
+    1
+    1.ms
+    { The person named Bob }
+    """
   }
 }

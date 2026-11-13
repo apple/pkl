@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import org.pkl.commons.test.FileTestUtils.rootProjectDir
+import org.pkl.core.util.IoUtils
 
 sealed class ExecutablePaths(protected val gradleProject: String) {
   abstract val allNative: List<Path>
@@ -57,7 +58,6 @@ object Executables {
 
   object pkl : ExecutablePaths("pkl-cli") {
     val macAarch64: Path = executable("pkl-macos-aarch64")
-    val macAmd64: Path = executable("pkl-macos-amd64")
     val linuxAarch64: Path = executable("pkl-linux-aarch64")
     val linuxAmd64: Path = executable("pkl-linux-amd64")
     val alpineAmd64: Path = executable("pkl-alpine-linux-amd64")
@@ -65,12 +65,11 @@ object Executables {
 
     // order (aarch64 before amd64, linux before alpine) affects [firstExisting]
     override val allNative: List<Path> =
-      listOf(macAarch64, macAmd64, linuxAarch64, linuxAmd64, alpineAmd64, windowsAmd64)
+      listOf(macAarch64, linuxAarch64, linuxAmd64, alpineAmd64, windowsAmd64)
   }
 
   object pkldoc : ExecutablePaths("pkl-doc") {
     val macAarch64: Path = executable("pkldoc-macos-aarch64")
-    val macAmd64: Path = executable("pkldoc-macos-amd64")
     val linuxAarch64: Path = executable("pkldoc-linux-aarch64")
     val linuxAmd64: Path = executable("pkldoc-linux-amd64")
     val alpineAmd64: Path = executable("pkldoc-alpine-linux-amd64")
@@ -80,6 +79,22 @@ object Executables {
 
     // order (aarch64 before amd64, linux before alpine) affects [firstExisting]
     override val allNative: List<Path> =
-      listOf(macAarch64, macAmd64, linuxAarch64, linuxAmd64, alpineAmd64, windowsAmd64)
+      listOf(macAarch64, linuxAarch64, linuxAmd64, alpineAmd64, windowsAmd64)
+  }
+
+  val externalReaderFixture by lazy {
+    val readerPath =
+      System.getProperty("org.pkl.core.testExternalReaderPath")
+        ?: "pkl-core/build/fixtures/externalreader"
+          .let { if (IoUtils.isWindows()) "$it.bat" else it }
+
+    rootProjectDir.resolve(readerPath).also { path ->
+      if (!Files.exists(path)) {
+        throw AssertionError(
+          "Fixture `${readerPath.substringAfterLast('/')}` not found. To fix this problem, first run" +
+            " `./gradlew pkl-core:externalReaderFixture`."
+        )
+      }
+    }
   }
 }

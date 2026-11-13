@@ -17,11 +17,23 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
 import java.util.Objects;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmDynamicCursors.CachedElementCursor;
+import org.pkl.core.runtime.VmDynamicCursors.CachedEntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.ElementCursor;
+import org.pkl.core.runtime.VmDynamicCursors.EntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.MemberCursor;
+import org.pkl.core.runtime.VmDynamicCursors.PropertyCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedEntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedMemberCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedPropertyCursor;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 
@@ -73,17 +85,16 @@ public final class VmDynamic extends VmObject {
   }
 
   @Override
-  @TruffleBoundary
   public PObject export() {
+    assert isDeepForced() : "Value was not forced prior to export";
+
     var properties =
         CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
-
-    iterateMemberValues(
-        (key, member, value) -> {
-          properties.put(key.toString(), VmValue.exportNullable(value));
-          return true;
-        });
-
+    // export all members, not just properties
+    for (var cursor = members(); cursor.advance(); ) {
+      CollectionUtils.put(
+          properties, cursor.key().toString(), VmValue.export(cursor.cachedValue()));
+    }
     return new PObject(PClassInfo.Dynamic, properties);
   }
 
@@ -98,10 +109,80 @@ public final class VmDynamic extends VmObject {
   }
 
   @Override
+  public VmObjectCursor properties() {
+    return new PropertyCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    // never shallow-force because it's impossible to only force properties
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    return anyOrder ? new UnorderedPropertyCursor(this) : new PropertyCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    // never shallow-force because it's impossible to only force elements
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    // never shallow-force because it's impossible to only force elements
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    // never shallow-force because it's impossible to only force entries
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    if (anyOrder) {
+      return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    // never shallow-force because it's impossible to only force entries
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    if (anyOrder) {
+      return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return new MemberCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    if (option == CursorOption.ALL_VALUES) {
+      force(false, false);
+    }
+    return option == CursorOption.ANY_ORDER
+        ? new UnorderedMemberCursor(this)
+        : new MemberCursor(this);
+  }
+
+  @Override
   @TruffleBoundary
-  public boolean equals(Object obj) {
-    if (this == obj) // noinspection Contract
-    return true;
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) return true;
     if (!(obj instanceof VmDynamic other)) return false;
 
     // could use shallow force, but deep force is cached
@@ -115,6 +196,7 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -137,6 +219,7 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       result += key.hashCode() ^ value.hashCode();
     }
@@ -145,10 +228,9 @@ public final class VmDynamic extends VmObject {
     return result;
   }
 
-  // assumes object has been forced
   public int getRegularMemberCount() {
+    assert isShallowForced();
     if (cachedRegularMemberCount != -1) return cachedRegularMemberCount;
-
     var result = 0;
     for (var key : cachedValues.getKeys()) {
       if (!isHiddenOrLocalProperty(key)) result += 1;
@@ -158,7 +240,12 @@ public final class VmDynamic extends VmObject {
   }
 
   private boolean isHiddenOrLocalProperty(Object key) {
-    return key instanceof Identifier
-        && (key == Identifier.DEFAULT || ((Identifier) key).isLocalProp());
+    // only local members have the entire `ObjectMember` stored as a key in cachedValues
+    if (key instanceof ObjectMember member) {
+      assert member.isLocal();
+      return true;
+    }
+    return key instanceof Identifier identifier
+        && (key == Identifier.DEFAULT || identifier.isLocalProp());
   }
 }

@@ -15,12 +15,21 @@
  */
 package org.pkl.core.runtime;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /** A per-context thread-local value that can be used to influence execution. */
 public class VmLocalContext {
   private boolean shouldEagerTypecheck = false;
 
   /** Whether we are currently inside a type test ({@code is} check). */
   private boolean inTypeTest = false;
+
+  /** The number of classes currently being initialized. */
+  private int classDepth = 0;
+
+  /** The classes currently being initialized. */
+  private final Deque<VmClass> pendingClasses = new ArrayDeque<>();
 
   /**
    * Number of active {@link VmValueTracker} instances. Used to determine if instrumentation is
@@ -46,6 +55,27 @@ public class VmLocalContext {
 
   public boolean isInTypeTest() {
     return inTypeTest;
+  }
+
+  public void beginClassInit(VmClass vmClass) {
+    classDepth++;
+    pendingClasses.add(vmClass);
+  }
+
+  public void endClassInit() {
+    classDepth--;
+    if (classDepth > 0) {
+      return;
+    }
+    while (!pendingClasses.isEmpty()) {
+      var clazz = pendingClasses.pop();
+      clazz.onFullyInitialized();
+    }
+  }
+
+  public void clearClassInitState() {
+    pendingClasses.clear();
+    classDepth = 0;
   }
 
   public void enterTracker() {

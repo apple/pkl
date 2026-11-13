@@ -1,0 +1,2 @@
+// relative path in package URI
+res = import("package://localhost:0/%2e%2e/birds@0.5.0#/catalog/Bird.pkl")

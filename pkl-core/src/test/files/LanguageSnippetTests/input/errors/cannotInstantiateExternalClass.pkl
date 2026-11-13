@@ -1,0 +1,13 @@
+class Holder {
+  name: String
+}
+
+base: Holder = new {
+  name = "base"
+}
+
+result: Holder = (base) {
+  name {
+    "foo"
+  }
+}

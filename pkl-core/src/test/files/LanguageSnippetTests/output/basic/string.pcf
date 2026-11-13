@@ -30,7 +30,7 @@ examples {
     "new Listing { 1; 2; 3 }"
     "new Mapping { [\"Pigeon\"] = 42; [\"Barn Owl\"] = 21 }"
     "new Dynamic { name = \"Pigeon\"; age = 42 }"
-    "new Person { name = \"Pigeon\"; age = 42 }"
+    "new string#Person { name = \"Pigeon\"; age = 42 }"
     "My name is Pigeon and I'm 42 years old."
     "null"
     "null"
@@ -51,6 +51,12 @@ examples {
     "i"
     "Character index `-1` is out of range `0`..`3`. String: \"this\""
     "Character index `4` is out of range `0`..`3`. String: \"this\""
+    "🏀"
+    "?"
+    "?"
+    "h"
+    "h"
+    "?"
   }
   ["dollar sign has no special meaning"] {
     "123$"

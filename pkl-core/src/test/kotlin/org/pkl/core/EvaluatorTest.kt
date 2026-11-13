@@ -22,7 +22,6 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.io.encoding.Base64
 import kotlin.io.path.createParentDirectories
@@ -31,10 +30,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.createTempFile
 import org.pkl.commons.test.PackageServer
@@ -91,6 +88,13 @@ class EvaluatorTest {
   fun `evaluate text`() {
     val module = evaluator.evaluate(text(sourceText))
     checkModule(module)
+  }
+
+  @Test
+  fun `evaluate text with dynamic entry keyed by a non-identifier value`() {
+    val module = evaluator.evaluate(text("""result = new Dynamic { [5.s] = "value" }"""))
+    val result = module.getProperty("result") as PObject
+    assertThat(result.properties).containsEntry("5.s", "value")
   }
 
   @Test
@@ -358,6 +362,142 @@ class EvaluatorTest {
       )
   }
 
+  private fun evaluatorAllowingOnly(allowedDir: Path): Evaluator {
+    val allowedUri = allowedDir.toUri().toString()
+    val allowed = Pattern.compile(Pattern.quote(allowedUri))
+    val allowedJar = Pattern.compile(Pattern.quote("jar:$allowedUri"))
+    return with(EvaluatorBuilder.preconfigured()) {
+      setAllowedModules(
+        listOf(Pattern.compile("pkl:"), Pattern.compile("repl:"), allowed, allowedJar)
+      )
+      setAllowedResources(listOf(allowed, allowedJar))
+      build()
+    }
+  }
+
+  /** Creates `allowed/` and `secret/` directories inside [tempDir], and returns `allowed/`. */
+  private fun setUpAllowedAndSecretDirs(tempDir: Path): Path {
+    // resolve symlinks (e.g. `/var` -> `/private/var` on macOS) so that module URIs match
+    val allowedDir = tempDir.toRealPath().resolve("allowed")
+    allowedDir.resolve("ok.pkl").createParentDirectories().writeText("x = 1")
+    allowedDir.resolve("ok.txt").writeText("ok")
+    val secretDir = allowedDir.resolveSibling("secret")
+    secretDir.resolve("secret.pkl").createParentDirectories().writeText("x = 2")
+    secretDir.resolve("secret.txt").writeText("secret")
+    return allowedDir
+  }
+
+  @Test
+  fun `allowed modules - baseline - can import module inside allowed dir`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val module = allowedDir.resolve("test.pkl").writeString("res = import(\"${allowedUri}ok.pkl\")")
+    val result = evaluatorAllowingOnly(allowedDir).evaluateExpression(path(module), "res.x")
+    assertThat(result).isEqualTo(1L)
+  }
+
+  @Test
+  fun `allowed modules - cannot import module using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("../", "%2e%2e/", "%2e./", ".%2e/", "..%2f", "%2e%2e%2f", ".%2E%2F")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = import(\"${allowedUri}${traversal}secret/secret.pkl\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed modules - cannot import module glob using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = import*(\"${allowedUri}${traversal}secret/*.pkl\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed modules - cannot import module from jar using path traversal`(
+    @TempDir tempDir: Path
+  ) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    createModulesZip(allowedDir.resolveSibling("secret"))
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString(
+            "res = import(\"jar:${allowedUri}${traversal}secret/modules.zip!/foo/baz/module2.pkl\")"
+          )
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/modules.zip")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed resources - baseline - can read resource inside allowed dir`(
+    @TempDir tempDir: Path
+  ) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val module =
+      allowedDir.resolve("test.pkl").writeString("res = read(\"${allowedUri}ok.txt\").text")
+    val result = evaluatorAllowingOnly(allowedDir).evaluateExpression(path(module), "res")
+    assertThat(result).isEqualTo("ok")
+  }
+
+  @Test
+  fun `allowed resources - cannot read resource using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("../", "%2e%2e/", "%2e./", ".%2e/", "..%2f", "%2e%2e%2f", ".%2E%2F")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = read(\"${allowedUri}${traversal}secret/secret.txt\").text")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("resource allowlist (`--allowed-resources`)")
+    }
+  }
+
+  @Test
+  fun `allowed resources - cannot read resource glob using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = read*(\"${allowedUri}${traversal}secret/*.txt\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("resource allowlist (`--allowed-resources`)")
+    }
+  }
+
   @Test
   fun `multiple-file output`() {
     val evaluator = Evaluator.preconfigured()
@@ -506,7 +646,7 @@ class EvaluatorTest {
     val evaluator = evaluatorBuilder.setProjectDependencies(project.dependencies).build()
     assertThatCode { evaluator.use { it.evaluateOutputText(uri("foobar:baz")) } }
       .hasMessageContaining(
-        "Cannot import dependency because project URI `foobar:foo/PklProject` does not have a hierarchical path."
+        "Cannot resolve dependency because project URI `foobar:foo/PklProject` does not have a hierarchical path."
       )
   }
 
@@ -549,28 +689,6 @@ class EvaluatorTest {
   }
 
   @Test
-  @EnabledOnOs(OS.WINDOWS)
-  @Timeout(1, unit = TimeUnit.SECONDS)
-  fun `root dir check happens without any UNC or SMB access`() {
-    val evaluator =
-      with(EvaluatorBuilder.preconfigured()) {
-        rootDir = Path.of("/tmp/test")
-        build()
-      }
-    // this uses a TEST-NET-1 IP which has no server running in order to force a timeout-driven
-    // failure (takes ~20s)
-    // root dir check failure should prevent any I/O and fail fast instead of hitting the timeout
-    val exc =
-      assertThrows<PklException> {
-        evaluator.evaluate(text("result = import(\"file://192.0.2.1/share/nope.pkl\")"))
-      }
-    assertThat(exc)
-      .hasMessageContaining(
-        "Refusing to load module `file://192.0.2.1/share/nope.pkl` because it is not within the root directory (`--root-dir`)."
-      )
-  }
-
-  @Test
   fun `constraint failures activate instrumentation`() {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {
@@ -578,17 +696,16 @@ class EvaluatorTest {
         build()
       }
 
-    val exc =
-      assertThrows<PklException> {
-        evaluator.evaluate(
-          text(
-            """
-            foo: String(chars.first == "a") = "boo"
-            """
-              .trimIndent()
-          )
+    assertThrows<PklException> {
+      evaluator.evaluate(
+        text(
+          """
+          foo: String(chars.first == "a") = "boo"
+          """
+            .trimIndent()
         )
-      }
+      )
+    }
 
     assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isTrue
   }
@@ -634,7 +751,7 @@ class EvaluatorTest {
   }
 
   @Test
-  fun `nested pkl-binary rendiring produces correct results`() {
+  fun `nested pkl-binary rendering produces correct results`() {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {
         allowedResources.add(Pattern.compile("b64:"))
@@ -693,6 +810,133 @@ class EvaluatorTest {
         )
       )
     }
+  }
+
+  @Test
+  fun `power assertions work with test facts with unavailable source section`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    assertDoesNotThrow {
+      evaluator.evaluateTest(
+        text(
+          """
+          amends "pkl:test"
+          facts {
+            ["foo"] {
+              ...List(false)
+            }
+          }
+          """
+            .trimIndent()
+        ),
+        false,
+      )
+    }
+  }
+
+  @Test
+  fun `eval dependency notation as a module source`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    val project = Project.load(modulePath("org/pkl/core/project/project5/PklProject"))
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        moduleCacheDir = tempDir
+        applyFromProject(project)
+        build()
+      }
+    val outputText = evaluator.evaluateOutputText(uri("@fruit/catalog/apple.pkl"))
+    assertThat(outputText)
+      .isEqualTo(
+        """
+        name = "Apple"
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `eval dependency notation -- no project configured`() {
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode { evaluator.evaluateOutputText(uri("@fruit/catalog/apple.pkl")) }
+      .hasMessageContaining("Cannot resolve dependency because there is no project found.")
+  }
+
+  @Test
+  fun `eval schema when property has a ConvertProperty annotation`() {
+    // this fails when `ConvertProperty.render` is not hidden
+    // because module schema generation exports all annotations
+    // and this annotation has a Function2 property that is not exportable
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode {
+        evaluator.evaluateSchema(
+          text(
+            """
+            @ConvertProperty {
+              render = (prop, ) -> prop
+            }
+            foo: String
+            """
+              .trimIndent()
+          )
+        )
+      }
+      .doesNotThrowAnyException()
+  }
+
+  @Test
+  fun `eval schema containing a parameterized Class type`() {
+    val evaluator = Evaluator.preconfigured()
+    val schema =
+      evaluator.evaluateSchema(
+        text(
+          """
+          foo: Class<Int>
+          """
+            .trimIndent()
+        )
+      )
+    val fooType = schema.moduleClass.properties["foo"]?.type as? PType.Class
+    assertThat(fooType?.pClass?.info).isEqualTo(PClassInfo.Class)
+    val argType = fooType?.typeArguments?.single() as? PType.Class
+    assertThat(argType?.pClass?.info).isEqualTo(PClassInfo.Int)
+  }
+
+  @Test
+  fun `concurrent evals`() {
+    val exceptions = mutableListOf<Throwable>()
+    val threads =
+      (0..10).map {
+        Thread { Evaluator.preconfigured().use { ev -> ev.evaluateOutputText(text("foo = 1")) } }
+          .also { t ->
+            t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+              synchronized(exceptions) { exceptions.add(e) }
+            }
+            t.start()
+          }
+      }
+    for (t in threads) t.join()
+    exceptions.firstOrNull()?.let { throw it }
+  }
+
+  @Test
+  fun `method call type args are obeyed for stdlib methods when test mode is off`() {
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode {
+        evaluator.evaluateOutputText(
+          text(
+            """
+            res = List(1, 2, 3).map<String>((it) -> it + 1)
+            """
+              .trimIndent()
+          )
+        )
+      }
+      .hasMessageContaining("Expected value of type `String`, but got type `Int`.")
   }
 
   private fun checkModule(module: PModule) {

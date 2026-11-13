@@ -56,7 +56,8 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getParamsAnnotation().getOrNull(),
                 getNonNullAnnotation().getOrNull(),
                 getImplementSerializable().get(),
-                getRenames().get()))
+                getRenames().get(),
+                getSpringBootConfigurationProperties().get()))
         .run();
   }
 }

@@ -2,7 +2,7 @@ set -e
 mkdir -p ~/staticdeps/
 
 ZLIB_VERSION="1.2.13"
-MUSL_VERSION="1.2.5"
+MUSL_VERSION="9fa28ece75d8a2191de7c5bb53bed224c5947417" # v1.2.6
 
 # install zlib
 if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -34,25 +34,29 @@ if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
   rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
 fi
 
+declare -a MUSL_REPOS=(
+  https://git.musl-libc.org/git/musl
+  https://gogs.librecmc.org/OWEALS/musl.git
+)
+
 # install musl
 if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-  # Download musl tarball and signature
-  curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
-  curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
-
-  # Import musl GPG key
-  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
-
-  # Verify GPG signature
-  echo "Verifying musl GPG signature..."
-  gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
-
-  mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
-  cd "/tmp/dep_musl-${MUSL_VERSION}"
-
-  # shellcheck disable=SC2002
-  cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
-
+  # Download musl git repo
+  cd /tmp
+  for repo in "${MUSL_REPOS[@]}"; do
+    if git clone --depth 1 --revision "$MUSL_VERSION" "$repo" /tmp/musl; then
+      break
+    else
+      rm -rf /tmp/musl
+    fi
+  done
+  cd /tmp/musl
+  
+  for patch in $GITHUB_WORKSPACE/.github/scripts/musl-*.patch; do
+    echo "musl-${MUSL_VERSION}: applying $patch..."
+    cat "$patch" | git apply
+  done
+  
   echo "musl-${MUSL_VERSION}: configure..." 
   ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
 

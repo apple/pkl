@@ -22,6 +22,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
@@ -29,7 +30,6 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 /**
  * Indicates that a type check failed. [TypeNode]s use this exception instead of [VmException] to
@@ -94,8 +94,9 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
       assert expectedType instanceof VmClass
           || expectedType instanceof VmTypeAlias
+          || expectedType instanceof VmType
           || expectedType instanceof String // string literal type
-          || expectedType instanceof Set; // union of string literal types
+          || expectedType instanceof List; // union of string literal types
 
       this.expectedType = expectedType;
     }
@@ -109,20 +110,20 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       if (expectedType instanceof String string) {
         // string literal type
         renderedType = valueFormatter.formatStringValue(string, "");
-      } else if (expectedType instanceof Set) {
+      } else if (expectedType instanceof List) {
         // union of string literal types
         @SuppressWarnings("unchecked")
-        var stringLiterals = (Set<String>) expectedType;
+        var stringLiterals = (List<String>) expectedType;
         renderedType =
             stringLiterals.stream()
                 .map((l) -> valueFormatter.formatStringValue(l, ""))
                 .collect(Collectors.joining("|"));
       } else {
-        renderedType = expectedType.toString();
+        renderedType = VmUtils.toPklString(expectedType);
       }
 
       if (actualValue instanceof VmNull
-          || actualValue instanceof String && expectedType instanceof Set) {
+          || actualValue instanceof String && expectedType instanceof List) {
         builder.append(
             ErrorMessages.createIndented(
                 "typeMismatchValue", indent, renderedType, new ProgramValue("", actualValue)));
@@ -152,10 +153,11 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
         }
       }
 
+      var valueType =
+          actualValue instanceof VmReference ref ? ref.getType() : VmUtils.getClass(actualValue);
+
       builder
-          .append(
-              ErrorMessages.createIndented(
-                  "typeMismatch", indent, renderedType, VmUtils.getClass(actualValue)))
+          .append(ErrorMessages.createIndented("typeMismatch", indent, renderedType, valueType))
           .append("\n")
           .append(indent)
           .append("Value: ")
@@ -165,6 +167,71 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     @Override
     protected Boolean hasHint() {
       return false;
+    }
+  }
+
+  public static final class ClassType extends VmTypeMismatchException {
+
+    private final String renderedExpected;
+    private final @Nullable VmClass expectedClass;
+
+    @TruffleBoundary
+    public ClassType(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
+      super(sourceSection, actualClass);
+      this.expectedClass = expectedClass;
+      renderedExpected = "Class<" + expectedClass.toPklString() + ">";
+    }
+
+    @TruffleBoundary
+    public ClassType(SourceSection sourceSection, VmClass actualClass, VmType expectedType) {
+      super(sourceSection, actualClass);
+      this.expectedClass = null;
+      renderedExpected = expectedType.toString();
+    }
+
+    @Override
+    @TruffleBoundary
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      var actualClass = (VmClass) actualValue;
+      var renderedActualClass = "Class<" + actualClass.toPklString() + ">";
+
+      // give better error than "expected Class<foo.Bar>, but got Class<foo.Bar>" in case of naming
+      // conflict
+      if (expectedClass != null
+          && actualClass.getQualifiedName().equals(expectedClass.getQualifiedName())) {
+        var actualModuleUri = actualClass.getModule().getModuleInfo().getModuleKey().getUri();
+        var expectedModuleUri = expectedClass.getModule().getModuleInfo().getModuleKey().getUri();
+
+        builder
+            .append(
+                ErrorMessages.createIndented(
+                    actualClass.getPClassInfo().isModuleClass()
+                        ? "typeMismatchVersionConflict1"
+                        : "typeMismatchVersionConflict2",
+                    indent,
+                    renderedExpected,
+                    expectedModuleUri,
+                    actualModuleUri))
+            .append("\n");
+        return;
+      }
+
+      builder.append(
+          ErrorMessages.createIndented(
+              "typeMismatch", indent, renderedExpected, renderedActualClass));
+    }
+
+    @Override
+    protected Boolean hasHint() {
+      return expectedClass == null;
+    }
+
+    @Override
+    @TruffleBoundary
+    public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      if (expectedClass != null) return;
+      builder.append(ErrorMessages.createIndented("classTypeMismatchHint", indent));
     }
   }
 

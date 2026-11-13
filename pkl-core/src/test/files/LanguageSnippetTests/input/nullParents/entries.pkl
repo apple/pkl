@@ -1,0 +1,53 @@
+// Covers EntriesLiteralNode's specializations for amending a `VmNull` whose default value is
+// each of the underlying parent types it supports. At least one entry key below is non-constant
+// (via `id()`) so that these bodies compile to EntriesLiteralNode rather than
+// ConstantEntriesLiteralNode.
+import "pkl:test"
+
+function id(x) = x
+
+// evalNullableMapping
+local mapping = Null(new Mapping { ["a"] = 1 })
+res1 = (mapping) {
+  [id("b")] = 2
+}
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { a = 1 })
+res2 = (dynamic) {
+  [id("b")] = 2
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "a"; "b" })
+res3 = (listing) {
+  [id(0)] = "updated a"
+}
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Mapping { ["a"] = 1 })
+local amendedFun = (fun) {
+  [id("b")] = 2
+}
+res4 = amendedFun.apply()
+
+// error: listing entry with wrong key type
+res5 = test.catch(() -> (Null(new Listing { "a" })) { [id("wrong type")] = "value" })
+
+// error: listing entry index out of range
+res6 = test.catch(() -> (Null(new Listing { "a" })) { [id(5)] = "value" })
+
+// error: mapping cannot have a property (other than `default`)
+res7 = test.catch(() -> (Null(new Mapping { ["a"] = 1 })) { foo = "bar"; [id("b")] = 2 })
+
+// error: duplicate key
+res8 = test.catch(() -> (Null(new Mapping {})) { [id("a")] = 1; [id("a")] = 2 })
+
+// error: function amendment with wrong parameter count
+local twoArgFun = (x, y) -> new Mapping {}
+res9 = test.catch(() -> (Null(twoArgFun)) { x -> [id("a")] = 1 })
+
+hidden foo: "foo"?
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res10 = test.catch(() -> (foo) { [id("a")] = 1 })

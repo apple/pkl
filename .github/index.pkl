@@ -61,16 +61,21 @@ local gradleCheckJobs: PklJobs = new {
 
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
   for (_dist in List("release", "snapshot")) {
-    for (_project in List("pkl-cli", "pkl-doc")) {
+    for (_project in List("pkl-cli", "pkl-doc", "libpkl")) {
       for (_arch in List("amd64", "aarch64")) {
-        for (_os in List("macOS", "linux")) {
-          ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
-            arch = _arch
-            os = _os
-            isRelease = _dist == "release"
-            project = _project
-          }
+        ["\(_project)-linux-\(_arch)-\(_dist)"] {
+          arch = _arch
+          os = "linux"
+          isRelease = _dist == "release"
+          project = _project
+          buildDir = if (_project == "libpkl") "libpkl/build/native-libs/**/*" else "\(_project)*/build/executable/**/*"
         }
+      }
+      ["\(_project)-macOS-aarch64-\(_dist)"] {
+        arch = "aarch64"
+        os = "macOS"
+        isRelease = _dist == "release"
+        project = _project
       }
       ["\(_project)-alpine-linux-amd64-\(_dist)"] {
         arch = "amd64"
@@ -78,12 +83,14 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
         musl = true
         isRelease = _dist == "release"
         project = _project
+        buildDir = if (_project == "libpkl") "libpkl*/build/distributions/**/*" else "\(_project)*/build/executable/**/*"
       }
       ["\(_project)-windows-amd64-\(_dist)"] {
         arch = "amd64"
         os = "windows"
         isRelease = _dist == "release"
         project = _project
+        buildDir = if (_project == "libpkl") "libpkl*/build/distributions/**/*" else "\(_project)*/build/executable/**/*"
       }
     }
   }
@@ -220,7 +227,7 @@ release {
         needs = releaseJobs.keys.toListing()
       }
       ["github-release"] = new GithubRelease {
-        needs = "deploy-release"
+        needs = releaseJobs.keys.toListing()
       }
     } |> toWorkflowJobs
 }
@@ -230,7 +237,7 @@ dependabot {
     new {
       `package-ecosystem` = "gradle"
       schedule {
-        interval = "weekly"
+        interval = "quarterly"
       }
       cooldown {
         `default-days` = 7

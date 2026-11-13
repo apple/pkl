@@ -59,6 +59,13 @@ examples {
     str3[2]
     module.catch(() -> str3[-1])
     module.catch(() -> str3[4])
+
+    "🏀"[0]
+    "\u{D800}"[0]
+    "\u{D800}h"[0]
+    "\u{D800}h"[1]
+    "h\u{D800}"[0]
+    "h\u{D800}"[1]
   }
 
   ["dollar sign has no special meaning"] {

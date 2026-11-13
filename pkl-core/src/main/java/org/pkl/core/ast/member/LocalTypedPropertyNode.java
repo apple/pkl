@@ -18,17 +18,16 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 public final class LocalTypedPropertyNode extends RegularMemberNode {
   private final VmLanguage language;
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
-  @Child @LateInit private TypeNode typeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable TypeNode typeNode;
   private @Nullable Object defaultValue;
   private boolean defaultValueInitialized;
 
@@ -47,9 +46,13 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
 
   public @Nullable Object getDefaultValue(VirtualFrame frame) {
     if (!defaultValueInitialized) {
+      assert typeNode != null;
+      // typeNode.createDefaultValue() is a regular polymorphic call rather than a child node.
+      // passing a non-materialized frame will cause GraalVM to emit diagnostics that it failed
+      // to compile this call.
       defaultValue =
           typeNode.createDefaultValue(
-              frame, language, member.getHeaderSection(), member.getQualifiedName());
+              frame.materialize(), language, member.getHeaderSection(), member.getQualifiedName());
       defaultValueInitialized = true;
     }
     return defaultValue;
@@ -59,6 +62,7 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
   protected Object executeImpl(VirtualFrame frame) {
     if (typeNode == null) {
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }

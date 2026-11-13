@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Cannot define an abstract method in a non-abstract module.
+
+x | abstract function foo(): Int
+    ^^^^^^^^
+at abstractMethodInNonAbstractModule (file:///$snippetsDir/input/errors/abstractMethodInNonAbstractModule.pkl)
+
+A member can only be `abstract` if its enclosing class is also `abstract`.

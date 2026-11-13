@@ -5,5 +5,5 @@
     <age>42</age>
   </pigeon2>
   <res2>`xml.Element` is not supported here. Value: new Dynamic { _isXmlElement = true; name = &quot;pigeon2&quot;; attributes {}; isBlockF...</res2>
-  <res3>`xml.Inline` is not supported here. Value: new Inline { value { name = ?; age = ? } }</res3>
+  <res3>`xml.Inline` is not supported here. Value: new pkl.xml#Inline { value { name = ?; age = ? } }</res3>
 </root>

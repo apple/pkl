@@ -16,7 +16,7 @@
 
 /// Defines inputs and outputs for CLI commands implemented in Pkl.
 ///
-/// Modules extending `pkl:Command` may configure [ModuleOutput.text], [ModuleOutput.bytes], and/or
+/// Modules extending `pkl:Command` may configure [FileOutput.text], [FileOutput.bytes], and/or
 /// [ModuleOutput.files] of [output] to influence the effect of the command.
 ///
 /// Command modules should override [options] and provide their own class declaring options:
@@ -29,19 +29,22 @@
 ///   // ...
 /// }
 /// ```
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 open module pkl.Command
 
 import "pkl:Command"
 import "pkl:reflect"
 
 local commandClass = reflect.Class(getClass())
+local commandModule = reflect.Module(Command)
 
 /// Command configuration.
 hidden command: CommandInfo = new {
-  name = // choose the name of the module if the command is a module or the class otherwise
-    if (commandClass.name == "ModuleClass") reflect.Module(module).name else commandClass.name
-  description = commandClass.docComment // works for both classes and module classes
+  when (commandClass != commandModule.moduleClass) {
+    name =
+      if (commandClass.name == "ModuleClass") reflect.moduleOf(module).name else commandClass.name
+    description = commandClass.docComment
+  }
 }
 
 /// Command line options.
@@ -165,7 +168,7 @@ class Flag extends BaseFlag {
   /// | [Listing], [List], [Set]   | Element values are parsed based on the above primitive types |
   /// | [Mapping], [Map], [Pair]   | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
   /// | Other types                | An error is thrown; `convert` should be defined explicitly |
-  convert: ((String) -> Any)?
+  hidden convert: ((String) -> Any)?
 
   /// Specifies whether the flag may be specified more than once.
   ///
@@ -188,7 +191,7 @@ class Flag extends BaseFlag {
   /// | [Listing], [List] | Result is all option values in the order specified |
   /// | [Set]             | Result is all unique option values |
   /// | Other types       | Result is the last value specified option value |
-  transformAll: ((List<Any>) -> Any)?
+  hidden transformAll: ((List<Any>) -> Any)?
 
   /// Specify how this flag should be completed in generated shell completions.
   ///
@@ -226,7 +229,7 @@ class Argument extends Annotation {
   ///
   /// If no value is provided, each option value is transformed using the same rules as
   /// [Flag.convert].
-  convert: ((String) -> Any)?
+  hidden convert: ((String) -> Any)?
 
   /// Specifies whether the argument may be specified more than once.
   ///
@@ -245,7 +248,7 @@ class Argument extends Annotation {
   ///
   /// If no value is provided, all option values are transformed using the same rules as
   /// [Flag.transformAll].
-  transformAll: ((List<Any>) -> Any)?
+  hidden transformAll: ((List<Any>) -> Any)?
 
   /// Specify how this flag should be completed in generated shell completions.
   ///
@@ -257,10 +260,12 @@ class Argument extends Annotation {
   completionCandidates: "paths" | *Listing<String>(isDistinct)
 }
 
-/// A value used in [Flag.convert] and [Argument.convert] to declare an option as a dynamic
-/// import.
+/// A value used in [Flag.convert], [Flag.transformAll], [Argument.convert], and
+/// [Argument.transformAll] functions to trigger a dynamic module import.
 class Import {
-  /// The absolute URI of the module to import.
+  /// The URI of the module to import.
+  ///
+  /// Relative paths are resolved relative to the current working directory.
   uri: String
 
   /// Whether [uri] should be interpreted as a glob pattern.

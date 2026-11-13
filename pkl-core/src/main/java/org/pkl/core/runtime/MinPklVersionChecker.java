@@ -16,9 +16,9 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.nodes.Node;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Release;
 import org.pkl.core.Version;
-import org.pkl.core.util.Nullable;
 import org.pkl.parser.syntax.Module;
 import org.pkl.parser.syntax.ObjectMember.ObjectProperty;
 import org.pkl.parser.syntax.Type;

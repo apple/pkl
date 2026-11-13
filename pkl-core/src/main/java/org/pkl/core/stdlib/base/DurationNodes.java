@@ -31,12 +31,12 @@ public final class DurationNodes {
   @ImportStatic(MathUtils.class)
   @PklName("value")
   public abstract static class valueProperty extends ExternalPropertyNode {
-    @Specialization(guards = "isMathematicalInteger(self.getValue())")
+    @Specialization(guards = "isMathematicalIntegerFittingLong(self.getValue())")
     protected long evalInt(VmDuration self) {
       return (long) self.getValue();
     }
 
-    @Specialization(guards = "!isMathematicalInteger(self.getValue())")
+    @Specialization(guards = "!isMathematicalIntegerFittingLong(self.getValue())")
     protected double evalFloat(VmDuration self) {
       return self.getValue();
     }

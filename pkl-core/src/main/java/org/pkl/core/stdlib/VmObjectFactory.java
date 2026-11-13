@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.function.Supplier;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
@@ -28,7 +29,6 @@ import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public final class VmObjectFactory<E> {
   private final Supplier<VmClass> classSupplier;
@@ -94,6 +94,7 @@ public final class VmObjectFactory<E> {
             ? TypeCheckedPropertyNodeGen.create(null, new FrameDescriptor(), member, bodyNode)
             : new UntypedObjectMemberNode(null, new FrameDescriptor(), member, bodyNode);
     member.initMemberNode(node);
+    //noinspection ConstantValue
     if (members.put(identifier, member) != null) {
       throw new VmExceptionBuilder()
           .bug(
@@ -110,10 +111,18 @@ public final class VmObjectFactory<E> {
   @TruffleBoundary
   public VmTyped create(@Nullable E extraStorage) {
     var clazz = classSupplier.get();
-    assert clazz != null;
 
     var result =
         new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    result.setExtraStorage(extraStorage);
+    return result;
+  }
+
+  @TruffleBoundary
+  public VmTyped create(@Nullable E extraStorage, VmTyped parent) {
+    var clazz = classSupplier.get();
+    assert parent.getVmClass() == clazz;
+    var result = new VmTyped(VmUtils.createEmptyMaterializedFrame(), parent, clazz, members);
     result.setExtraStorage(extraStorage);
     return result;
   }

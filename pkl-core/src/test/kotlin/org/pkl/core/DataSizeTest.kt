@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,5 +121,24 @@ class DataSizeTest {
 
     assertThat(size3.hashCode()).isNotEqualTo(size1.hashCode())
     assertThat(size2.hashCode()).isNotEqualTo(size3.hashCode())
+
+    // -0.0 == 0.0, so equal sizes must have equal hash codes
+    assertThat(DataSize(0.0, BYTES)).isEqualTo(DataSize(-0.0, BYTES))
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, BYTES).hashCode())
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, PEBIBYTES).hashCode())
+  }
+
+  @Test
+  fun `toString()`() {
+    assertThat(DataSize(3.0, BYTES).toString()).isEqualTo("3.b")
+    assertThat(DataSize(1.5, BYTES).toString()).isEqualTo("1.5.b")
+    assertThat(DataSize(1e18, BYTES).toString()).isEqualTo("1000000000000000000.b")
+    // -2^63 still fits into a `long`
+    assertThat(DataSize(-9.223372036854776E18, BYTES).toString())
+      .isEqualTo("-9223372036854775808.b")
+    // values too large to fit into a `long` are printed in their `double` form,
+    // instead of saturating to 9223372036854775807
+    assertThat(DataSize(9.223372036854776E18, BYTES).toString()).isEqualTo("9.223372036854776E18.b")
+    assertThat(DataSize(1e300, PETABYTES).toString()).isEqualTo("1.0E300.pb")
   }
 }

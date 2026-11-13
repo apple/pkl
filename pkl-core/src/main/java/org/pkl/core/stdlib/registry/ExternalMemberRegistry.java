@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
-import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
+import org.pkl.core.ast.frame.ReadExactFrameSlotNodeGen;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
@@ -115,7 +115,7 @@ public abstract class ExternalMemberRegistry {
     if (factory == null) throw cannotFindMemberImpl(qualifiedName, headerSection);
 
     var sourceSection = VmUtils.unavailableSourceSection();
-    var param1Node = ReadFrameSlotNodeGen.create(sourceSection, 0);
+    var param1Node = ReadExactFrameSlotNodeGen.create(sourceSection, 0);
     return factory.create(new GetReceiverNode(), param1Node);
   }
 
@@ -125,8 +125,8 @@ public abstract class ExternalMemberRegistry {
     if (factory == null) throw cannotFindMemberImpl(qualifiedName, headerSection);
 
     var sourceSection = VmUtils.unavailableSourceSection();
-    var param1Node = ReadFrameSlotNodeGen.create(sourceSection, 0);
-    var param2Node = ReadFrameSlotNodeGen.create(sourceSection, 1);
+    var param1Node = ReadExactFrameSlotNodeGen.create(sourceSection, 0);
+    var param2Node = ReadExactFrameSlotNodeGen.create(sourceSection, 1);
     return factory.create(new GetReceiverNode(), param1Node, param2Node);
   }
 
@@ -136,9 +136,9 @@ public abstract class ExternalMemberRegistry {
     if (factory == null) throw cannotFindMemberImpl(qualifiedName, headerSection);
 
     var sourceSection = VmUtils.unavailableSourceSection();
-    var param1Node = ReadFrameSlotNodeGen.create(sourceSection, 0);
-    var param2Node = ReadFrameSlotNodeGen.create(sourceSection, 1);
-    var param3Node = ReadFrameSlotNodeGen.create(sourceSection, 2);
+    var param1Node = ReadExactFrameSlotNodeGen.create(sourceSection, 0);
+    var param2Node = ReadExactFrameSlotNodeGen.create(sourceSection, 1);
+    var param3Node = ReadExactFrameSlotNodeGen.create(sourceSection, 2);
     return factory.create(new GetReceiverNode(), param1Node, param2Node, param3Node);
   }
 
@@ -148,10 +148,10 @@ public abstract class ExternalMemberRegistry {
     if (factory == null) throw cannotFindMemberImpl(qualifiedName, headerSection);
 
     var sourceSection = VmUtils.unavailableSourceSection();
-    var param1Node = ReadFrameSlotNodeGen.create(sourceSection, 0);
-    var param2Node = ReadFrameSlotNodeGen.create(sourceSection, 1);
-    var param3Node = ReadFrameSlotNodeGen.create(sourceSection, 2);
-    var param4Node = ReadFrameSlotNodeGen.create(sourceSection, 3);
+    var param1Node = ReadExactFrameSlotNodeGen.create(sourceSection, 0);
+    var param2Node = ReadExactFrameSlotNodeGen.create(sourceSection, 1);
+    var param3Node = ReadExactFrameSlotNodeGen.create(sourceSection, 2);
+    var param4Node = ReadExactFrameSlotNodeGen.create(sourceSection, 3);
     return factory.create(new GetReceiverNode(), param1Node, param2Node, param3Node, param4Node);
   }
 
@@ -161,11 +161,11 @@ public abstract class ExternalMemberRegistry {
     if (factory == null) throw cannotFindMemberImpl(qualifiedName, headerSection);
 
     var sourceSection = VmUtils.unavailableSourceSection();
-    var param1Node = ReadFrameSlotNodeGen.create(sourceSection, 0);
-    var param2Node = ReadFrameSlotNodeGen.create(sourceSection, 1);
-    var param3Node = ReadFrameSlotNodeGen.create(sourceSection, 2);
-    var param4Node = ReadFrameSlotNodeGen.create(sourceSection, 3);
-    var param5Node = ReadFrameSlotNodeGen.create(sourceSection, 4);
+    var param1Node = ReadExactFrameSlotNodeGen.create(sourceSection, 0);
+    var param2Node = ReadExactFrameSlotNodeGen.create(sourceSection, 1);
+    var param3Node = ReadExactFrameSlotNodeGen.create(sourceSection, 2);
+    var param4Node = ReadExactFrameSlotNodeGen.create(sourceSection, 3);
+    var param5Node = ReadExactFrameSlotNodeGen.create(sourceSection, 4);
     return factory.create(
         new GetReceiverNode(), param1Node, param2Node, param3Node, param4Node, param5Node);
   }

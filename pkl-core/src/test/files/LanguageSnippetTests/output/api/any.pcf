@@ -39,7 +39,7 @@ examples {
     "new Listing { 1; 2; 3 }"
     "new Mapping { [\"Pigeon\"] = 42; [\"Barn Owl\"] = 21 }"
     "new Dynamic { name = \"Pigeon\"; age = 42 }"
-    "new Person2 { name = \"Pigeon\"; age = 42 }"
+    "new any#Person2 { name = \"Pigeon\"; age = 42 }"
     "null"
     "null"
   }

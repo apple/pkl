@@ -1,0 +1,14 @@
+import "pkl:test"
+
+class Foo { bar: Int }
+const function isOk(f: Foo) = f.bar > 0
+
+typealias WithInferredNew<X> = Int(isOk(new { bar = 1 }) && this is X)
+typealias WithLet<X> = Int((let (n = 1) n == 1) && this is X)
+
+wrongType = 3 is WithInferredNew<String>
+matchingType = 3 is WithInferredNew<Int>
+wrongTypeAgain = 3 is WithInferredNew<String>
+letWrongType = 3 is WithLet<String>
+letMatchingType = 3 is WithLet<Int>
+castWrongType = test.catch(() -> 3 as WithInferredNew<String>)

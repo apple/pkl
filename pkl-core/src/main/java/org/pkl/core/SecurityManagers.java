@@ -23,9 +23,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** A provider for {@link SecurityManager}s. */
 public final class SecurityManagers {
@@ -273,7 +273,7 @@ public final class SecurityManagers {
 
     private final List<Pattern> allowedResources = new ArrayList<>();
 
-    private Path rootDir;
+    private @Nullable Path rootDir;
 
     private StandardBuilder() {}
 

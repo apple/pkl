@@ -1,0 +1,8 @@
+qux = "outer"
+
+foo {
+  when (true) {
+    local qux = "then branch"
+    prop = qux
+  }
+}

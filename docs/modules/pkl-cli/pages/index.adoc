@@ -4,7 +4,6 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-mise: https://mise.jdx.dev
 :uri-winget: https://learn.microsoft.com/en-us/windows/package-manager/
 
-:uri-pkl-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-amd64&e=bin
 :uri-pkl-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-aarch64&e=bin
 :uri-pkl-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-amd64&e=bin
 :uri-pkl-linux-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-aarch64&e=bin
@@ -13,7 +12,6 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-java&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-macos-amd64-download: {github-releases}/pkl-macos-amd64
 :uri-pkl-macos-aarch64-download: {github-releases}/pkl-macos-aarch64
 :uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
 :uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
@@ -36,7 +34,7 @@ For interactive development, the CLI includes a Read-Eval-Print Loop (REPL).
 
 The CLI comes in multiple flavors:
 
-* Native macOS executable for amd64 (tested on macOS 10.15)
+* Native macOS executable for aarch64 (tested on macOS 10.15)
 * Native Linux executable for amd64
 * Native Linux executable for aarch64
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
@@ -140,22 +138,10 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
-On aarch64:
-
 [source,shell]
 [subs="+attributes"]
 ----
 curl -L -o pkl '{uri-pkl-macos-aarch64-download}'
-chmod +x pkl
-./pkl --version
-----
-
-On amd64:
-
-[source,shell]
-[subs="+attributes"]
-----
-curl -L -o pkl '{uri-pkl-macos-amd64-download}'
 chmod +x pkl
 ./pkl --version
 ----
@@ -321,7 +307,6 @@ The default output renderer for a module supports the following formats:
 * `pcf`
 * `plist`
 * `properties`
-* `textproto`
 * `xml`
 * `yaml`
 
@@ -464,6 +449,24 @@ When enabled, type constraint failures will show intermediate values in the asse
 Use `--no-power-assertions` to disable this feature if you prefer simpler output or better performance.
 ====
 
+[[profile-cpu-output]]
+.--profile-cpu-output
+[%collapsible]
+====
+Default: (none) +
+The file to write profiler output to. Omitting this option disables CPU profiling entirely. +
+
+The CPU profiler writes output in https://github.com/google/pprof[pprof] format.
+====
+
+[[profile-cpu-sample-period]]
+.--profile-cpu-sample-period
+[%collapsible]
+====
+Default: 10 +
+The sampling duration for the CPU sampler, in milliseconds.
+====
+
 This command also takes <<common-options, common options>>.
 
 [[command-server]]
@@ -544,6 +547,15 @@ Default: enabled +
 Enable or disable power assertions for detailed assertion failure messages.
 When enabled, test failures will show intermediate values in the assertion expression, making it easier to understand why a test failed.
 Use `--no-power-assertions` to disable this feature if you prefer simpler output.
+====
+
+[[test-reporter]]
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
 ====
 
 This command also takes <<common-options, common options>>.
@@ -665,6 +677,20 @@ Used in combination with `--junit-aggregate-reports` flag.
 ====
 Force generation of expected examples. +
 The old expected files will be deleted if present.
+====
+
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
+====
+
+.--install
+[%collapsible]
+====
+Install the built package into the module cache dir.
 ====
 
 This command also takes <<common-options,common options>>.
@@ -1368,14 +1394,24 @@ it works as follows:
 The Pkl settings file allows to customize the CLI experience.
 
 A settings file is a Pkl module amending the `pkl.settings` standard library module.
-Its default location is `~/.pkl/settings.pkl`.
+
+Unless configured explicitly, Pkl will look in the following locations:
+
+. `$XDG_CONFIG_HOME/pkl/settings.pkl`
+. `%APPDATA%/pkl/settings.pkl` (on Windows only)
+. `~/.config/pkl/settings.pkl`
+. Subdirectory `pkl/settings.pkl` within one of the paths described by `$XDG_CONFIG_DIRS`
+. `/etc/xdg/pkl/settings.pkl`
+. `~/.pkl/settings.pkl` (legacy location used by Pkl 0.32 and lower)
+
 To use a different settings file, set the `--settings` command line option, for example `--settings mysettings.pkl`.
 To enforce default settings, use `--settings pkl:settings`.
+
 The settings file is also honored by (and configurable through) the Gradle plugin and `CliEvaluator` API.
 
 Here is a typical settings file:
 
-.~/.pkl/settings.pkl
+.~/.config/pkl/settings.pkl
 [source%parsed,{pkl}]
 ----
 amends "pkl:settings" // <1>
@@ -1397,10 +1433,19 @@ When making TLS requests, Pkl comes with its own set of {uri-certificates}[CA ce
 These certificates can be overridden via either of the two options:
 
 - Set them directly via the CLI option `--ca-certificates <path>`.
-- Add them to a directory at path `~/.pkl/cacerts/`.
+- Add them to a user directory.
+
+If CA certificates are not explicitly configured, Pkl will look in the following locations:
+
+. `$XDG_CONFIG_HOME/pkl/cacerts`
+. `%APPDATA%/pkl/cacerts` (on Windows only)
+. `~/.config/pkl/cacerts`
+. Subdirectory `pkl/cacerts` within one of the paths described by `$XDG_CONFIG_DIRS`
+. `/etc/xdg/pkl/cacerts`
+. `~/.pkl/cacerts` (legacy location used by Pkl 0.32 and lower)
 
 Both these options will *replace* the default CA certificates bundled with Pkl. +
-The CLI option takes precedence over the certificates in `~/.pkl/cacerts/`. +
+The CLI option takes precedence over the certificates in the cacerts directory. +
 Certificates need to be X.509 certificates in PEM format.
 
 [[http-proxy]]

@@ -1,0 +1,11 @@
+–– Pkl Error ––
+Project `file:///$snippetsDir/input/projects/badProjectDeps7/PklProject` declares a dependency on a local package whose version doesn't match what is declared in `PklProject.deps.json`.
+
+Declared: `package://localhost:0/project6@1.0.0`
+Resolved: `package://localhost:0/project6@1.5.0`
+
+Run `pkl project resolve` to update resolved dependencies.
+
+x | import "@project6/children.pkl"
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+at bug (file:///$snippetsDir/input/projects/badProjectDeps7/bug.pkl)

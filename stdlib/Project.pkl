@@ -16,8 +16,8 @@
 
 /// A manifest that defines the presence of a project.
 ///
-/// A project is useful for defining [dependencies], and also for defining common evaluator
-/// [settings].
+/// A project is useful for defining [dependencies], and also for 
+/// [common evaluator settings][evaluatorSettings].
 ///
 /// A project is a directory that contains a project file at its root.
 /// The project file is a file named `PklProject` exactly, that amends or embeds `"pkl:Project"`.
@@ -26,8 +26,8 @@
 /// `--project-dir` flag, or is determined implicitly by walking up the working directory, looking
 /// for a directory containing a `PklProject` file.
 ///
-/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must be
-/// explicitly stated via the evaluator builder.
+/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must
+/// be explicitly stated via the evaluator builder.
 ///
 /// ## Embedding [Project]
 ///
@@ -64,7 +64,7 @@
 ///   value = project
 /// }
 /// ``` 
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 module pkl.Project
 
 import "pkl:EvaluatorSettings" as EvaluatorSettingsModule
@@ -191,23 +191,32 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 /// Evaluator settings do not get published as part of a package.
 /// It is not possible for a package dependency to influence the evaluator settings of a project.
 ///
-/// The following values can only be set if this is a file-based project.
+/// The following values can only be set if this is a file-based project:
 ///
-///  - [modulePath][EvaluatorSettings.modulePath]
-///  - [rootDir][EvaluatorSettings.rootDir]
-///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
-///
-/// For each of these, relative paths are resolved against the project's enclosing directory.
+///  - [modulePath][EvaluatorSettingsModule.modulePath]
+///  - [rootDir][EvaluatorSettingsModule.rootDir]
+///  - [moduleCacheDir][EvaluatorSettingsModule.moduleCacheDir]
+///  - [externalModuleReaders][EvaluatorSettingsModule.externalModuleReaders]
+///  - [externalResourceReaders][EvaluatorSettingsModule.externalResourceReaders]
 evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
   (moduleCacheDir != null).implies(isFileBasedProject),
+  (externalModuleReaders != null).implies(isFileBasedProject),
+  (externalResourceReaders != null).implies(isFileBasedProject),
 )
+
+/// The [evaluatorSettings] resolved against the project dir.
+@Since { version = "0.32.0" }
+fixed resolvedEvaluatorSettings: EvaluatorSettingsModule = evaluatorSettings.resolve(projectFileUri)
 
 /// The URI of the PklProject file.
 ///
-/// This value is used to resolve relative paths when importing another local project as a
-/// dependency.
+/// This value is used to:
+///
+///  * Resolve relative paths when importing another local project as a
+///    dependency.
+///  * Resolve relative paths declared within [evaluatorSettings].
 projectFileUri: String = reflect.Module(module).uri
 
 /// Instantiates a project definition within the enclosing module.
@@ -229,7 +238,8 @@ local const hasVersion = (it: Uri) ->
     if (versionSep == -1)
       false
     else
-      let (version = it.drop(versionSep + 1)) semver.parseOrNull(version) != null
+      let (version = it.drop(versionSep + 1))
+        semver.parseOrNull(version) != null
 
 typealias PackageUri = Uri(startsWith("package:"), hasVersion)
 

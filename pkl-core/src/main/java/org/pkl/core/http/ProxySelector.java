@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 final class ProxySelector extends java.net.ProxySelector {
 
@@ -31,7 +31,7 @@ final class ProxySelector extends java.net.ProxySelector {
 
   private final @Nullable List<Proxy> myProxy;
   private final List<NoProxyRule> noProxyRules;
-  private final @Nullable java.net.ProxySelector delegate;
+  private final java.net.@Nullable ProxySelector delegate;
 
   ProxySelector(@Nullable URI proxyAddress, List<String> noProxyRules) {
     this.noProxyRules = noProxyRules.stream().map(NoProxyRule::new).toList();

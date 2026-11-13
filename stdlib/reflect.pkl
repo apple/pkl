@@ -26,10 +26,11 @@
 /// - Documentation generators (such as *Pkldoc*)
 /// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
 /// - Domain-specific schema validators
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 module pkl.reflect
 
 import "pkl:base"
+import "pkl:syntax"
 
 /// A mirror for the [Any] type.
 const anyType: DeclaredType = DeclaredType(Class(Any))
@@ -107,6 +108,9 @@ const bytesType: DeclaredType = DeclaredType(Class(Bytes))
 /// A mirror for the `module` type.
 external const moduleType: ModuleType
 
+/// A mirror for the `this` type.
+external const thisType: ThisType
+
 /// A mirror for the `unknown` type.
 external const unknownType: UnknownType
 
@@ -163,7 +167,7 @@ external const function TypeVariable(referent: TypeParameter): TypeVariable
 /// A program declaration.
 abstract external class Declaration {
   /// The source location of this declaration.
-  location: SourceLocation
+  location: syntax.SourceLocation
 
   /// The documentation comment for this declaration, if any.
   docComment: String?
@@ -201,7 +205,7 @@ external class Module extends Declaration {
   /// Map keys are the identifiers by which imports are accessed within this module.
   /// Map values are the URIs of the imported modules.
   ///
-  /// Does not cover import expressions.
+  /// Does not cover import expressions or glob imports.
   imports: Map<String, Uri>
 
   /// The classes declared in this module.
@@ -216,7 +220,7 @@ external class Module extends Declaration {
 /// A class or type alias declaration.
 abstract external class TypeDeclaration extends Declaration {
   /// The class or type alias reflected upon.
-  abstract hidden reflectee: base.Class | base.TypeAlias
+  hidden reflectee: base.Class | base.TypeAlias
 
   /// The module enclosing this type declaration.
   ///
@@ -224,7 +228,7 @@ abstract external class TypeDeclaration extends Declaration {
   hidden enclosingDeclaration: Module
 
   /// The type parameters of this type declaration.
-  abstract typeParameters: List<TypeParameter>
+  typeParameters: List<TypeParameter>
 }
 
 /// A class declaration.
@@ -431,6 +435,11 @@ external class FunctionType extends Type {
 /// [moduleType] is an instance of this class.
 class ModuleType extends Type
 
+/// The `this` type.
+///
+/// [thisType] is an instance of this class.
+class ThisType extends Type
+
 /// The `unknown` type.
 ///
 /// [unknownType] is an instance of this class.
@@ -449,13 +458,5 @@ external class TypeVariable extends Type {
 }
 
 /// A source location within a module.
-external class SourceLocation {
-  /// The 1-based line number of this source location.
-  line: UInt
-
-  /// The 1-based column number of this source location.
-  column: UInt
-
-  /// The display URI of this source location.
-  displayUri: String
-}
+@Deprecated { since = "0.33.0"; replaceWith = "syntax.SourceLocation" }
+typealias SourceLocation = syntax.SourceLocation

@@ -48,6 +48,8 @@ facts {
     modClassProps["aliased"].type ==
       reflect.DeclaredType(reflect.TypeAlias(BaseModule.MyMap))
         .withTypeArgument(reflect.DeclaredType(reflect.Class(BaseModule.Person)))
+    modClassProps["mod"].type == reflect.moduleType
+    modClassProps["self"].type == reflect.thisType
   }
   
   ["Reflecting a class"] {

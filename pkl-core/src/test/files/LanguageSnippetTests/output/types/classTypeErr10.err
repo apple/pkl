@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Expected value of type `Class<classTypeErr10>`, but got type `Class<classType#C>`.
+
+x | res14 = C as Class<module>
+                 ^^^^^^^^^^^^^
+at classTypeErr10#res14 (file:///$snippetsDir/input/types/classTypeErr10.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

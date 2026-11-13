@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping extends VmObject {
   // reified type of listing elements and mapping values
@@ -42,7 +42,7 @@ public abstract class VmListingOrMapping extends VmObject {
     typeCheckOwner = null;
   }
 
-  public VmListingOrMapping(
+  protected VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
@@ -55,34 +55,41 @@ public abstract class VmListingOrMapping extends VmObject {
     this.typeCheckOwner = typeCheckOwner;
   }
 
-  // Recursively executes type casts between `owner` and `this` and returns the resulting value.
+  // Executes type casts for every parent between `owner` and `this` and returns the resulting
+  // value.
   public final Object executeTypeCasts(
       Object value,
       VmObjectLike owner,
       IndirectCallNode callNode,
       // if non-null, a stack frame for this member is inserted if a type cast fails
-      @Nullable ObjectMember member,
-      // Next type cast to be performed by the caller.
-      // Avoids repeating the same type cast in some cases.
-      @Nullable ListingOrMappingTypeCastNode nextTypeCastNode) {
-    var newNextTypeCastNode = typeCastNode != null ? typeCastNode : nextTypeCastNode;
-    @SuppressWarnings("DataFlowIssue")
-    var result =
-        this == owner
-            ? value
-            : ((VmListingOrMapping) parent)
-                .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
-    if (typeCastNode == null || typeCastNode == nextTypeCastNode) return result;
-    var callTarget = typeCastNode.getCallTarget();
-    try {
-      return callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
-    } catch (VmException e) {
-      CompilerDirectives.transferToInterpreter();
-      if (member != null) {
-        VmUtils.insertStackFrame(member, callTarget, e);
+      @Nullable ObjectMember member) {
+    var result = value;
+    VmObject parent = this;
+    ListingOrMappingTypeCastNode prevTypeCastNode = null;
+    while (parent != null && parent != owner) {
+      var obj = (VmListingOrMapping) parent;
+      if (obj.typeCastNode != null && obj.typeCastNode != prevTypeCastNode) {
+        var callTarget = obj.typeCastNode.getCallTarget();
+        try {
+          result =
+              callNode.call(
+                  callTarget,
+                  VmUtils.getReceiver(enclosingFrame),
+                  VmUtils.getOwner(enclosingFrame),
+                  obj.enclosingFrame,
+                  result);
+          prevTypeCastNode = obj.typeCastNode;
+        } catch (VmException e) {
+          CompilerDirectives.transferToInterpreter();
+          if (member != null) {
+            VmUtils.insertStackFrame(member, callTarget, e);
+          }
+          throw e;
+        }
       }
-      throw e;
+      parent = parent.parent;
     }
+    return result;
   }
 
   @Override
@@ -108,7 +115,8 @@ public abstract class VmListingOrMapping extends VmObject {
       var callNode = IndirectCallNode.getUncached();
       var callTarget = typeCastNode.getCallTarget();
       try {
-        result = callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+        result =
+            callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, enclosingFrame, result);
       } catch (VmException e) {
         var member = VmUtils.findMember(parent, key);
         assert member != null; // already found the member's cached value
@@ -132,6 +140,9 @@ public abstract class VmListingOrMapping extends VmObject {
     if (typeCastNode == null) {
       return false;
     }
-    return typeCastNode.getTypeNode().isEquivalentTo(typeNode);
+    var castTypeNode = typeCastNode.getTypeNode();
+    // if cast type is not final, we can't know if typeNode is a subtype
+    if (!castTypeNode.isFinalType()) return false;
+    return castTypeNode.getType().equals(typeNode.getType());
   }
 }

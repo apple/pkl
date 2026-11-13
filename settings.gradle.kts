@@ -21,6 +21,8 @@ include("bench")
 
 include("docs")
 
+include("libpkl")
+
 include("pkl-bom")
 
 include("pkl-cli")
@@ -57,6 +59,8 @@ include("pkl-server")
 
 include("pkl-tools")
 
+include("pkl-profiler")
+
 include("stdlib")
 
 pluginManagement {
@@ -68,7 +72,40 @@ pluginManagement {
 
 plugins { id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0") }
 
-@Suppress("UnstableApiUsage") dependencyResolutionManagement { repositories { mavenCentral() } }
+@Suppress("UnstableApiUsage")
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    // Source archives of tagged GitHub releases (used to bundle sources of native executables).
+    exclusiveContent {
+      forRepository {
+        ivy {
+          name = "GitHub tag archives"
+          url = uri("https://github.com/")
+          patternLayout { artifact("[organisation]/[module]/archive/refs/tags/[revision].tar.gz") }
+          metadataSources { artifact() }
+        }
+      }
+      filter {
+        includeGroup("madler")
+        includeGroup("openjdk")
+        includeGroup("oracle")
+      }
+    }
+    // musl's release tarballs (used to bundle sources of statically linked musl executables).
+    exclusiveContent {
+      forRepository {
+        ivy {
+          name = "musl releases"
+          url = uri("https://musl.libc.org/releases/")
+          patternLayout { artifact("[module]-[revision].tar.gz") }
+          metadataSources { artifact() }
+        }
+      }
+      filter { includeGroup("musl") }
+    }
+  }
+}
 
 for (prj in rootProject.children) {
   prj.buildFileName = "${prj.name}.gradle.kts"

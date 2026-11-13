@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -461,12 +461,15 @@ private fun findTypesUsedBy(
             enclosingPackage.uri,
             enclosingPackage.version,
             enclosingType.moduleName
-              .substring(enclosingPackage.moduleNamePrefix.length)
+              .removePrefix(enclosingPackage.moduleNamePrefix)
               .replace('.', '/'),
             PClassInfo.MODULE_CLASS_NAME,
           )
         )
       }
+    }
+    PType.THIS -> {
+      // do nothing, the enclosing PType.Class has already been visited
     }
     PType.NOTHING -> {}
     is PType.Nullable -> {

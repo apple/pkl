@@ -56,6 +56,12 @@ dependencies {
   // Graal.JS
   testImplementation(libs.graalSdk)
   testImplementation(libs.graalJs)
+
+  // used by `pklJavaExecutable` plugin (ideally this would be inferred automatically)
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
 }
 
 publishing {
@@ -69,27 +75,36 @@ publishing {
   }
 }
 
-val testNativeExecutable by
-  tasks.registering(Test::class) {
+tasks.test {
+  inputs.dir("src/test/files/DocGeneratorTest/input")
+  inputs.dir("src/test/files/DocGeneratorTest/output")
+  inputs.dir("src/test/files/DocMigratorTest/input")
+  inputs.dir("src/test/files/DocMigratorTest/output")
+  inputs.dir("src/test/files/SinglePackageTest/input")
+  inputs.dir("src/test/files/SinglePackageTest/output")
+}
+
+val testNativeExecutable =
+  tasks.register<Test>("testNativeExecutable") {
     dependsOn(tasks.assembleNative)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     inputs.dir("src/test/files/DocGeneratorTest/input")
-    outputs.dir("src/test/files/DocGeneratorTest/output")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.NativeExecutableTest", "true")
 
     filter { includeTestsMatching("org.pkl.doc.NativeExecutableTest") }
   }
 
-val testJavaExecutable by
-  tasks.registering(Test::class) {
+val testJavaExecutable =
+  tasks.register<Test>("testJavaExecutable") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     dependsOn(tasks.javaExecutable)
     inputs.dir("src/test/files/DocGeneratorTest/input")
-    outputs.dir("src/test/files/DocGeneratorTest/output")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.JavaExecutableTest", "true")
 
     filter { includeTestsMatching("org.pkl.doc.JavaExecutableTest") }
@@ -105,4 +120,6 @@ tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.doc.Main") }
 
 htmlValidator { sources = files("src/test/files/DocGeneratorTest/output") }
 
-tasks.validateHtml { mustRunAfter(testJavaExecutable) }
+// Tests usually read expected output files, but may write missing ones before failing.
+// If that happens, delay validation until after any test tasks in the graph.
+tasks.validateHtml { mustRunAfter(tasks.test, testJavaExecutable, testNativeExecutable) }

@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import com.oracle.truffle.api.TruffleOptions
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -99,14 +100,19 @@ constructor(
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      if (options.multipleFileOutputPath != null) {
-        writeMultipleFileOutput(builder)
-      } else {
-        writeOutput(builder)
+      withCpuProfiler(options.profilerOptions) { startProfiling ->
+        if (options.multipleFileOutputPath != null) {
+          writeMultipleFileOutput(builder, startProfiling)
+        } else {
+          writeOutput(builder, startProfiling)
+        }
       }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
+      if (TruffleOptions.AOT) {
+        VmUtils.closeEngine()
+      }
     }
   }
 
@@ -115,20 +121,25 @@ constructor(
     // used just to resolve the `%{moduleName}` placeholder
     val moduleResolver = ModuleResolver(moduleKeyFactories(ModulePathResolver.empty()))
 
-    return resolvedSourceModules.associateWith { uri ->
+    return options.base.normalizedSourceModules.associateWith { uri ->
       val moduleDir: String? =
-        IoUtils.toPath(uri)?.let {
-          IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
-        }
-      val moduleKey =
-        try {
-          moduleResolver.resolve(uri)
-        } catch (e: VmException) {
-          throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
-        }
+        if (!uri.isAbsolute && uri.schemeSpecificPart.startsWith("@")) null
+        else
+          IoUtils.toPath(uri)?.let {
+            IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
+          }
+      val moduleName =
+        if (!uri.isAbsolute && uri.schemeSpecificPart.startsWith("@"))
+          IoUtils.getNameWithoutExtension(uri.path)
+        else
+          try {
+            IoUtils.inferModuleName(moduleResolver.resolve(uri))
+          } catch (e: VmException) {
+            throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
+          }
       val substituted =
         pathStr
-          .replace("%{moduleName}", IoUtils.inferModuleName(moduleKey))
+          .replace("%{moduleName}", moduleName)
           .replace("%{outputFormat}", options.outputFormat ?: "%{outputFormat}")
           .replace("%{moduleDir}", moduleDir ?: "%{moduleDir}")
       if (substituted.contains("%{moduleDir}")) {
@@ -151,8 +162,9 @@ constructor(
   }
 
   /** Renders each module's `output.bytes`, writing it to the specified output file. */
-  private fun writeOutput(builder: EvaluatorBuilder) {
+  private fun writeOutput(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val evaluator = builder.setOutputFormat(options.outputFormat).build()
+    startProfiling()
     evaluator.use { ev ->
       val outputFiles = fileOutputPaths
       if (outputFiles != null) {
@@ -191,7 +203,7 @@ constructor(
         }
       } else {
         var outputWritten = false
-        for (moduleUri in resolvedSourceModules) {
+        for (moduleUri in options.base.normalizedSourceModules) {
           val moduleSource = toModuleSource(moduleUri, inputStream)
           if (options.expression != null) {
             val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
@@ -226,45 +238,47 @@ constructor(
    * Renders each module's `output.files`, writing each entry as a file into the specified output
    * directory.
    */
-  private fun writeMultipleFileOutput(builder: EvaluatorBuilder) {
+  private fun writeMultipleFileOutput(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val outputDirs = directoryOutputPaths!!
     val writtenFiles = mutableMapOf<Path, OutputFile>()
-    for ((moduleUri, outputDir) in outputDirs) {
-      val evaluator = builder.setOutputFormat(options.outputFormat).build()
-      if (outputDir.exists() && !outputDir.isDirectory()) {
-        throw CliException("Output path `$outputDir` exists and is not a directory.")
-      }
-      val moduleSource = toModuleSource(moduleUri, inputStream)
-      val output = evaluator.evaluateOutputFiles(moduleSource)
-      val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
+    builder.setOutputFormat(options.outputFormat).build().use { evaluator ->
+      startProfiling()
+      for ((moduleUri, outputDir) in outputDirs) {
+        if (outputDir.exists() && !outputDir.isDirectory()) {
+          throw CliException("Output path `$outputDir` exists and is not a directory.")
+        }
+        val moduleSource = toModuleSource(moduleUri, inputStream)
+        val output = evaluator.evaluateOutputFiles(moduleSource)
+        val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
 
-      for ((pathSpec, fileOutput) in output) {
-        checkPathSpec(pathSpec)
-        val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
-        if (!realPath.startsWith(realOutputDir)) {
-          throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
+        for ((pathSpec, fileOutput) in output) {
+          checkPathSpec(pathSpec)
+          val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
+          if (!realPath.startsWith(realOutputDir)) {
+            throw CliException(
+              "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
+            )
+          }
+          val previousOutput = writtenFiles[realPath]
+          if (previousOutput != null) {
+            throw CliException(
+              "Output file conflict: `output.files` entries `\"${previousOutput.pathSpec}\"` in module `${previousOutput.moduleUri}` and `\"$pathSpec\"` in module `$moduleUri` resolve to the same file path `$realPath`."
+            )
+          }
+          if (realPath.isDirectory()) {
+            throw CliException(
+              "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is a directory."
+            )
+          }
+          writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
+          realPath.createParentDirectories()
+          realPath.writeBytes(fileOutput.bytes)
+          outputStream.writeText(
+            IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
+              IoUtils.getLineSeparator()
           )
+          outputStream.flush()
         }
-        val previousOutput = writtenFiles[realPath]
-        if (previousOutput != null) {
-          throw CliException(
-            "Output file conflict: `output.files` entries `\"${previousOutput.pathSpec}\"` in module `${previousOutput.moduleUri}` and `\"$pathSpec\"` in module `$moduleUri` resolve to the same file path `$realPath`."
-          )
-        }
-        if (realPath.isDirectory()) {
-          throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is a directory."
-          )
-        }
-        writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
-        realPath.createParentDirectories()
-        realPath.writeBytes(fileOutput.bytes)
-        outputStream.writeText(
-          IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
-            IoUtils.getLineSeparator()
-        )
-        outputStream.flush()
       }
     }
   }

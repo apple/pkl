@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,17 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.core.util.IoUtils;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
@@ -37,8 +43,12 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<Path> certificateFiles = new ArrayList<>();
   private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
-  private ProxySelector proxySelector;
+  private @Nullable ProxySelector proxySelector;
   private Map<URI, URI> rewrites = new HashMap<>();
+  // okay to use Pattern as a map key here because `GlobResolver.toRegexPattern()` caches and
+  // gives the same `Pattern` instance for an existing glob pattern.
+  // use LinkedHashMap to preserve insertion order.
+  private Map<Pattern, Map<String, List<String>>> headers = new LinkedHashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -87,7 +97,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public Builder setProxy(URI proxyAddress, List<String> noProxy) {
+  public Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy) {
     this.proxySelector = new org.pkl.core.http.ProxySelector(proxyAddress, noProxy);
     return this;
   }
@@ -111,6 +121,55 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
+  public Builder setHeaders(Map<String, Map<String, List<String>>> headers) {
+    var newHeaders = new LinkedHashMap<Pattern, Map<String, List<String>>>(headers.size());
+    for (var rule : headers.entrySet()) {
+      Pattern pattern;
+      try {
+        pattern = GlobResolver.toRegexPattern(rule.getKey());
+      } catch (InvalidGlobPatternException e) {
+        throw new IllegalArgumentException(e.getMessage(), e);
+      }
+      var map = new LinkedHashMap<String, List<String>>();
+      for (var entry : rule.getValue().entrySet()) {
+        IoUtils.validateHeaderName(entry.getKey());
+        for (var value : entry.getValue()) {
+          IoUtils.validateHeaderValue(value);
+        }
+        map.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+      }
+      newHeaders.put(pattern, map);
+    }
+    this.headers = newHeaders;
+    return this;
+  }
+
+  @Override
+  public Builder addHeaders(String globPattern, Map<String, List<String>> headers) {
+    try {
+      var pattern = GlobResolver.toRegexPattern(globPattern);
+      var existingHeaders = this.headers.computeIfAbsent(pattern, k -> new HashMap<>());
+      for (var entry : headers.entrySet()) {
+        var headerName = entry.getKey();
+        var headerValues = entry.getValue();
+
+        IoUtils.validateHeaderName(headerName);
+        for (var value : headerValues) {
+          IoUtils.validateHeaderValue(value);
+        }
+
+        var existingList = existingHeaders.putIfAbsent(headerName, new ArrayList<>(headerValues));
+        if (existingList != null) {
+          existingList.addAll(headerValues);
+        }
+      }
+      return this;
+    } catch (InvalidGlobPatternException e) {
+      throw new IllegalArgumentException(e.getMessage(), e);
+    }
+  }
+
+  @Override
   public HttpClient build() {
     return doBuild().get();
   }
@@ -128,7 +187,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
     return () -> {
       var jdkClient =
           new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
-      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient, rewrites);
+      return new RequestRewritingClient(
+          userAgent, requestTimeout, testPort, jdkClient, rewrites, headers);
     };
   }
 }

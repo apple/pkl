@@ -40,6 +40,10 @@ class DocGeneratorTestHelper {
     projectDir.resolve("src/test/files/DocGeneratorTest/input").apply { assert(exists()) }
   }
 
+  private val spInputDir: Path by lazy {
+    projectDir.resolve("src/test/files/SinglePackageTest/input").apply { assert(exists()) }
+  }
+
   internal val docsiteModule: URI by lazy {
     inputDir.resolve("docsite-info.pkl").apply { assert(exists()) }.toUri()
   }
@@ -68,14 +72,31 @@ class DocGeneratorTestHelper {
       .map { it.toUri() }
   }
 
+  internal val spInputModules: List<URI> by lazy {
+    // intentionally not filtered
+    spInputDir.listFilesRecursively().map { it.toUri() }
+  }
+
   internal val expectedOutputDir: Path by lazy {
     projectDir.resolve("src/test/files/DocGeneratorTest/output").createDirectories()
   }
 
+  internal val spExpectedOutputDir: Path by lazy {
+    projectDir.resolve("src/test/files/SinglePackageTest/output").createDirectories()
+  }
+
   internal val expectedOutputFiles: List<Path> by lazy { expectedOutputDir.listFilesRecursively() }
+
+  internal val spExpectedOutputFiles: List<Path> by lazy {
+    spExpectedOutputDir.listFilesRecursively()
+  }
 
   val baseActualOutputDir: Path by lazy {
     tempDir.resolve("work/DocGeneratorTest").createDirectories()
+  }
+
+  val spBaseActualOutputDir: Path by lazy {
+    tempDir.resolve("work/SinglePackageTest").createDirectories()
   }
 
   val actualOutputDir: Path by lazy { baseActualOutputDir.resolve("run-1") }
@@ -83,20 +104,53 @@ class DocGeneratorTestHelper {
 
   internal val actualOutputFiles: List<Path> by lazy { baseActualOutputDir.listFilesRecursively() }
 
+  internal val spActualOutputFiles: List<Path> by lazy {
+    spBaseActualOutputDir.listFilesRecursively()
+  }
+
   internal val cacheDir: Path by lazy { tempDir.resolve("cache") }
 
   internal val expectedRelativeOutputFiles: List<String> by lazy {
-    expectedOutputFiles.map { path ->
-      IoUtils.toNormalizedPathString(expectedOutputDir.relativize(path)).let { str ->
-        // Git will by default clone symlinks as shortcuts on Windows, and shortcuts have a
-        // `.lnk` extension.
-        if (IoUtils.isWindows() && str.endsWith(".lnk")) str.dropLast(4) else str
-      }
-    }
+    expectedOutputFiles.map { path -> relativeOutputPath(expectedOutputDir, path) }
+  }
+
+  internal val spExpectedRelativeOutputFiles: List<String> by lazy {
+    spExpectedOutputFiles.map { path -> relativeOutputPath(spExpectedOutputDir, path) }
   }
 
   internal val actualRelativeOutputFiles: List<String> by lazy {
-    actualOutputFiles.map { IoUtils.toNormalizedPathString(baseActualOutputDir.relativize(it)) }
+    actualOutputFiles.map { relativeOutputPath(baseActualOutputDir, it) }
+  }
+
+  internal val spActualRelativeOutputFiles: List<String> by lazy {
+    spActualOutputFiles.map { relativeOutputPath(spBaseActualOutputDir, it) }
+  }
+
+  internal val actualRelativeOutputFileSet: Set<String> by lazy {
+    actualRelativeOutputFiles.toSet()
+  }
+
+  internal val spActualRelativeOutputFileSet: Set<String> by lazy {
+    spActualRelativeOutputFiles.toSet()
+  }
+
+  private fun relativeOutputPath(baseDir: Path, path: Path): String {
+    return IoUtils.toNormalizedPathString(baseDir.relativize(path)).let { str ->
+      // Git will by default clone symlinks as shortcuts on Windows, and shortcuts have a
+      // `.lnk` extension.
+      if (IoUtils.isWindows() && str.endsWith(".lnk")) str.dropLast(4) else str
+    }
+  }
+
+  private fun assertExpectedFilesGenerated(expectedFiles: List<String>, actualFiles: Set<String>) {
+    val missingFiles = expectedFiles - actualFiles
+    if (missingFiles.isNotEmpty()) {
+      val error = buildString {
+        appendLine("The following expected files were not actually generated:")
+        missingFiles.forEach { appendLine(it) }
+      }
+      Assertions.fail<Unit>(error)
+    }
   }
 
   fun runPklDocCli(executable: Path, options: CliDocGeneratorOptions) {
@@ -183,14 +237,7 @@ class DocGeneratorTestHelper {
       )
     doGenerate(options2)
 
-    val missingFiles = expectedRelativeOutputFiles - actualRelativeOutputFiles
-    if (missingFiles.isNotEmpty()) {
-      val error = buildString {
-        appendLine("The following expected files were not actually generated:")
-        missingFiles.forEach { appendLine(it) }
-      }
-      Assertions.fail<Unit>(error)
-    }
+    assertExpectedFilesGenerated(expectedRelativeOutputFiles, actualRelativeOutputFileSet)
 
     return actualRelativeOutputFiles
   }
@@ -201,5 +248,22 @@ class DocGeneratorTestHelper {
 
   fun generateDocs(): List<String> {
     return generateDocsWith { CliDocGenerator(it).run() }
+  }
+
+  fun generateSpDocs(): List<String> {
+    PackageServer.populateCacheDir(cacheDir)
+
+    val options =
+      CliDocGeneratorOptions(
+        CliBaseOptions(sourceModules = spInputModules, moduleCacheDir = cacheDir),
+        outputDir = spBaseActualOutputDir,
+        isTestMode = true,
+        noSymlinks = true,
+      )
+    CliDocGenerator(options).run()
+
+    assertExpectedFilesGenerated(spExpectedRelativeOutputFiles, spActualRelativeOutputFileSet)
+
+    return spActualRelativeOutputFiles
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,15 @@ data class CliKotlinCodeGeneratorOptions(
    * original Pkl module name, and the value is the desired replacement.
    */
   val renames: Map<String, String> = emptyMap(),
+
+  /**
+   * The mapping of Pkl class names to the spring boot `@ConfigurationProperties` prefix name, when
+   * [generateSpringBootConfig] is enabled.
+   *
+   * Setting this field is optional, and by default is inferred through the schema of the input
+   * modules.
+   */
+  val springBootConfigurationProperties: Map<String, String> = emptyMap(),
 ) {
   @Suppress("DeprecatedCallableAddReplaceWith")
   @Deprecated("deprecated without replacement")
@@ -62,5 +71,6 @@ data class CliKotlinCodeGeneratorOptions(
       implementSerializable,
       addGeneratedAnnotation,
       renames,
+      springBootConfigurationProperties,
     )
 }

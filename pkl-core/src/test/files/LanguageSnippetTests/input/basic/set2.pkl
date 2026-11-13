@@ -1,0 +1,38 @@
+local l1: Listing = new {
+  new { x = 1 }
+  new { x = 2 }
+}
+
+local l2: Listing = new {
+  new { x = 1 }
+  new { x = 2 }
+}
+
+local m1: Mapping = new {
+  ["a"] { x = 1 }
+  ["b"] { x = 2 }
+}
+
+local m2: Mapping = new {
+  ["a"] { x = 1 }
+  ["b"] { x = 2 }
+}
+
+res1 {
+  first = l2[1]
+  // https://github.com/apple/pkl/issues/1920
+  size = Set(l1, l2).length
+}
+
+res2 {
+  first = m2["b"]
+  size = Set(m1, m2).length
+}
+
+local bigList = IntSeq(1, 200).toList().map((i) -> i.b)
+
+// https://github.com/apple/pkl/issues/1921
+res3 = (bigList + List(0.b, -0.b)).toSet().length - bigList.length
+
+// https://github.com/apple/pkl/issues/1921
+res4 = (bigList + List(0.ms, -0.ms)).toSet().length - bigList.length

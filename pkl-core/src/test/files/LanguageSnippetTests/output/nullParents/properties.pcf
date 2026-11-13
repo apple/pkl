@@ -1,0 +1,22 @@
+res1 {
+  name = "Pigeon"
+  age = 3
+}
+res2 {
+  name = "Pigeon"
+  age = 3
+}
+res3 = "three"
+res4 = 0
+res5 {
+  zero = 0
+  amended = "amended"
+}
+res6 = "Cannot find property `nickname` in object of type `properties#Person`."
+res7 = "Object of type `Listing` cannot have a property (other than `default`)."
+res8 = "Object of type `Mapping` cannot have a property (other than `default`)."
+res9 = "Expected a function with 1 parameters, but got 2."
+res10 = "Cannot instantiate, or amend an instance of, external class `String`."
+res11 {
+  x = 1
+}

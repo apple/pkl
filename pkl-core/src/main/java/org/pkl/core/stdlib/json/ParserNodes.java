@@ -17,17 +17,19 @@ package org.pkl.core.stdlib.json;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.*;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.LateInit;
 import org.pkl.core.util.json.JsonHandler;
 import org.pkl.core.util.json.JsonParser;
 import org.pkl.core.util.json.ParseException;
@@ -38,20 +40,21 @@ public final class ParserNodes {
   public abstract static class parse extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object eval(VmTyped self, String text) {
-      return doParse(self, text);
+    protected Object eval(
+        VmTyped self, String text, @Shared @Cached("create()") IndirectCallNode callNode) {
+      return doParse(self, text, callNode);
     }
 
     @Specialization
     @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
+        VmTyped self, VmTyped resource, @Shared @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
-      return doParse(self, text);
+      return doParse(self, text, callNode);
     }
 
-    private Object doParse(VmTyped self, String text) {
-      var converter = PklConverter.fromParser(self);
+    private Object doParse(VmTyped self, String text, IndirectCallNode callNode) {
+      var converter = PklConverter.fromParser(self, callNode);
       var useMapping = (boolean) VmUtils.readMember(self, Identifier.USE_MAPPING);
       var handler = new Handler(converter, useMapping);
       var parser = new JsonParser(handler);
@@ -71,14 +74,14 @@ public final class ParserNodes {
 
     private final Deque<Object> currPath = new ArrayDeque<>();
 
+    @LateInit private Object value;
+
     public Handler(PklConverter converter, boolean useMapping) {
       this.converter = converter;
       this.useMapping = useMapping;
 
       currPath.push(VmValueConverter.TOP_LEVEL_VALUE);
     }
-
-    private Object value;
 
     @Override
     public void endNull() {

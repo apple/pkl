@@ -30,6 +30,7 @@ import java.net.URI
 import org.pkl.cli.CliCommandRunner
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
+import org.pkl.commons.cli.commands.ProfileOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 
 class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
@@ -61,6 +62,8 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
 
   private val projectOptions by ProjectOptions()
 
+  private val profileOptions by ProfileOptions()
+
   override fun run() {
     // if no module is specified but --help is show help, otherwise error becuase module is missing
     if (module == null)
@@ -75,11 +78,13 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
         else reservedFlagShortNames.add(it.trimStart('-'))
       }
     }
+    val cliBaseOptions = baseOptions.baseOptions(listOf(module!!), projectOptions)
     CliCommandRunner(
-        baseOptions.baseOptions(listOf(module!!), projectOptions),
+        cliBaseOptions,
         reservedFlagNames,
         reservedFlagShortNames,
         if (showHelp) args + listOf("--help") else args,
+        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
       )
       .run()
   }

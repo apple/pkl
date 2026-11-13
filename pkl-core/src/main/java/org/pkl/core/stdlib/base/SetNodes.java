@@ -17,15 +17,20 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.pkl.core.ast.expression.binary.GreaterThanNode;
 import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanNode;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
+import org.pkl.core.ast.internal.ToStringNode;
+import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
@@ -425,8 +430,11 @@ public final class SetNodes {
 
   public abstract static class flatten extends ExternalMethod0Node {
     @Specialization
-    protected VmSet eval(VmSet self) {
-      return (VmSet) self.flatten();
+    protected VmSet eval(
+        VirtualFrame frame,
+        VmSet self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      return (VmSet) self.flatten(frame, readCursorValueNode);
     }
   }
 
@@ -1025,9 +1033,23 @@ public final class SetNodes {
   }
 
   public abstract static class join extends ExternalMethod1Node {
+    @Child ToStringNode toStringNode = ToStringNodeGen.create(sourceSection, null);
+    private final LoopConditionProfile loopConditionProfile = LoopConditionProfile.create();
+
     @Specialization
-    protected String eval(VmSet self, String separator) {
-      return self.join(separator);
+    protected String eval(VirtualFrame frame, VmSet self, String separator) {
+      if (self.isEmpty()) return "";
+
+      var iter = self.iterator();
+      var builder = VmUtils.createBuilder();
+      VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
+
+      while (loopConditionProfile.profile(iter.hasNext())) {
+        VmUtils.appendToBuilder(builder, separator);
+        VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
+      }
+
+      return VmUtils.builderToString(builder);
     }
   }
 

@@ -4,10 +4,6 @@ Value: "abc"
 
 x | let (x: Float = "abc")
             ^^^^^
-at letExpressionErrorTyped#res1.<function#1> (file:///$snippetsDir/input/errors/letExpressionErrorTyped.pkl)
-
-x | let (x: Float = "abc")
-    ^^^^^^^^^^^^^^^^^^^^^^
 at letExpressionErrorTyped#res1 (file:///$snippetsDir/input/errors/letExpressionErrorTyped.pkl)
 
 xxx | renderer.renderDocument(value)

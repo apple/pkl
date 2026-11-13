@@ -15,13 +15,13 @@
 //===----------------------------------------------------------------------===//
 
 /// Information about the Pkl release that the current program runs on.
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.34.0" }
 module pkl.release
 
 import "pkl:semver"
 
 /// The Pkl release that the current program runs on.
-external current: Release
+external const current: Release
 
 /// A Pkl release.
 class Release {

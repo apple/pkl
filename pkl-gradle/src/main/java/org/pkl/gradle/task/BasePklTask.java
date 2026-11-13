@@ -15,6 +15,9 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.spec.ExternalReaderSpec.toExternalReaderMap;
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
@@ -23,7 +26,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -42,6 +44,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -49,6 +52,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.jspecify.annotations.Nullable;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
+import org.pkl.gradle.spec.ExternalReaderSpec;
 import org.pkl.gradle.utils.PluginUtils;
 
 @CacheableTask
@@ -163,7 +167,17 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract MapProperty<String, Map<String, List<String>>> getHttpHeaders();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getPowerAssertions();
+
+  @Nested
+  public abstract MapProperty<String, ExternalReaderSpec> getExternalModuleReaders();
+
+  @Nested
+  public abstract MapProperty<String, ExternalReaderSpec> getExternalResourceReaders();
 
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
@@ -218,8 +232,9 @@ public abstract class BasePklTask extends DefaultTask {
         getHttpProxy().getOrNull(),
         getHttpNoProxy().getOrElse(List.of()),
         getHttpRewrites().getOrNull(),
-        Map.of(),
-        Map.of(),
+        getHttpHeaders().getOrNull(),
+        toExternalReaderMap(getExternalModuleReaders().get().values()),
+        toExternalReaderMap(getExternalResourceReaders().get().values()),
         null,
         getPowerAssertions().getOrElse(false));
   }
@@ -241,17 +256,5 @@ public abstract class BasePklTask extends DefaultTask {
 
   protected List<Pattern> patternsFromStrings(List<String> patterns) {
     return patterns.stream().map(Pattern::compile).collect(Collectors.toList());
-  }
-
-  /**
-   * Equivalent to {@code provider.map(it -> f.apply(it)).getOrNull()}.
-   *
-   * <p>This function is necessary because in some cases doing {@code
-   * someProvider.map(...).getOrNull()} may trigger validation errors inside Gradle, when {@code
-   * someProvider} is derived from a property.
-   */
-  protected <T, U> @Nullable U mapAndGetOrNull(Provider<T> provider, Function<T, U> f) {
-    @Nullable T value = provider.getOrNull();
-    return value == null ? null : f.apply(value);
   }
 }

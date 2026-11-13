@@ -15,75 +15,92 @@
  */
 package org.pkl.core.ast.builder;
 
+import static org.pkl.core.util.ArrayUtils.EMPTY_INT_ARRAY;
+
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
 import java.util.*;
 import java.util.function.Function;
-import org.pkl.core.TypeParameter;
+import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
+import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.builder.MethodResolution.ImplicitBaseMethod;
+import org.pkl.core.ast.builder.MethodResolution.ImplicitThisMethod;
+import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
+import org.pkl.core.ast.builder.VariableResolution.ForGeneratorVariableOrLetBinding;
+import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
+import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
+import org.pkl.core.ast.builder.VariableResolution.Parameter;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.BaseModuleMembers;
+import org.pkl.core.runtime.FrameDescriptorBuilder;
+import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.util.ArrayUtils;
+import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
 
 public final class SymbolTable {
-  private Scope currentScope;
 
-  public SymbolTable(ModuleInfo moduleInfo) {
-    currentScope = new ModuleScope(moduleInfo);
+  private Scope currentScope;
+  // consider having each scope keep track of this individually rather than set on SymbolTable.
+  public boolean isInTypeAliasScope;
+
+  public SymbolTable(ModuleInfo moduleInfo, boolean isBaseModule) {
+    currentScope = new ModuleScope(moduleInfo, isBaseModule);
   }
 
   public Scope getCurrentScope() {
     return currentScope;
   }
 
-  public @Nullable TypeParameter findTypeParameter(String name) {
-    TypeParameter result;
-    for (var scope = currentScope; scope != null; scope = scope.getParent()) {
-      result = scope.getTypeParameter(name);
-      if (result != null) return result;
-    }
-    return null;
-  }
-
   public ObjectMember enterClass(
       Identifier name,
-      List<TypeParameter> typeParameters,
+      int modifiers,
+      TypeParameter[] typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
             currentScope,
             name,
             toQualifiedName(name),
-            FrameDescriptor.newBuilder(),
+            modifiers,
+            new FrameDescriptorBuilder(),
             typeParameters),
         nodeFactory);
   }
 
   public ObjectMember enterTypeAlias(
       Identifier name,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
-    return doEnter(
-        new TypeAliasScope(
-            currentScope,
-            name,
-            toQualifiedName(name),
-            FrameDescriptor.newBuilder(),
-            typeParameters),
-        nodeFactory);
+    try {
+      this.isInTypeAliasScope = true;
+      return doEnter(
+          new TypeAliasScope(
+              currentScope,
+              name,
+              toQualifiedName(name),
+              new FrameDescriptorBuilder(),
+              typeParameters),
+          nodeFactory);
+    } finally {
+      this.isInTypeAliasScope = false;
+    }
   }
 
   public <T> T enterMethod(
       Identifier name,
       ConstLevel constLevel,
-      Builder frameDescriptorBuilder,
-      List<TypeParameter> typeParameters,
+      FrameSlotVariable[] bindings,
+      FrameDescriptorBuilder frameDescriptorBuilder,
+      TypeParameter[] typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
         new MethodScope(
@@ -91,26 +108,35 @@ public final class SymbolTable {
             name,
             toQualifiedName(name),
             constLevel,
+            bindings,
             frameDescriptorBuilder,
             typeParameters),
         nodeFactory);
   }
 
+  public <T> T enterEagerGenerator(Function<EagerGeneratorScope, T> nodeFactory) {
+    return doEnter(new EagerGeneratorScope(currentScope, currentScope.qualifiedName), nodeFactory);
+  }
+
   public <T> T enterForGenerator(
-      FrameDescriptor.Builder frameDescriptorBuilder,
-      FrameDescriptor.Builder memberDescriptorBuilder,
+      @Nullable FrameSlotVariable keyBinding,
+      @Nullable FrameSlotVariable valueBinding,
+      FrameDescriptorBuilder frameDescriptorBuilder,
       Function<ForGeneratorScope, T> nodeFactory) {
     return doEnter(
         new ForGeneratorScope(
             currentScope,
             currentScope.qualifiedName,
-            frameDescriptorBuilder,
-            memberDescriptorBuilder),
+            keyBinding,
+            valueBinding,
+            frameDescriptorBuilder),
         nodeFactory);
   }
 
   public <T> T enterLambda(
-      FrameDescriptor.Builder frameDescriptorBuilder, Function<LambdaScope, T> nodeFactory) {
+      FrameSlotVariable[] bindings,
+      FrameDescriptorBuilder frameDescriptorBuilder,
+      Function<LambdaScope, T> nodeFactory) {
 
     // flatten names of lambdas nested inside other lambdas for presentation purposes
     var parentScope = currentScope;
@@ -122,27 +148,42 @@ public final class SymbolTable {
     var qualifiedName = parentScope.qualifiedName + "." + parentScope.getNextLambdaName();
 
     return doEnter(
-        new LambdaScope(currentScope, qualifiedName, frameDescriptorBuilder), nodeFactory);
+        new LambdaScope(currentScope, bindings, qualifiedName, frameDescriptorBuilder),
+        nodeFactory);
+  }
+
+  public <T> T enterLetExpression(
+      @Nullable FrameSlotVariable binding, Function<LetExpressionScope, T> nodeFactory) {
+
+    // flatten names of let exprs inside other let exprs for presentation purposes
+    var parentScope = currentScope;
+    while (parentScope instanceof LetExpressionScope) {
+      parentScope = parentScope.getParent();
+    }
+
+    assert parentScope != null;
+    var qualifiedName = parentScope.qualifiedName + "." + "<let expr>";
+    return doEnter(new LetExpressionScope(currentScope, binding, qualifiedName), nodeFactory);
   }
 
   public <T> T enterProperty(
       Identifier name, ConstLevel constLevel, Function<PropertyScope, T> nodeFactory) {
     return doEnter(
         new PropertyScope(
-            currentScope, name, toQualifiedName(name), constLevel, FrameDescriptor.newBuilder()),
+            currentScope, name, toQualifiedName(name), constLevel, new FrameDescriptorBuilder()),
         nodeFactory);
   }
 
-  public <T> T enterEntry(
+  public <T> T enterEntryOrElement(
       @Nullable ExpressionNode keyNode, // null for listing elements
-      Function<EntryScope, T> nodeFactory) {
+      Function<EntryOrElementScope, T> nodeFactory) {
 
     var qualifiedName = currentScope.getQualifiedName() + currentScope.getNextEntryName(keyNode);
     var builder =
         currentScope instanceof ForGeneratorScope forScope
-            ? forScope.memberDescriptorBuilder
-            : FrameDescriptor.newBuilder();
-    return doEnter(new EntryScope(currentScope, qualifiedName, builder), nodeFactory);
+            ? forScope.frameDescriptorBuilder
+            : new FrameDescriptorBuilder();
+    return doEnter(new EntryOrElementScope(currentScope, qualifiedName, builder), nodeFactory);
   }
 
   public <T> T enterCustomThisScope(Function<CustomThisScope, T> nodeFactory) {
@@ -150,13 +191,26 @@ public final class SymbolTable {
         new CustomThisScope(currentScope, currentScope.frameDescriptorBuilder), nodeFactory);
   }
 
-  public <T> T enterAnnotationScope(Function<AnnotationScope, T> nodeFactory) {
+  public <T> T enterAnnotationScope(
+      @Nullable Identifier annotatedTargetName, Function<AnnotationScope, T> nodeFactory) {
+    var qualifiedName =
+        annotatedTargetName == null
+            ? currentScope.getQualifiedName()
+            : toQualifiedName(annotatedTargetName);
     return doEnter(
-        new AnnotationScope(currentScope, currentScope.frameDescriptorBuilder), nodeFactory);
+        new AnnotationScope(currentScope, qualifiedName, currentScope.frameDescriptorBuilder),
+        nodeFactory);
   }
 
-  public <T> T enterObjectScope(Function<ObjectScope, T> nodeFactory) {
-    return doEnter(new ObjectScope(currentScope, currentScope.frameDescriptorBuilder), nodeFactory);
+  public <T> T enterObjectScope(
+      FrameSlotVariable[] bindings,
+      @Nullable FrameDescriptorBuilder parametersFrameDescriptorBuilder,
+      Function<ObjectScope, T> nodeFactory) {
+    var frameDescriptorBuilder =
+        parametersFrameDescriptorBuilder != null
+            ? parametersFrameDescriptorBuilder
+            : currentScope.frameDescriptorBuilder;
+    return doEnter(new ObjectScope(currentScope, bindings, frameDescriptorBuilder), nodeFactory);
   }
 
   private <T, S extends Scope> T doEnter(S scope, Function<S, T> nodeFactory) {
@@ -174,30 +228,63 @@ public final class SymbolTable {
     return currentScope.qualifiedName + separator + Lexer.maybeQuoteIdentifier(name.toString());
   }
 
+  public record Member(Identifier name, int modifiers) {}
+
   public abstract static class Scope {
     private final @Nullable Scope parent;
     private final @Nullable Identifier name;
     private final String qualifiedName;
     private int lambdaCount = 0;
     private int entryCount = 0;
-    private final FrameDescriptor.Builder frameDescriptorBuilder;
+    protected final FrameDescriptorBuilder frameDescriptorBuilder;
     private final ConstLevel constLevel;
+    protected boolean isBaseModule;
+    // all for-generator slots in this scope (excludes args and let bindings).
+    protected final int[] forGeneratorSlots;
+    // all parameter slots in this scope; includes let bindings, function params, method params,
+    // but excludes object body params (they are written one level higher)
+    protected final int[] parameterSlots;
+    // The properties defined on this (lexical) scope
+    protected final Map<String, Member> properties = new HashMap<>();
+    // The methods defined on this (lexical) scope
+    protected final Map<String, Member> methods = new HashMap<>();
+    protected final Set<String> knownTypeParameterNames;
+
+    static int[] getSlots(FrameSlotVariable[] bindings) {
+      if (bindings.length == 0) {
+        return EMPTY_INT_ARRAY;
+      }
+      var ret = new int[bindings.length];
+      for (var i = 0; i < ret.length; i++) {
+        ret[i] = bindings[i].slot();
+      }
+      return ret;
+    }
 
     private Scope(
         @Nullable Scope parent,
         @Nullable Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        FrameDescriptor.Builder frameDescriptorBuilder) {
+        FrameDescriptorBuilder frameDescriptorBuilder,
+        int[] forGeneratorSlots,
+        int[] parameterSlots,
+        Set<String> knownTypeParameterNames) {
       this.parent = parent;
       this.name = name;
       this.qualifiedName = qualifiedName;
       this.frameDescriptorBuilder = frameDescriptorBuilder;
+      if (parent != null) {
+        this.isBaseModule = parent.isBaseModule;
+      }
       // const level can never decrease
       this.constLevel =
           parent != null && parent.constLevel.biggerOrEquals(constLevel)
               ? parent.constLevel
               : constLevel;
+      this.forGeneratorSlots = forGeneratorSlots;
+      this.parameterSlots = parameterSlots;
+      this.knownTypeParameterNames = knownTypeParameterNames;
     }
 
     public final @Nullable Scope getParent() {
@@ -217,32 +304,26 @@ public final class SymbolTable {
       return qualifiedName;
     }
 
-    public FrameDescriptor buildFrameDescriptor() {
-      return frameDescriptorBuilder.build();
+    /**
+     * Returns the frame slots inhabited by for-generator variables in this scope.
+     *
+     * <p>Includes outer for-generator variables.
+     */
+    public int[] getForGeneratorSlots() {
+      return forGeneratorSlots;
     }
 
     /**
-     * Returns a new descriptor builder that contains the same slots as the current scope's frame
-     * descriptor.
+     * Returns the parameter slots in this scope.
+     *
+     * <p>Includes let bindings, object body params, method params, lambda params
      */
-    public FrameDescriptor.Builder newFrameDescriptorBuilder() {
-      return newFrameDescriptorBuilder(buildFrameDescriptor());
+    public int[] getParameterSlots() {
+      return parameterSlots;
     }
 
-    /** Returns a new descriptor builder for a {@link GeneratorMemberNode} in the current scope. */
-    public FrameDescriptor.Builder newForGeneratorMemberDescriptorBuilder() {
-      return this instanceof ForGeneratorScope forScope
-          ? newFrameDescriptorBuilder(forScope.buildMemberDescriptor())
-          : FrameDescriptor.newBuilder();
-    }
-
-    private static FrameDescriptor.Builder newFrameDescriptorBuilder(FrameDescriptor descriptor) {
-      var builder = FrameDescriptor.newBuilder();
-      for (var i = 0; i < descriptor.getNumberOfSlots(); i++) {
-        builder.addSlot(
-            descriptor.getSlotKind(i), descriptor.getSlotName(i), descriptor.getSlotInfo(i));
-      }
-      return builder;
+    public FrameDescriptor buildFrameDescriptor() {
+      return frameDescriptorBuilder.build();
     }
 
     public @Nullable TypeParameter getTypeParameter(String name) {
@@ -274,14 +355,29 @@ public final class SymbolTable {
      */
     public int getConstDepth() {
       var depth = -1;
-      var lexicalScope = getLexicalScope();
-      while (lexicalScope.getConstLevel() == ConstLevel.ALL) {
-        depth += 1;
-        var parent = lexicalScope.getParent();
-        if (parent == null) {
-          return depth;
+      var skipObjectBody = false;
+      for (var scope = this;
+          scope != null && scope.getConstLevel() == ConstLevel.ALL;
+          scope = scope.getParent()) {
+        if (scope instanceof EagerGeneratorScope) {
+          skipObjectBody = true;
+          continue;
         }
-        lexicalScope = parent.getLexicalScope();
+        // LambdaScope inherits constLevel but doesn't create a const scope barrier.
+        // Method scopes, let expression scopes, and for generator scopes don't level up.
+        if (scope instanceof LambdaScope
+            || scope instanceof MethodScope
+            || scope instanceof LetExpressionScope
+            || scope instanceof ForGeneratorScope) {
+          continue;
+        }
+        if (scope instanceof LexicalScope) {
+          if (scope instanceof ObjectScope && skipObjectBody) {
+            skipObjectBody = false;
+            continue;
+          }
+          depth += 1;
+        }
       }
       return depth;
     }
@@ -302,7 +398,7 @@ public final class SymbolTable {
             || value instanceof Boolean
             || value instanceof VmDuration
             || value instanceof VmDataSize) {
-          return "[" + value + "]";
+          return "[" + VmUtils.toPklString(value) + "]";
         }
       }
 
@@ -318,6 +414,31 @@ public final class SymbolTable {
       return curr;
     }
 
+    public final Scope skipLambdaAndLetScopes() {
+      var curr = this;
+      while (curr.isLambdaScope() || curr.isLetScope()) {
+        curr = curr.getParent();
+        assert curr != null : "Lambda scope always has a parent";
+      }
+      return curr;
+    }
+
+    public final boolean isAnnotationScope() {
+      return this instanceof AnnotationScope;
+    }
+
+    public final boolean isPropertyScope() {
+      return this instanceof PropertyScope;
+    }
+
+    public final boolean isMethodScope() {
+      return this instanceof MethodScope;
+    }
+
+    public final boolean isLetScope() {
+      return this instanceof LetExpressionScope;
+    }
+
     public final boolean isModuleScope() {
       return this instanceof ModuleScope;
     }
@@ -326,8 +447,12 @@ public final class SymbolTable {
       return this instanceof ClassScope;
     }
 
+    public final boolean isObjectScope() {
+      return this instanceof ObjectScope;
+    }
+
     public final boolean isClassMemberScope() {
-      var effectiveScope = skipLambdaScopes();
+      var effectiveScope = skipLambdaAndLetScopes();
       var parent = effectiveScope.parent;
       if (parent == null) return false;
 
@@ -340,6 +465,13 @@ public final class SymbolTable {
     }
 
     public final boolean isCustomThisScope() {
+      if (this instanceof LetExpressionScope) {
+        var myParent = parent;
+        while (myParent instanceof LetExpressionScope) {
+          myParent = myParent.getParent();
+        }
+        return myParent instanceof CustomThisScope;
+      }
       return this instanceof CustomThisScope;
     }
 
@@ -351,89 +483,534 @@ public final class SymbolTable {
       return this instanceof ForGeneratorScope;
     }
 
+    public final boolean isTypeAliasScope() {
+      return this instanceof TypeAliasScope;
+    }
+
     public ConstLevel getConstLevel() {
       return constLevel;
     }
+
+    public void addProperty(Identifier name, int modifiers) {
+      var prevProperty = this.properties.put(name.toString(), new Member(name, modifiers));
+      if (prevProperty != null
+          && !VmModifier.hasSameModifier(prevProperty.modifiers, modifiers, VmModifier.LOCAL)) {
+        // this can happen in when generators:
+        //
+        // ```
+        // when (cond) {
+        //   local prop = 1
+        // } else {
+        //   prop = 2
+        // }
+        // ```
+        //
+        // this can't happen with methods; object methods can only be `local`.
+        this.properties.put(
+            name.toString(), new Member(name, modifiers | VmModifier.AMBIGUOUS_LOCALITY));
+      }
+    }
+
+    public void addMethod(Identifier name, int modifiers) {
+      this.methods.put(name.toString(), new Member(name, modifiers));
+    }
+
+    public final VariableResolution resolveVariable(String name) {
+      var resolved =
+          resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp), null);
+      if (resolved != null) {
+        return resolved;
+      }
+      if (!isBaseModule) {
+        if (BaseModuleMembers.hasProperty(name)) {
+          return new ImplicitBaseProperty();
+        }
+      }
+      return new VariableResolution.ImplicitThisProperty();
+    }
+
+    public final MethodResolution resolveMethod(String name) {
+      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp), null);
+      if (resolved != null) {
+        return resolved;
+      }
+      if (!isBaseModule) {
+        if (BaseModuleMembers.hasMethod(name)) {
+          return new ImplicitBaseMethod();
+        }
+      }
+      return new ImplicitThisMethod();
+    }
+
+    public @Nullable TypeParameterResolution resolveTypeParameter(String name) {
+      if (!knownTypeParameterNames.contains(name)) {
+        return null;
+      }
+
+      return resolveLexical(
+          (scope, levelUp) -> ((Scope) scope).doResolveTypeParameter(name, levelUp),
+          (scope, levelUp) -> scope.doResolveTypeParameter(name, levelUp));
+    }
+
+    protected @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      return null;
+    }
+
+    @FunctionalInterface
+    private interface ResolutionFunction<Scope, T> {
+      @Nullable T apply(Scope scope, int levelUp);
+    }
+
+    @SuppressWarnings("unchecked")
+    private @Nullable <R> R resolveLexical(
+        ResolutionFunction<LexicalScope, R> fun,
+        @Nullable ResolutionFunction<TypeAliasScope, R> aliasFun) {
+      var levelsUp = 0;
+      var shouldSkip = false;
+      var skippedObjectScope = false;
+      for (var scope = this; scope != null; scope = scope.getParent()) {
+        // for headers resolve variables one scope up
+        if (scope instanceof EagerGeneratorScope) {
+          shouldSkip = true;
+          continue;
+        }
+        // annotations on class members don't level up
+        if (scope instanceof AnnotationScope && scope.getParent() instanceof ClassScope) {
+          levelsUp--;
+        }
+        if (aliasFun != null && scope instanceof TypeAliasScope typeAliasScope) {
+          // when resolving type params, also visit TypeAliasScopes with aliasFun
+          var result = aliasFun.apply(typeAliasScope, levelsUp);
+          if (result != null) return result;
+        } else if (scope instanceof LexicalScope lex) {
+          if (shouldSkip && !(scope instanceof ForGeneratorScope)) {
+            if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
+              // skipping the object scope should now see the object body params, because the params
+              // are one level higher than the body itself.
+              var result = fun.apply(objectScope, levelsUp);
+              if (result instanceof Parameter parameter) {
+                return (R) new Parameter(parameter.slot(), parameter.levelsUp() - 1);
+              }
+              levelsUp++;
+            }
+            // An EagerGeneratorScope (for `when` predicates) skipped an ObjectScope.
+            // The ObjectScope may become a parse-time-invisible amend function at runtime,
+            // so for-gen variables at levelsUp == 0 need ReadFrameSlotNode
+            // (which calls skipInvisibleScopes) rather than ReadExactFrameSlotNode.
+            if (scope instanceof ObjectScope) {
+              skippedObjectScope = true;
+            }
+            shouldSkip = false;
+            continue;
+          }
+          var result = fun.apply(lex, levelsUp);
+          if (result != null) {
+            if (result instanceof ForGeneratorVariableOrLetBinding p && skippedObjectScope) {
+              return (R) new ForGeneratorVariableOrLetBinding(p.slot(), p.levelsUp(), true);
+            }
+            return result;
+          }
+          if (scope instanceof MethodScope
+              || scope instanceof ForGeneratorScope
+              || scope instanceof LetExpressionScope) {
+            // fors, methods, and let exprs don't level up
+            continue;
+          }
+          levelsUp++;
+          if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
+            levelsUp++;
+          }
+        }
+      }
+      return null;
+    }
   }
 
-  private interface LexicalScope {}
+  public interface LexicalScope {
+    @Nullable VariableResolution doResolveProperty(String name, int levelsUp);
+
+    @Nullable MethodResolution doResolveMethod(String name, int levelsUp);
+  }
 
   public static class ObjectScope extends Scope implements LexicalScope {
-    private ObjectScope(Scope parent, Builder frameDescriptorBuilder) {
+    private final FrameSlotVariable[] bindings;
+
+    /**
+     * NOTE: object body params desugar to wrapping this object with a lambda call.
+     *
+     * <p>So, the object itself does not contribute to parameter slots in the object's frame
+     * descriptor.
+     *
+     * <p>This code:
+     *
+     * <pre>{@code
+     * foo { param ->
+     *   res = param
+     * }
+     * }</pre>
+     *
+     * Is sugar for:
+     *
+     * <pre>{@code
+     * foo = (param) -> (super.foo.apply(param)) {
+     *   res = param
+     * }
+     * }</pre>
+     */
+    private ObjectScope(
+        Scope parent, FrameSlotVariable[] bindings, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
           parent,
           parent.getNameOrNull(),
           parent.getQualifiedName(),
           ConstLevel.NONE,
-          frameDescriptorBuilder);
+          frameDescriptorBuilder,
+          parent.forGeneratorSlots,
+          EMPTY_INT_ARRAY,
+          parent.knownTypeParameterNames);
+      this.bindings = bindings;
+    }
+
+    public boolean hasParams() {
+      return bindings.length > 0;
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      // Underscore is a discard identifier and should not be resolvable
+      if (name.equals("_")) {
+        return null;
+      }
+      var prop = properties.get(name);
+      if (prop != null) {
+        return new VariableResolution.LexicalProperty(false, prop.modifiers, levelsUp);
+      }
+      for (var binding : bindings) {
+        if (binding.name().equals(name)) {
+          // params are on a higher level than the properties
+          return new VariableResolution.Parameter(binding.slot(), levelsUp + 1);
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      var method = methods.get(name);
+      if (method != null) {
+        return new LexicalMethod(true, false, false, method.modifiers, levelsUp);
+      }
+      return null;
     }
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    private final List<TypeParameter> typeParameters;
+    private final TypeParameter[] typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
         Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        Builder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
-      super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder);
+        FrameDescriptorBuilder frameDescriptorBuilder,
+        TypeParameter[] typeParameters,
+        int[] forGeneratorSlots,
+        int[] parameterSlots) {
+      super(
+          parent,
+          name,
+          qualifiedName,
+          constLevel,
+          frameDescriptorBuilder,
+          forGeneratorSlots,
+          parameterSlots,
+          extendTypeParams(parent.knownTypeParameterNames, typeParameters));
       this.typeParameters = typeParameters;
+    }
+
+    private static Set<String> extendTypeParams(Set<String> base, TypeParameter[] typeParams) {
+      var res = new HashSet<>(base);
+      for (var typeParam : typeParams) {
+        res.add(typeParam.name());
+      }
+      return res;
+    }
+
+    public int getTypeParameterCount() {
+      return typeParameters.length;
     }
 
     @Override
     public @Nullable TypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
-        if (name.equals(param.getName())) return param;
+        if (name.equals(param.name())) return param;
       }
       return null;
     }
   }
 
   public static final class ModuleScope extends Scope implements LexicalScope {
-    private final ModuleInfo moduleInfo;
 
-    public ModuleScope(ModuleInfo moduleInfo) {
-      super(null, null, moduleInfo.getModuleName(), ConstLevel.NONE, FrameDescriptor.newBuilder());
+    private final ModuleInfo moduleInfo;
+    @LateInit private boolean isClosed;
+    private final boolean isAmend;
+
+    public ModuleScope(ModuleInfo moduleInfo, boolean isBaseModule) {
+      super(
+          null,
+          null,
+          moduleInfo.getModuleName(),
+          ConstLevel.NONE,
+          new FrameDescriptorBuilder(),
+          EMPTY_INT_ARRAY,
+          EMPTY_INT_ARRAY,
+          Set.of());
+      this.isBaseModule = isBaseModule;
       this.moduleInfo = moduleInfo;
+      this.isAmend = moduleInfo.isAmend();
+    }
+
+    public void setModifiers(int modifiers) {
+      this.isClosed = VmModifier.isClosed(modifiers);
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      var member = properties.get(name);
+      if (member != null) {
+        return new LexicalProperty(true, member.modifiers, levelsUp);
+      }
+      return null;
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      var method = methods.get(name);
+      if (method == null) return null;
+      var isObjectMethod = isAmend && VmModifier.isLocal(method.modifiers);
+      return new LexicalMethod(isObjectMethod, isClosed, true, method.modifiers, levelsUp);
     }
   }
 
-  public static final class MethodScope extends TypeParameterizableScope {
-    public MethodScope(
+  public static final class MethodScope extends TypeParameterizableScope implements LexicalScope {
+    private final FrameSlotVariable[] bindings;
+
+    MethodScope(
         Scope parent,
         Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        Builder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
-      super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder, typeParameters);
+        FrameSlotVariable[] bindings,
+        FrameDescriptorBuilder frameDescriptorBuilder,
+        TypeParameter[] typeParameters) {
+      super(
+          parent,
+          name,
+          qualifiedName,
+          constLevel,
+          frameDescriptorBuilder,
+          typeParameters,
+          EMPTY_INT_ARRAY,
+          getSlots(bindings));
+      this.bindings = bindings;
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      return resolveParameter(name, bindings, levelsUp);
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      return null;
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      if (result.variance() != org.pkl.core.TypeParameter.Variance.INVARIANT) {
+        throw new PklBugException(
+            "found type parameter variance modifier found on a method declaration");
+      }
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.METHOD, levelsUp);
     }
   }
 
   public static final class LambdaScope extends Scope implements LexicalScope {
+    private final FrameSlotVariable[] bindings;
+
     public LambdaScope(
-        Scope parent, String qualifiedName, FrameDescriptor.Builder frameDescriptorBuilder) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
+        Scope parent,
+        FrameSlotVariable[] bindings,
+        String qualifiedName,
+        FrameDescriptorBuilder frameDescriptorBuilder) {
+      super(
+          parent,
+          null,
+          qualifiedName,
+          parent.getConstLevel(),
+          frameDescriptorBuilder,
+          EMPTY_INT_ARRAY,
+          getSlots(bindings),
+          parent.knownTypeParameterNames);
+      this.bindings = bindings;
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      return resolveParameter(name, bindings, levelsUp);
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      return null;
+    }
+  }
+
+  public static final class LetExpressionScope extends Scope implements LexicalScope {
+    public static final Object LET_BINDING_SLOT = new Object();
+    private final @Nullable FrameSlotVariable binding;
+
+    private static @Nullable Identifier getParentName(Scope parent) {
+      while (parent != null && parent.name == null) {
+        parent = parent.getParent();
+      }
+      return parent == null ? null : parent.name;
+    }
+
+    private static int[] getMyParameterSlots(Scope parent, @Nullable FrameSlotVariable binding) {
+      var parentSlots = parent.parameterSlots;
+      if (binding == null) {
+        return parentSlots;
+      }
+      return ArrayUtils.append(parentSlots, binding.slot());
+    }
+
+    public LetExpressionScope(
+        Scope parent, @Nullable FrameSlotVariable binding, String qualifiedName) {
+      super(
+          parent,
+          getParentName(parent),
+          qualifiedName,
+          parent.getConstLevel(),
+          parent.frameDescriptorBuilder,
+          parent.forGeneratorSlots,
+          getMyParameterSlots(parent, binding),
+          parent.knownTypeParameterNames);
+      this.binding = binding;
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      if (name.equals("_") || binding == null) {
+        return null;
+      }
+      if (name.equals(binding.name())) {
+        return new ForGeneratorVariableOrLetBinding(binding.slot(), levelsUp, false);
+      }
+      return null;
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      return null;
+    }
+  }
+
+  // A generator scope that is resolved eagerly and one level above
+  public static final class EagerGeneratorScope extends Scope {
+    private static FrameDescriptorBuilder getFrameDescriptorBuilder(Scope parent) {
+      if (parent instanceof ObjectScope objectScope && objectScope.hasParams()) {
+        return parent.frameDescriptorBuilder;
+      }
+      var grandParent = parent.parent;
+      assert grandParent != null;
+      return grandParent.frameDescriptorBuilder;
+    }
+
+    private static int[] getForGeneratorSlots(Scope parent) {
+      var grandParent = parent.parent;
+      assert grandParent != null;
+      return grandParent.forGeneratorSlots;
+    }
+
+    private static int[] getParameterSlots(Scope parent) {
+      var grandParent = parent.parent;
+      assert grandParent != null;
+      return grandParent.parameterSlots;
+    }
+
+    private EagerGeneratorScope(Scope parent, String qualifiedName) {
+      super(
+          parent,
+          null,
+          qualifiedName,
+          ConstLevel.NONE,
+          getFrameDescriptorBuilder(parent),
+          getForGeneratorSlots(parent),
+          getParameterSlots(parent),
+          parent.knownTypeParameterNames);
     }
   }
 
   public static final class ForGeneratorScope extends Scope implements LexicalScope {
-    private final FrameDescriptor.Builder memberDescriptorBuilder;
+    private final @Nullable FrameSlotVariable keyBinding;
+    private final @Nullable FrameSlotVariable valueBinding;
+
+    private static int[] getMyForGeneratorSlots(
+        Scope parentScope,
+        @Nullable FrameSlotVariable keyBinding,
+        @Nullable FrameSlotVariable valueBinding) {
+      var slots = parentScope.forGeneratorSlots;
+      if (keyBinding != null && valueBinding != null) {
+        return ArrayUtils.append(slots, keyBinding.slot(), valueBinding.slot());
+      }
+      if (keyBinding != null) {
+        return ArrayUtils.append(slots, keyBinding.slot());
+      }
+      if (valueBinding != null) {
+        return ArrayUtils.append(slots, valueBinding.slot());
+      }
+      return slots;
+    }
+
+    // for-generators execute in the frame above their enclosing object.
+    // so, the parameters of the scope outside that object is visible.
+    //
+    // e.g. this for-generator reads param `it` as levels up == 0
+    // ```
+    // (it) -> new Listing {
+    //   for (elem in it) {
+    //     doSomething(elem)
+    //   }
+    // }
+    // ```
+    private static int[] getMyParameterSlots(Scope parent) {
+      if (parent instanceof ObjectScope) {
+        var grandParent = parent.parent;
+        assert grandParent != null;
+        return grandParent.parameterSlots;
+      }
+      return parent.parameterSlots;
+    }
 
     public ForGeneratorScope(
         Scope parent,
         String qualifiedName,
-        FrameDescriptor.Builder frameDescriptorBuilder,
-        FrameDescriptor.Builder memberDescriptorBuilder) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
-      this.memberDescriptorBuilder = memberDescriptorBuilder;
-    }
-
-    public FrameDescriptor buildMemberDescriptor() {
-      return memberDescriptorBuilder.build();
+        @Nullable FrameSlotVariable keyBinding,
+        @Nullable FrameSlotVariable valueBinding,
+        FrameDescriptorBuilder frameDescriptorBuilder) {
+      super(
+          parent,
+          null,
+          qualifiedName,
+          ConstLevel.NONE,
+          frameDescriptorBuilder,
+          getMyForGeneratorSlots(parent, keyBinding, valueBinding),
+          getMyParameterSlots(parent),
+          parent.knownTypeParameterNames);
+      this.keyBinding = keyBinding;
+      this.valueBinding = valueBinding;
     }
 
     @Override
@@ -441,6 +1018,22 @@ public final class SymbolTable {
       var parent = getParent();
       assert parent != null;
       return parent.getNextEntryName(keyNode);
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      if (keyBinding != null && keyBinding.name().equals(name)) {
+        return new ForGeneratorVariableOrLetBinding(keyBinding.slot(), levelsUp, false);
+      }
+      if (valueBinding != null && valueBinding.name().equals(name)) {
+        return new ForGeneratorVariableOrLetBinding(valueBinding.slot(), levelsUp, false);
+      }
+      return null;
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      return null;
     }
   }
 
@@ -450,26 +1043,76 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        FrameDescriptor.Builder frameDescriptorBuilder) {
-      super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder);
+        FrameDescriptorBuilder frameDescriptorBuilder) {
+      super(
+          parent,
+          name,
+          qualifiedName,
+          constLevel,
+          frameDescriptorBuilder,
+          // object members inherit the for-generator slots of the parent for-generator, if it
+          // exists.
+          parent instanceof ForGeneratorScope ? parent.forGeneratorSlots : EMPTY_INT_ARRAY,
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
-  public static final class EntryScope extends Scope {
-    public EntryScope(
-        Scope parent, String qualifiedName, FrameDescriptor.Builder frameDescriptorBuilder) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
+  public static final class EntryOrElementScope extends Scope {
+    public EntryOrElementScope(
+        Scope parent, String qualifiedName, FrameDescriptorBuilder frameDescriptorBuilder) {
+      super(
+          parent,
+          null,
+          qualifiedName,
+          ConstLevel.NONE,
+          frameDescriptorBuilder,
+          parent instanceof ForGeneratorScope ? parent.forGeneratorSlots : EMPTY_INT_ARRAY,
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
   public static final class ClassScope extends TypeParameterizableScope implements LexicalScope {
+    private final boolean isClosed;
+
     public ClassScope(
         Scope parent,
         Identifier name,
         String qualifiedName,
-        Builder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
-      super(parent, name, qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder, typeParameters);
+        int modifiers,
+        FrameDescriptorBuilder frameDescriptorBuilder,
+        TypeParameter[] typeParameters) {
+      super(
+          parent,
+          name,
+          qualifiedName,
+          ConstLevel.MODULE,
+          frameDescriptorBuilder,
+          typeParameters,
+          EMPTY_INT_ARRAY,
+          EMPTY_INT_ARRAY);
+      isClosed = VmModifier.isClosed(modifiers);
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      var member = properties.get(name);
+      if (member == null) return null;
+      return new LexicalProperty(false, member.modifiers, levelsUp);
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      var member = methods.get(name);
+      if (member == null) return null;
+      return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.CLASS, -1);
     }
   }
 
@@ -478,9 +1121,23 @@ public final class SymbolTable {
         Scope parent,
         Identifier name,
         String qualifiedName,
-        FrameDescriptor.Builder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
-      super(parent, name, qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder, typeParameters);
+        FrameDescriptorBuilder frameDescriptorBuilder,
+        TypeParameter[] typeParameters) {
+      super(
+          parent,
+          name,
+          qualifiedName,
+          ConstLevel.MODULE,
+          frameDescriptorBuilder,
+          typeParameters,
+          parent.forGeneratorSlots,
+          parent.parameterSlots);
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.TYPEALIAS, -1);
     }
   }
 
@@ -488,35 +1145,45 @@ public final class SymbolTable {
    * A scope where {@code this} has a special meaning (type constraint, object member predicate).
    *
    * <p>Technically, a scope where {@code this} isn't {@code frame.getArguments()[0]}, but the value
-   * at an auxiliary slot identified by {@link CustomThisScope#FRAME_SLOT_ID}.
+   * at an auxiliary slot identified by {@link VmUtils#CUSTOM_THIS_FRAME_SLOT_ID}.
    */
   public static final class CustomThisScope extends Scope {
-    public static final Object FRAME_SLOT_ID =
-        new Object() {
-          @Override
-          public String toString() {
-            return "customThisSlot";
-          }
-        };
 
-    public CustomThisScope(Scope parent, FrameDescriptor.Builder frameDescriptorBuilder) {
+    public CustomThisScope(Scope parent, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
           parent,
           parent.getNameOrNull(),
           parent.getQualifiedName(),
           ConstLevel.NONE,
-          frameDescriptorBuilder);
+          frameDescriptorBuilder,
+          parent.forGeneratorSlots,
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
-  public static final class AnnotationScope extends Scope implements LexicalScope {
-    public AnnotationScope(Scope parent, FrameDescriptor.Builder frameDescriptorBuilder) {
+  public static final class AnnotationScope extends Scope {
+    public AnnotationScope(
+        Scope parent, String qualifiedName, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
           parent,
           parent.getNameOrNull(),
-          parent.getQualifiedName(),
+          qualifiedName,
           ConstLevel.MODULE,
-          frameDescriptorBuilder);
+          frameDescriptorBuilder,
+          EMPTY_INT_ARRAY,
+          EMPTY_INT_ARRAY,
+          parent.knownTypeParameterNames);
     }
+  }
+
+  private static @Nullable VariableResolution resolveParameter(
+      String name, FrameSlotVariable[] bindings, int levelsUp) {
+    for (var binding : bindings) {
+      if (name.equals(binding.name())) {
+        return new Parameter(binding.slot(), levelsUp);
+      }
+    }
+    return null;
   }
 }

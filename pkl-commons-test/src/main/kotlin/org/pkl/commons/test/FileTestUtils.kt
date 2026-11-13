@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,19 @@ object FileTestUtils {
       ?: workingDir.parent.parent.takeIf { it.resolve("settings.gradle.kts").exists() }
       ?: throw AssertionError("Failed to locate root project directory.")
   }
-  val selfSignedCertificate: Path by lazy {
+
+  val selfSignedCertificateP12: Path by lazy {
+    rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.p12")
+  }
+
+  val selfSignedCertificatePem: Path by lazy {
     rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.pem")
   }
 
+  val selfSignedCertificatePassword = "password"
+
   fun writeCertificateWithMissingLines(dir: Path): Path {
-    val lines = selfSignedCertificate.readLines()
+    val lines = selfSignedCertificatePem.readLines()
     // drop some lines in the middle
     return dir.resolve("invalidCerts.pem").writeLines(lines.take(5) + lines.takeLast(5))
   }

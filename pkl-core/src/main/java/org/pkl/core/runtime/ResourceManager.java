@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.IoUtils;
 
 public final class ResourceManager {
   private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
@@ -86,7 +88,7 @@ public final class ResourceManager {
           .build();
     } catch (SecurityManagerException
         | PackageLoadError
-        | HttpClientInitException
+        | HttpClientException
         | ExternalReaderProcessException e) {
       throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
     }
@@ -95,15 +97,27 @@ public final class ResourceManager {
 
   @TruffleBoundary
   public Optional<Object> read(URI resourceUri, @Nullable Node readNode) {
+    var reader = getResourceReader(resourceUri);
+    URI normalizedUri;
+    try {
+      normalizedUri =
+          IoUtils.normalizeUri(resourceUri, reader != null && reader.hasHierarchicalUris());
+    } catch (ExternalReaderProcessException | IOException e) {
+      throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
+    }
     return resources.computeIfAbsent(
-        resourceUri.normalize(),
+        normalizedUri,
         (uri) -> {
-          try {
-            securityManager.checkReadResource(uri);
-          } catch (SecurityManagerException e) {
-            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
+          // hack: we don't want to call `checkReadResource` here for these resources because those
+          // readers defer to HttpClient to do the actual checks.
+          if (!(reader instanceof ResourceReaders.HttpResource)
+              && !(reader instanceof ResourceReaders.HttpsResource)) {
+            try {
+              securityManager.checkReadResource(uri);
+            } catch (SecurityManagerException e) {
+              throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
+            }
           }
-          var reader = getResourceReader(uri);
           if (reader == null) {
             throw new VmExceptionBuilder()
                 .withOptionalLocation(readNode)

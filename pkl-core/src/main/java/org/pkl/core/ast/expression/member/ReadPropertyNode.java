@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,21 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessError;
+import org.pkl.core.util.ErrorMessages;
 
 @NodeInfo(shortName = ".")
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 @NodeChild(value = "receiverNode", type = ExpressionNode.class)
 public abstract class ReadPropertyNode extends ExpressionNode {
   protected final Identifier propertyName;
@@ -61,11 +64,48 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     this(sourceSection, propertyName, MemberLookupMode.EXPLICIT_RECEIVER, false);
   }
 
+  protected abstract ExpressionNode getReceiverNode();
+
+  protected String getReferenceErrorHint(VmReference reference, VmReferenceAccessError err) {
+    var myType = reference.getReferentType();
+    return switch (err.getErrorType()) {
+      case CANNOT_FIND_MEMBER ->
+          err.getType().equals(myType)
+              ? ErrorMessages.create("cannotFindPropertyInType", propertyName, myType)
+              : ErrorMessages.create(
+                  "cannotFindPropertyInType2", propertyName, myType, err.getType());
+      case EXTERNAL_MEMBER ->
+          ErrorMessages.create("cannotReferenceExternalProperty", propertyName, err.getType());
+      case DEFAULT_MEMBER ->
+          ErrorMessages.create(
+              "cannotReferenceDefaultProperty",
+              ((VmType.ClassType) err.getType()).getVmClass().getSimpleName());
+      case EXTERNAL_CLASS ->
+          ErrorMessages.create(
+              "cannotReferencePropertyInExternalClass", propertyName, err.getType());
+    };
+  }
+
+  @Specialization
+  protected VmReference evalReference(VmReference receiver) {
+    assert lookupMode == MemberLookupMode.EXPLICIT_RECEIVER;
+    try {
+      return receiver.withPropertyAccess(propertyName);
+    } catch (VmReferenceAccessError err) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError("cannotFindPropertyInObjectNoHint", propertyName, receiver.getType())
+          .withHint(getReferenceErrorHint(receiver, err))
+          .build();
+    }
+  }
+
   // This method effectively covers `VmObject receiver` but is implemented in a more
   // efficient way. See:
   // https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces
   @Specialization(guards = "receiver.getClass() == cachedClass", limit = "99")
   protected Object evalObject(
+      VirtualFrame frame,
       Object receiver,
       @Cached("getVmObjectSubclassOrNull(receiver)") Class<? extends VmObjectLike> cachedClass,
       @Cached("create()") IndirectCallNode callNode) {
@@ -76,15 +116,16 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();
-    throw cannotFindProperty(object);
+    throw cannotFindProperty(VmUtils.getOwner(frame), object);
   }
 
   // specializations for all other types
   @Specialization(guards = "receiver.getClass() == cachedClass", limit = "99")
   protected Object evalOther(
+      VirtualFrame frame,
       Object receiver,
       @Cached("receiver.getClass()") @SuppressWarnings("unused") Class<?> cachedClass,
-      @Cached("resolveProperty(receiver)") ClassProperty resolvedProperty,
+      @Cached("resolveProperty(getOwner(frame), receiver)") ClassProperty resolvedProperty,
       @Cached("createCallNode(resolvedProperty)") DirectCallNode callNode) {
 
     return callNode.call(receiver, resolvedProperty.getOwner(), resolvedProperty.getName());
@@ -95,13 +136,13 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     return value instanceof VmObjectLike objectLike ? objectLike.getClass() : null;
   }
 
-  protected ClassProperty resolveProperty(Object value) {
+  protected ClassProperty resolveProperty(VmObjectLike owner, Object value) {
     var clazz = VmUtils.getClass(value);
     var propertyDef = clazz.getProperty(propertyName);
     if (propertyDef != null) return propertyDef;
 
     CompilerDirectives.transferToInterpreter();
-    throw cannotFindProperty(clazz.getPrototype());
+    throw cannotFindProperty(owner, clazz.getPrototype());
   }
 
   // This method should only be used for standard library properties implemented as nodes.
@@ -111,26 +152,32 @@ public abstract class ReadPropertyNode extends ExpressionNode {
   }
 
   @TruffleBoundary
-  private VmException cannotFindProperty(VmObjectLike receiver) {
+  private VmException cannotFindProperty(VmObjectLike owner, VmObjectLike receiver) {
     return exceptionBuilder()
-        .cannotFindProperty(
-            receiver, propertyName, true, lookupMode != MemberLookupMode.EXPLICIT_RECEIVER)
+        .cannotFindProperty(receiver, owner, propertyName, true, lookupMode, getReceiverNode())
         .build();
   }
 
-  // only ever need to check once per node because `needsConst` is only true in the case of implicit
-  // receivers inside class (and module) bodies, and the const-ness of a resolved property cannot be
-  // changed by subclasses.
+  // Only ever need to check once per node because `needsConst` is only true in the case of:
+  //
+  // * implicit receiver in class (and module) bodies
+  // * `local const` object members
+  //
+  // and the const-ness of a resolved property cannot be changed by subclasses / amending objects.
   private void checkConst(VmObjectLike receiver) {
     if (needsConst && !isConstChecked) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       var property = receiver.getVmClass().getProperty(propertyName);
-      if (property == null) {
+      if (property != null && !property.isConst()) {
+        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
+      }
+      var objectMember = receiver.getMember(propertyName);
+      if (objectMember != null && !objectMember.isConst()) {
+        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
+      }
+      if (property == null && objectMember == null) {
         // fall through; `cannotFindProperty` gets thrown when we attempt to read the property.
         return;
-      }
-      if (!property.isConst()) {
-        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
       }
       isConstChecked = true;
     }

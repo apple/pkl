@@ -41,3 +41,9 @@ foo7 =
     1
   else
     2
+
+foo8 =
+  if (/* c */ bar)
+    1
+  else
+    2

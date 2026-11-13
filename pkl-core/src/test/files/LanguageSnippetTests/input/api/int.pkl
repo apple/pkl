@@ -1,5 +1,7 @@
 amends "../snippetTest.pkl"
 
+import "pkl:math"
+
 facts {
   ["isEven"] {
     (-124).isEven
@@ -92,7 +94,7 @@ examples {
     0.floor
     (-0).floor
   }
-  
+
   ["toRadixString()"] {
     123.toRadixString(16)
     123.toRadixString(2)
@@ -101,15 +103,17 @@ examples {
     (-123).toRadixString(16)
     (-123).toRadixString(2)
     (-123).toRadixString(33)
-    
+
     0.toRadixString(16)
     0.toRadixString(2)
     0.toRadixString(33)
-    
+
     (-0).toRadixString(16)
     (-0).toRadixString(2)
     (-0).toRadixString(33)
-    
+
+    math.minInt.toRadixString(10)
+
     module.catch(() -> (-123).toRadixString(-1))
     module.catch(() -> (-123).toRadixString(64))
   }
@@ -159,7 +163,7 @@ examples {
     (-123).toFixed(2)
     0.toFixed(3)
     (-0).toFixed(4)
-    
+
     123456789.toFixed(1)
     123456789.toFixed(2)
     123456789.toFixed(3)

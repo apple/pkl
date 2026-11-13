@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -24,13 +25,13 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 
 /**
  * Object literal that contains entries (and possibly properties) but not elements. Additionally, at
@@ -38,7 +39,7 @@ import org.pkl.core.util.Nullable;
  * used.) Example: `foo { ["on" + "e"] = 1 }`
  */
 // IDEA: don't materialize frames if all members have constant values
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @Children private final ExpressionNode[] keyNodes;
   private final ObjectMember[] values;
@@ -92,9 +93,24 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
     return new VmMapping(frame.materialize(), parent, createMapMembers(frame));
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isMappingClass()", "checkIsValidMappingAmendment()"})
+  protected Object evalNullWithMappingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalMapping(frame, (VmMapping) defaultValue);
+  }
+
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(frame.materialize(), parent, createMapMembers(frame), parent.getLength());
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(guards = {"getClass(defaultValue).isDynamicClass()"})
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalDynamic(frame, (VmDynamic) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
@@ -107,10 +123,12 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
         parent.getLength());
   }
 
-  @Specialization
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkIsValidListingAmendment()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListing(frame, (VmListing) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidFunctionAmendment(parent)")
@@ -121,6 +139,18 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(guards = {"parent == getMappingClass()", "checkIsValidMappingAmendment()"})
@@ -152,7 +182,12 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @Fallback
   @TruffleBoundary
   protected Object fallback(Object parent) {
-    return elementsEntriesFallback(parent, values[0], false);
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
+    return elementsEntriesFallback(value, values[0], false);
   }
 
   @ExplodeLoop
@@ -162,6 +197,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
     EconomicMaps.putAll(result, members);
 
     for (var i = 0; i < keyNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       var key = keyNodes[i].executeGeneric(frame);
       var value = values[i];
       var previousValue = EconomicMaps.put(result, key, value);

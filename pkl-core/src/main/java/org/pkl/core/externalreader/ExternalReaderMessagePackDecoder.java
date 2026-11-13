@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.externalreader;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.Value;
@@ -26,7 +27,6 @@ import org.pkl.core.messaging.BaseMessagePackDecoder;
 import org.pkl.core.messaging.DecodeException;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.Message.Type;
-import org.pkl.core.util.Nullable;
 
 final class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
 

@@ -1,0 +1,98 @@
+amends "../snippetTest.pkl"
+
+import "pkl:net"
+
+local gClef = "\u{1D11E}"
+
+facts {
+  ["encodeUrlComponent()"] {
+    net.encodeUrlComponent("a b&c") == "a%20b%26c"
+    net.encodeUrlComponent("münchen") == "m%C3%BCnchen"
+    // only the unreserved characters are left alone
+    net.encodeUrlComponent("aZ09-._~") == "aZ09-._~"
+    net.encodeUrlComponent("!'()*") == "%21%27%28%29%2A"
+    net.encodeUrlComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
+    net.encodeUrlComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
+    // an encoded component is safe to drop into any component of a URL
+    new net.Url {
+      scheme = "https"
+      rawHost = "example.com"
+      rawPath = "/" + net.encodeUrlComponent("a/b")
+    }.pathSegments == List("a/b")
+  }
+
+  ["decodeUrlComponent()"] {
+    net.decodeUrlComponent("a%20b%26c") == "a b&c"
+    net.decodeUrlComponent("m%C3%BCnchen") == "münchen"
+    // "+" is not a space; that is an application/x-www-form-urlencoded convention
+    net.decodeUrlComponent("a+b") == "a+b"
+    // a literal "%" has to be written as "%25"
+    net.decodeUrlComponent("100%25") == "100%"
+    net.decodeUrlComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
+    net.decodeUrlComponent("%FF") == "\u{FFFD}"
+    net.decodeUrlComponent(net.encodeUrlComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+    net.decodeUrlComponent(net.encodeUrlComponent(gClef)) == gClef
+  }
+
+  ["buildQuery()"] {
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "1" }; ["b"] { "2" } }) == "a=1&b=2"
+    net.buildQuery(new Mapping {}) == ""
+    // a name is written once per value it holds
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "1"; "2" } }) == "a=1&a=2"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "1"; "2" }; ["b"] { "3" } }) == "a=1&a=2&b=3"
+    // one that holds no values is left out entirely
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] {} }) == ""
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] {}; ["b"] { "1" } }) == "b=1"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "" } }) == "a="
+    net.buildQuery(new Mapping<String, Listing<String>> { [""] { "1" } }) == "=1"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a b"] { "c d" } }) == "a+b=c+d"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["a&b"] { "1=2" } }) == "a%26b=1%3D2"
+    // only the ASCII alphanumerics and "*-._" are left alone, as WHATWG's serializer does
+    net.buildQuery(new Mapping<String, Listing<String>> { ["q"] { "aZ09*-._" } }) == "q=aZ09*-._"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["q"] { "~!'()" } }) == "q=%7E%21%27%28%29"
+
+    local parameters = new Mapping<String, Listing<String>> {
+      ["a b"] { "c&d" }
+      ["e"] { "1"; "2" }
+      ["f"] { "" }
+      ["münchen"] { "a+b" }
+    }
+    net.Url("https://example.com?" + net.buildQuery(parameters)).queryParameters == parameters
+    (net.Url("https://example.com/a?q=1")) {
+      rawQuery = net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "b c" } })
+    }.toString() == "https://example.com/a?a=b+c"
+  }
+
+  ["parseQuery()"] {
+    net.parseQuery("a=1&b=2") == new Mapping<String, Listing<String>> { ["a"] { "1" }; ["b"] { "2" } }
+    net.parseQuery("") == new Mapping {}
+    net.parseQuery("a=1&&b=2") == new Mapping<String, Listing<String>> { ["a"] { "1" }; ["b"] { "2" } }
+    // a bare name holds no value, so it contributes nothing
+    net.parseQuery("a") == new Mapping {}
+    net.parseQuery("a&b=1") == new Mapping<String, Listing<String>> { ["b"] { "1" } }
+    net.parseQuery("a=") == new Mapping<String, Listing<String>> { ["a"] { "" } }
+    net.parseQuery("=1") == new Mapping<String, Listing<String>> { [""] { "1" } }
+    // a name that repeats holds every value it is given, in order
+    net.parseQuery("a=1&a=2") == new Mapping<String, Listing<String>> { ["a"] { "1"; "2" } }
+    net.parseQuery("a=1&b=2&a=3")
+      == new Mapping<String, Listing<String>> { ["a"] { "1"; "3" }; ["b"] { "2" } }
+    // only the first "=" separates a name from its value
+    net.parseQuery("a=1=2") == new Mapping<String, Listing<String>> { ["a"] { "1=2" } }
+    net.parseQuery("a%20b=c%20d") == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
+    net.parseQuery("a+b=c+d") == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
+    net.parseQuery("q=m%C3%BCnchen") == new Mapping<String, Listing<String>> { ["q"] { "münchen" } }
+    net.parseQuery("q=%7E*") == new Mapping<String, Listing<String>> { ["q"] { "~*" } }
+
+    // this is how a Url reads its own query
+    local url = net.Url("https://example.com?a=1&a=2&b=3")
+    net.parseQuery(url.rawQuery!!) == url.queryParameters
+    // and the inverse of buildQuery()
+    local parameters = new Mapping<String, Listing<String>> {
+      ["a b"] { "c&d" }
+      ["e"] { "1"; "2" }
+      ["f"] { "" }
+      ["münchen"] { "a+b" }
+    }
+    net.parseQuery(net.buildQuery(parameters)) == parameters
+  }
+}

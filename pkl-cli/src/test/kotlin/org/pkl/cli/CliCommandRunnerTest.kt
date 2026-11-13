@@ -1286,4 +1286,41 @@ class CliCommandRunnerTest {
       ;;"""
       )
   }
+
+  @Test
+  fun `exec of amended subcommand`() {
+    writePklFile(
+      "sub.pkl",
+      """
+      extends "pkl:Command"
+      target: String
+      """
+        .trimIndent(),
+    )
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        """
+        amends "pkl:Command"
+        import "sub.pkl"
+
+        command {
+          name = "root"
+          subcommands {
+            new sub { target = "foo" }
+          }
+        }
+        """
+          .trimIndent(),
+      )
+    val output = runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("sub"))
+    assertThat(output)
+      .isEqualTo(
+        """
+        target = "foo"
+
+        """
+          .trimIndent()
+      )
+  }
 }

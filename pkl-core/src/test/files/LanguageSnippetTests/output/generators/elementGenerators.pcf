@@ -18,6 +18,8 @@ res1d {
   6
   20
 }
+res1e {}
+res1f {}
 res2 {
   2
   6
@@ -334,4 +336,16 @@ whenWithElse {
   "24"
   20
   40
+}
+nestedForsWithinLambda {
+  "hi"
+  new {
+    2
+    3
+  }
+  "hi"
+  new {
+    3
+    4
+  }
 }
