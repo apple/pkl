@@ -4,6 +4,7 @@ checksumPlugin = "1.4.0"
 # 5.0.3 is the last version compatible with Kotlin 2.2
 clikt = "5.0.3"
 commonMark = "0.30.0"
+diffx = "0.9.0"
 downloadTaskPlugin = "5.7.0"
 eclipseCdtFormat = "12.2"
 errorProne = "2.50.0"
@@ -31,6 +32,7 @@ graalVmSha256-windows-x64 = "789d2af1c06c3c24f402d2d4a711bdbb19b36f7d8c74afe6a95
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
 ideaExtPlugin = "1.4.1"
+izumiReflect = "2.3.10"
 javaPoet = "0.17.0"
 javaxInject = "1"
 jextractPlugin = "1.+"
@@ -64,6 +66,10 @@ nuValidator = "26.7.3"
 paguro = "3.10.3"
 protobufPlugin = "0.10.0"
 protobuf = "4.35.1"
+scala = "3.3.7"
+scalafmt = "3.10.0"
+scalaTest = "3.2.19"
+scalaTestPlusJunit = "3.2.19.0"
 shadowPlugin = "9.5.1"
 slf4j = "2.0.20"
 snakeYaml = "3.0.1"
@@ -76,6 +82,7 @@ clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt
 cliktMarkdown = { group = "com.github.ajalt.clikt", name = "clikt-markdown", version.ref = "clikt" }
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
+diffx = { group = "com.softwaremill.diffx", name = "diffx-scalatest-should_3", version.ref = "diffx" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
@@ -85,6 +92,7 @@ geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = 
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
+izumiReflect = { group = "dev.zio", name = "izumi-reflect_3", version.ref = "izumiReflect" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
@@ -122,6 +130,9 @@ paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" 
 protobuf = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
 protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
+scalaLibrary = { group = "org.scala-lang", name = "scala3-library_3", version.ref = "scala" }
+scalaTest = { group = "org.scalatest", name = "scalatest_3", version.ref = "scalaTest" }
+scalaTestPlusJunit = { group = "org.scalatestplus", name = "junit-5-12_3", version.ref = "scalaTestPlusJunit" }
 shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
