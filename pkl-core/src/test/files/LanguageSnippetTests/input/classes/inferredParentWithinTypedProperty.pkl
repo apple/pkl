@@ -1,0 +1,14 @@
+qux = 4
+
+class Foo {
+  bar: Listing(!isEmpty)
+
+  foo: Listing = bar
+}
+
+foo: Foo = new {
+  bar = new Listing { 1; 2; 3 }
+  foo = new {
+    qux
+  }
+}
