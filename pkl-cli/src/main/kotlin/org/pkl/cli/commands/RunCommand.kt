@@ -28,6 +28,7 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import java.net.URI
 import org.pkl.cli.CliCommandRunner
+import org.pkl.cli.closingEngineIfNative
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProfileOptions
@@ -79,13 +80,15 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
       }
     }
     val cliBaseOptions = baseOptions.baseOptions(listOf(module!!), projectOptions)
-    CliCommandRunner(
-        cliBaseOptions,
-        reservedFlagNames,
-        reservedFlagShortNames,
-        if (showHelp) args + listOf("--help") else args,
-        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
-      )
-      .run()
+    closingEngineIfNative {
+      CliCommandRunner(
+          cliBaseOptions,
+          reservedFlagNames,
+          reservedFlagShortNames,
+          if (showHelp) args + listOf("--help") else args,
+          profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
+        )
+        .run()
+    }
   }
 }
