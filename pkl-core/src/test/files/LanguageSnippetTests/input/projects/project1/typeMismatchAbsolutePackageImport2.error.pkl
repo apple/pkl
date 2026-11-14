@@ -1,0 +1,4 @@
+import "@birds/Bird.pkl"
+
+// the value's class extends a `Bird` that was imported via an absolute `package:` URI
+res: Bird|String = import("../../../input-helper/projects/absoluteBirdImport.pkl")

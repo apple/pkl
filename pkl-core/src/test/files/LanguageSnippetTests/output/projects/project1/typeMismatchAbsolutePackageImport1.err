@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Module version conflict: Expected value of type `birds.Bird` defined by module `projectpackage://localhost:0/birds@0.5.0#/Bird.pkl`, but got type `birds.Bird` defined by module `package://localhost:0/birds@0.5.0#/Bird.pkl`.
+
+
+x | res: Bird = import("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl")
+         ^^^^
+at typeMismatchAbsolutePackageImport1.error#res (file:///$snippetsDir/input/projects/project1/typeMismatchAbsolutePackageImport1.error.pkl)
+
+Module `projectpackage://localhost:0/birds@0.5.0#/Bird.pkl` was imported as a project dependency, but module `package://localhost:0/birds@0.5.0#/Bird.pkl` was imported with an absolute `package:` URI.
+Pkl treats these as two different modules, so their types are not compatible, even if they come from the same package.
+To fix this, import the module the same way everywhere, for example with dependency notation (`@<dependency name>/...`).
+
+x | res: Bird = import("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeMismatchAbsolutePackageImport1.error#res (file:///$snippetsDir/input/projects/project1/typeMismatchAbsolutePackageImport1.error.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
