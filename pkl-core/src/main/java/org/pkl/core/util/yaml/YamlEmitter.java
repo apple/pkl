@@ -292,12 +292,20 @@ public abstract class YamlEmitter {
   private void emitMultilineString(String str, int newlineIndex, StringBuilder currIndent) {
     currIndent.append(indent);
 
+    var length = str.length();
+
+    // YAML detects the indentation of a block scalar from its first non-empty line.
+    // If that line starts with a space, emit an explicit indentation indicator.
+    var firstNonNewlineIndex = 0;
+    while (firstNonNewlineIndex < length && str.charAt(firstNonNewlineIndex) == '\n') {
+      firstNonNewlineIndex++;
+    }
+
     builder.append('|');
-    if (str.charAt(0) == ' ') {
+    if (firstNonNewlineIndex < length && str.charAt(firstNonNewlineIndex) == ' ') {
       builder.append(indent.length());
     }
 
-    var length = str.length();
     if (str.charAt(length - 1) == '\n') {
       if (length == 1 || str.charAt(length - 2) == '\n') {
         builder.append('+');

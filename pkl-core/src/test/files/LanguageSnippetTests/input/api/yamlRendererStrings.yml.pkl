@@ -59,6 +59,9 @@ i3 = "one\u{7}two\nthree"
 j1 = " one\ntwo"
 j2 = "   one\ntwo"
 j3 = "one\n   two"
+j4 = "\n one"
+j5 = "\n\n   one\ntwo"
+j6 = "\n   \none"
 
 // trailing spaces in multiline strings
 k1 = "one\ntwo "
