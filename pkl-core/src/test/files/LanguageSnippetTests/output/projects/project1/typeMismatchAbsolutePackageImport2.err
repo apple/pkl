@@ -10,9 +10,8 @@ at typeMismatchAbsolutePackageImport2.error#res (file:///$snippetsDir/input/proj
   Module version conflict: Expected value of type `birds.Bird` defined in module `projectpackage://localhost:0/birds@0.5.0#/Bird.pkl`, but got type `absoluteBirdImport`, which extends `birds.Bird` defined in module `package://localhost:0/birds@0.5.0#/Bird.pkl`.
   Value: new absoluteBirdImport { name = ?; favoriteFruit = ? }
 
-  Module `projectpackage://localhost:0/birds@0.5.0#/Bird.pkl` was imported as a project dependency, but module `package://localhost:0/birds@0.5.0#/Bird.pkl` was imported with an absolute `package:` URI.
-  Pkl treats these as two different modules, so their types are not compatible, even if they come from the same package.
-  To fix this, import the module the same way everywhere, for example with dependency notation (`@<dependency name>/...`).
+  Expected a dependency notation import (`@<dependency name>/...`), but got a type from an absolute package URI.
+  These two are not compatible with each other.
 
 x | res: Bird|String = import("../../../input-helper/projects/absoluteBirdImport.pkl")
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

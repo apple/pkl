@@ -242,14 +242,11 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var expectedModuleUri = moduleUriOf((VmClass) expectedType);
       var actualModuleUri = moduleUriOf(conflictingClass);
       if (!isProjectVsAbsolutePackageImport(expectedModuleUri, actualModuleUri)) return;
-      var projectPackageUri =
-          "projectpackage".equalsIgnoreCase(expectedModuleUri.getScheme())
-              ? expectedModuleUri
-              : actualModuleUri;
-      var packageUri = projectPackageUri == expectedModuleUri ? actualModuleUri : expectedModuleUri;
-      builder.append(
-          ErrorMessages.createIndented(
-              "typeMismatchProjectPackageHint", indent, projectPackageUri, packageUri));
+      var errorHint =
+          expectedModuleUri.getScheme().equalsIgnoreCase("projectpackage")
+              ? "typeMismatchProjectPackageHint1"
+              : "typeMismatchProjectPackageHint2";
+      builder.append(ErrorMessages.createIndented(errorHint, indent));
     }
   }
 

@@ -6,9 +6,8 @@ x | res: Bird = import("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl")
          ^^^^
 at typeMismatchAbsolutePackageImport1.error#res (file:///$snippetsDir/input/projects/project1/typeMismatchAbsolutePackageImport1.error.pkl)
 
-Module `projectpackage://localhost:0/birds@0.5.0#/Bird.pkl` was imported as a project dependency, but module `package://localhost:0/birds@0.5.0#/Bird.pkl` was imported with an absolute `package:` URI.
-Pkl treats these as two different modules, so their types are not compatible, even if they come from the same package.
-To fix this, import the module the same way everywhere, for example with dependency notation (`@<dependency name>/...`).
+Expected a dependency notation import (`@<dependency name>/...`), but got a type from an absolute package URI.
+These two are not compatible with each other.
 
 x | res: Bird = import("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl")
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
