@@ -38,6 +38,7 @@ import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
+import org.pkl.core.packages.DependencyMetadata
 import org.pkl.core.util.IoUtils
 
 class CliProjectPackagerTest {
@@ -580,6 +581,91 @@ class CliProjectPackagerTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `package a remote dependency resolved to a local project`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project")
+    val bridgeDir = tempDir.resolve("bridge")
+    val fruitDir = tempDir.resolve("fruit")
+    projectDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://example.com/mypackage.zip"
+      }
+
+      dependencies {
+        ["remoteFruit"] { uri = "package://localhost:0/fruit@1.0.5" }
+        ["bridge"] = import("../bridge/PklProject")
+      }
+      """
+        .trimIndent(),
+    )
+    bridgeDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      package {
+        name = "bridge"
+        baseUri = "package://example.com/bridge"
+        version = "1.0.0"
+        packageZipUrl = "https://example.com/bridge.zip"
+      }
+
+      dependencies {
+        ["fruit"] = import("../fruit/PklProject")
+      }
+      """
+        .trimIndent(),
+    )
+    fruitDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      package {
+        name = "fruit"
+        baseUri = "package://localhost:0/fruit"
+        version = "1.0.6"
+        packageZipUrl = "https://example.com/fruit.zip"
+      }
+      """
+        .trimIndent(),
+    )
+
+    val projects = listOf(projectDir, bridgeDir, fruitDir)
+    val options =
+      CliBaseOptions(
+        workingDir = tempDir,
+        caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
+        testPort = packageServer.port,
+        noCache = true,
+      )
+    CliProjectResolver(options, projects, consoleWriter = StringWriter()).run()
+    CliProjectPackager(
+        options,
+        projects,
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        install = false,
+        consoleWriter = StringWriter(),
+      )
+      .run()
+
+    val metadata =
+      DependencyMetadata.parse(tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0").readString())
+    val fruitChecksum = tempDir.resolve(".out/fruit@1.0.6/fruit@1.0.6.sha256").readString()
+    val remoteFruit = metadata.dependencies.getValue("remoteFruit")
+    assertThat(remoteFruit.packageUri.toString()).isEqualTo("package://localhost:0/fruit@1.0.6")
+    assertThat(remoteFruit.checksums!!.sha256).isEqualTo(fruitChecksum)
   }
 
   @Test
