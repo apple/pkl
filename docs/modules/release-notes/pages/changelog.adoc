@@ -11,12 +11,17 @@ include::ROOT:partial$component-attributes.adoc[]
 * Fix pkl project package with multiple projects (https://github.com/apple/pkl/pull/1981[#1981]).
 * Fix subscript access on unparameterized `List`/`Listing`/`Map`/`Mapping` references (https://github.com/apple/pkl/pull/1993[#1993]).
 
+=== Additions
+
+* Add publications for pkl-server, and pkl-profiler (https://github.com/apple/pkl/pull/1995[#1995]).
+
 === Contributors ❤️
 
 Thank you to all the contributors for this release!
 
 * https://github.com/0z5a[@0z5a]
 * https://github.com/amannm[@amannm]
+* https://github.com/bioball[@bioball]
 * https://github.com/HT154[@HT154]
 * https://github.com/stackoverflow[@stackoverflow]
 
