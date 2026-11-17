@@ -347,3 +347,459 @@ external const function buildQuery(parameters: Mapping<String, Listing<String>>)
 /// net.parseQuery("q=a+b&bare") == new Mapping { ["q"] = new Listing { "a b" } }
 /// ```
 external const function parseQuery(query: String): Mapping<String, Listing<String>>
+
+// language=RegExp
+local const hex: String = "[0-9a-fA-F]"
+
+// language=RegExp
+local const decByte: String = #"(25[0-5]|2[0-4][0-9]|[01]?[0-9]{1,2})"#
+
+local const ipv4String = #"(\#(decByte)\.){3}\#(decByte)"#
+
+local const ipv6String =
+  #"""
+  (?x:
+  (\#(hex){1,4}:){7}\#(hex){1,4}           # x:x:x:x:x:x:x:x
+  | (\#(hex){1,4}:){1,7}:                    # x:: … x:x:x:x:x:x:x::
+  | (\#(hex){1,4}:){6}:\#(hex){1,4}          # x:x:x:x:x:x::x
+  | (\#(hex){1,4}:){5}(:\#(hex){1,4}){1,2}   # x:x:x:x:x::x … x:x:x:x:x::x:x
+  | (\#(hex){1,4}:){4}(:\#(hex){1,4}){1,3}   # x:x:x:x::x … x:x:x:x::x:x:x
+  | (\#(hex){1,4}:){3}(:\#(hex){1,4}){1,4}   # x:x:x::x … x:x:x::x:x:x:x
+  | (\#(hex){1,4}:){2}(:\#(hex){1,4}){1,5}   # x:x::x … x:x::x:x:x:x:x
+  | \#(hex){1,4}:(:\#(hex){1,4}){1,6}        # x::x … x::x:x:x:x:x:x
+  | :((:\#(hex){1,4}){1,7}|:)                # ::x … ::x:x:x:x:x:x:x, ::
+  | (?: # IPv6 with trailing IPv4
+  (\#(hex){1,4}:){6}                      # x:x:x:x:x:x:
+  | (\#(hex){1,4}:){5}:                     # x:x:x:x:x::
+  | (\#(hex){1,4}:){4}(:\#(hex){1,4})?:     # x:x:x:x:: … x:x:x:x::x:
+  | (\#(hex){1,4}:){3}(:\#(hex){1,4}){0,2}: # x:x:x:: … x:x:x::x:x:
+  | (\#(hex){1,4}:){2}(:\#(hex){1,4}){0,3}: # x:x:: … x:x::x:x:x:
+  | \#(hex){1,4}:(:\#(hex){1,4}){0,4}:      # x:: … x::x:x:x:x:
+  | :(:\#(hex){1,4}){0,5}:                  # :: … ::x:x:x:x:x:
+  )\#(ipv4String)                           # …d.d.d.d
+  | \#(nonGlobalIpv6String)%[^%]+ # Scoped address
+  )
+  """#
+
+// language=RegExp
+local const nonGlobalIpv6String =
+  #"""
+  (?xi-U:
+  ff[0-9a-f][0-9a-d](?:                    # multicast (FF00::/8 with "scop" less than E (global scope))
+  (:[0-9a-f]{1,4}){7}                        # FFxx:x:x:x:x:x:x:x
+  | :(:|(:[0-9a-f]{1,4}){1,6})               # FFxx:: … FFxx::x:x:x:x:x:x
+  | :[0-9a-f]:(:|(:[0-9a-f]{1,4}){1,5})      # FFxx:x:: … FFxx:x::x:x:x:x:x
+  | (:[0-9a-f]){2}:(:|(:[0-9a-f]{1,4}){1,4}) # FFxx:x:x:: … FFxx:x:x::x:x:x:x
+  | (:[0-9a-f]){3}:(:|(:[0-9a-f]{1,4}){1,3}) # FFxx:x:x:x:: … FFxx:x:x:x::x:x:x
+  | (:[0-9a-f]){4}:(:|(:[0-9a-f]{1,4}){1,2}) # FFxx:x:x:x:x:: … FFxx:x:x:x:x::x:x
+  | (:[0-9a-f]){5}:(:|(:[0-9a-f]{1,4}))      # FFxx:x:x:x:x:x:: … FFxx:x:x:x:x:x::x
+  | (:[0-9a-f]){6}::                         # FFxx:x:x:x:x:x:x::
+  )
+  | fe80(?:                                # link-local unicast (FE80::/10)
+  (:0{1,4}){3}(?:                            # FE80:0:0:0…
+  :: | :(:[0-9a-f]{1,4}){1,3}                # FE80:0:0:0:: … FE80:0:0:0::x:x:x
+  | :[0-9a-f]{1,4}:(:|(:[0-9a-f]{1,4}){1,2}) # FE80:0:0:0:x:: … FE80:0:0:0:x::x:x
+  | (:[0-9a-f]{1,4}){2}::([0-9a-f]{1,4})?    # FE80:0:0:0:x:x:: … FE80:0:0:0:x:x::x
+  | (:[0-9a-f]{1,4}){3}:(:|[0-9a-f]{1,4})    # FE80:0:0:0:x:x:x::, FE80:0:0:0:x:x:x:x
+  )
+  | (:0{1,4}){0,2}:(:|(:[0-9a-f]{1,4}){1,4})  # FE80:: … FE80:0:0::x:x:x:x
+  )
+  )
+  """#
+
+/// A string that contains either an IPv4 or IPv6 address.
+@Since { version = "0.34.0" }
+typealias IpAddressString = Ipv4AddressString | Ipv6AddressString
+
+/// A string that contains either an IPv4 or IPv6 address and port.
+@Since { version = "0.34.0" }
+typealias IpAddressPortString = Ipv4AddressPortString | Ipv6AddressPortString
+
+/// A string that contains either an IPv4 or IPv6 CIDR range.
+@Since { version = "0.34.0" }
+typealias IpCidrString = Ipv4CidrString | Ipv6CidrString
+
+/// A string that contains either a IPv4 of IPv6 network.
+@Since { version = "0.34.0" }
+typealias IpNetworkString = Ipv4NetworkString | Ipv6NetworkString
+
+/// A string that contains an IPv4 address.
+@Since { version = "0.34.0" }
+typealias Ipv4AddressString = String(matches(Regex(ipv4String)))
+
+/// A string that contains an IPv6 address.
+///
+/// IPv6 unicast and multicast addresses of non-global scope except for the unspecified address and the loopback address
+/// may include a scope ID suffix, e.g. `"fe80::1234%1"`.
+/// Site-local unicast addresses (`fec0::/10`) are deprecated and thus are considered to be global unicast addresses.
+@Since { version = "0.34.0" }
+typealias Ipv6AddressString = String(matches(Regex(ipv6String)))
+
+/// A string that contains an IPv4 address and port.
+@Since { version = "0.34.0" }
+typealias Ipv4AddressPortString = String(matches(Regex(#"\#(ipv4String):[0-9]{1,5}"#)))
+
+/// A string that contains an IPv6 address and port.
+@Since { version = "0.34.0" }
+typealias Ipv6AddressPortString = String(matches(Regex(#"\[\#(ipv6String)\]:[0-9]{1,5}"#)))
+
+/// A string that contains an IPv4 network CIDR.
+@Since { version = "0.34.0" }
+typealias Ipv4CidrString = String(matches(Regex(#"\#(ipv4String)/([12]?[0-9]|3[012])"#)))
+
+/// A string that contains an IPv6 network CIDR.
+@Since { version = "0.34.0" }
+typealias Ipv6CidrString =
+  String(matches(Regex(#"\#(ipv6String)/([1-9]?[0-9]|1([01][0-9]|2[0-8]))"#)))
+
+/// A string that contains a strict IPv4 network, i.e. an IPv4 CIDR block whose address has no bits set beyond its prefix.
+///
+/// For example, `"10.0.0.0/24"` qualifies, but `"10.0.0.1/24"` does not, since the latter has host bits set.
+@Since { version = "0.34.0" }
+typealias Ipv4NetworkString = Ipv4CidrString(baseIsFirstAddress)
+
+/// A string that contains a strict IPv6 network, i.e. an IPv6 CIDR block whose address has no bits set beyond its prefix.
+///
+/// For example, `"2001:db8::/32"` qualifies, but `"2001:db8::1/32"` does not, since the latter has host bits set.
+@Since { version = "0.34.0" }
+typealias Ipv6NetworkString = Ipv6CidrString(baseIsFirstAddress)
+
+local const baseIsFirstAddress: (IpCidrString) -> Boolean = (str: IpCidrString) ->
+  let (net = IpNetwork(str)) net.base == net.firstAddress
+
+/// Creates an [IpAddress] from an [IpAddressString].
+@Since { version = "0.34.0" }
+external const function IpAddress(ip: IpAddressString): IpAddress
+
+/// An IP address.
+@Since { version = "0.34.0" }
+abstract external class IpAddress extends Any {
+  /// The canonical string representation of the address.
+  fixed stringValue: String = toString()
+
+  /// The byte buffer representation of the address.
+  ///
+  /// The highest byte of the address is at index `0`.
+  hidden bytes: Bytes
+
+  /// Tells if this address is the unspecified address.
+  hidden isUnspecified: Boolean
+
+  /// Tells if this address is the loopback address.
+  hidden isLoopback: Boolean
+
+  /// The reverse DNS (PTR record) hostname for this address.
+  hidden reverseDnsHostname: String
+
+  abstract function add(n: Int): this
+
+  /// Return a [List] of IP addresses between [this] and [other], inclusive.
+  ///
+  /// If [other] represents a lower address, an empty list is returned.
+  abstract function rangeTo(other: this): List<this>
+
+  abstract function toString(): IpAddressString
+}
+
+/// Creates an [Ipv4Address] from an [Ipv4AddressString].
+@Since { version = "0.34.0" }
+external const function Ipv4Address(ip: Ipv4AddressString): Ipv4Address
+
+/// An IPv4 address, as defined by [RFC 791](https://www.rfc-editor.org/info/rfc791/).
+///
+/// Facts:
+/// ```
+/// net.Ipv4Address("127.0.0.1").stringValue == "127.0.0.1"
+/// net.Ipv4Address("127.0.0.1").bytes == Bytes(0x7f, 0x00, 0x00, 0x01)
+/// ```
+@Since { version = "0.34.0" }
+external class Ipv4Address extends IpAddress {
+  /// The byte buffer representation of the address.
+  ///
+  /// The highest byte of the address is at index `0`.
+  hidden bytes: Bytes(length == 4)
+
+  /// Tells if this address is the unspecified address (`0.0.0.0`).
+  hidden isUnspecified: Boolean
+
+  /// Tells if this address is the loopback address (`127.x.x.x`).
+  hidden isLoopback: Boolean
+
+  /// The reverse DNS (PTR record) hostname for this address.
+  hidden reverseDnsHostname: String
+
+  /// Return the IP address [n] addresses higher than [this].
+  ///
+  /// Wraps on overflow.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Ipv4Address("0.0.0.0").add(1) == net.Ipv4Address("0.0.0.1") 
+  /// net.Ipv4Address("255.255.255.255").add(1) == net.Ipv4Address("0.0.0.0") 
+  /// net.Ipv4Address("0.0.0.0").add(math.maxUInt32 + 1) == net.Ipv4Address("0.0.0.0") 
+  /// ``` 
+  external function add(n: Int): this
+
+  /// Return a [List] of IPv4 addresses between [this] and [other], inclusive.
+  ///
+  /// If [other] represents a lower address, an empty list is returned.
+  external function rangeTo(other: this): List<this>
+
+  external function toString(): Ipv4AddressString
+}
+
+/// Creates an [Ipv6Address] from an [Ipv6AddressString].
+@Since { version = "0.34.0" }
+external const function Ipv6Address(ip: Ipv6AddressString): Ipv6Address
+
+@Since { version = "0.34.0" }
+external class Ipv6Address extends IpAddress {
+  /// The byte buffer representation of the address.
+  ///
+  /// The highest byte of the address is at index `0`.
+  hidden bytes: Bytes(length == 16)
+
+  /// Tells if this address is the unspecified address (`::`).
+  hidden isUnspecified: Boolean
+
+  /// Tells if this address is the loopback address (`::1`).
+  hidden isLoopback: Boolean
+
+  /// The reverse DNS (PTR record) hostname for this address.
+  hidden reverseDnsHostname: String
+
+  /// Tells if this address is an IPv4-mapped address (`::ffff:0:0/96`).
+  hidden isIpv4Mapped: Boolean
+
+  /// Tells if this address is an IPv4-embedded address using the Well-Known Prefix (`64:ff9b::/96`)
+  /// described by [RFC 6052 §2.1](https://tools.ietf.org/html/rfc6052#section-2.1).
+  hidden isIpv4Embedded: Boolean
+
+  /// The scope ID associated with this address, or [null] if the scope is unknown or not applicable.
+  ///
+  /// Only addresses of [non-global scope][isNonGlobalScope] are allowed to have a scope ID.
+  hidden scopeId: String(isNonGlobalScope)?
+
+  /// Tells if this address has non-global unicast or multicast scope.
+  ///
+  /// Returns [true] for link-local unicast and for multicast with "scop" field less than global.
+  /// Returns [false] for the [unspecified address][isUnspecified] and the [loopback address][isLoopback],
+  /// and for site-local addresses as per [RFC 4291 §2.5.7](https://tools.ietf.org/html/rfc4291#section-2.5.7).
+  hidden isNonGlobalScope: Boolean
+
+  /// Return the IP address [n] addresses higher than [this].
+  ///
+  /// Wraps on overflow.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Ipv6Address("::").add(1) == net.Ipv6Address("::1") 
+  /// net.Ipv6Address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff").add(1) == net.Ipv6Address("::") 
+  /// ``` 
+  external function add(n: Int): this
+
+  /// Return a [List] of IPv6 addresses between [this] and [other], inclusive.
+  ///
+  /// If [other] represents a lower address, an empty list is returned.
+  external function rangeTo(other: this): List<this>
+
+  /// Returns a new [Ipv6Address] with the specified [scopeId]. 
+  external function withScopeId(scopeId: String(isNonGlobalScope)?): this
+
+  /// Returns the expanded string representation of this IPv6 address.
+  ///
+  /// In this representation:
+  /// * Abbreviation of zeroes using `::` does not occur.
+  /// * Each segment is zero-padded to 4 digits.
+  ///
+  /// As with [stringValue] and [toString()], if [isIpv4Mapped] or [isIpv4Embedded] are `true`,
+  /// then the final 4 bytes are rendered as an IPv4 address.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Ipv6Address("::").toExpandedString() == "0000:0000:0000:0000:0000:0000:0000:0000"
+  /// net.Ipv6Address("::ffff:127.0.0.1").toExpandedString() == "0000:0000:0000:0000:0000:ffff:127.0.0.1"
+  /// ```
+  external function toExpandedString(): Ipv6AddressString
+
+  /// Returns the canonical string representation of this IPv6 address.
+  ///
+  /// If [isIpv4Mapped] or [isIpv4Embedded] are `true`, then the final 4 bytes are rendered as an IPv4 address.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Ipv6Address("0000::0:00:000").toString() == "::"
+  /// net.Ipv6Address("0000::ffff:127.0.0.1").toString() == "::ffff:127.0.0.1"
+  /// ```
+  external function toString(): Ipv6AddressString
+}
+
+@Since { version = "0.34.0" }
+external const function IpNetwork(cidr: IpCidrString): IpNetwork
+
+@Since { version = "0.34.0" }
+abstract external class IpNetwork extends Any {
+  /// The base IP address of this network.
+  base: IpAddress
+
+  /// The CIDR prefix of this network.
+  prefix: UInt
+
+  /// The first IP address in this network.
+  hidden firstAddress: IpAddress
+
+  /// The last IP address in this network.
+  hidden lastAddress: IpAddress
+
+  /// The reverse DNS zone name for this network.
+  ///
+  /// This is [null] if [prefix] is smaller than the largest network representable as a reverse DNS zone.
+  hidden reverseDnsZone: String?
+
+  /// Returns [true] if [ip] is in this network.
+  abstract function contains(ip: IpAddress): Boolean
+
+  /// Return [true] if this network contains every IP in [other].
+  abstract function containsNetwork(other: this): Boolean
+
+  /// Return [true] if this network contains every IP in [other] or vice versa.
+  abstract function overlaps(other: this): Boolean
+
+  /// Returns all subnets of this network with prefix [targetPrefix].
+  abstract function subdivideTo(targetPrefix: UInt): List<this>
+
+  /// Returns the [n]th subnet of this network with prefix [targetPrefix].
+  abstract function subnet(targetPrefix: UInt, n: UInt): this
+
+  /// Returns the string representation of this network.
+  ///
+  /// Equivalent to `"\(base)/\(prefix)"`.
+  abstract function toString(): IpCidrString
+}
+
+/// Creates an [Ipv4Network] from an [Ipv4CidrString].
+@Since { version = "0.34.0" }
+external const function Ipv4Network(ip: Ipv4CidrString): Ipv4Network
+
+@Since { version = "0.34.0" }
+external class Ipv4Network extends IpNetwork {
+  /// The base IPv4 address of this network.
+  base: Ipv4Address
+
+  /// The CIDR prefix of this network.
+  prefix: UInt(isBetween(0, bitWidth))
+
+  local bitWidth = 32
+
+  /// The first IPv4 address in this network.
+  hidden firstAddress: Ipv4Address
+
+  /// The last IPv4 address in this network.
+  hidden lastAddress: Ipv4Address
+
+  /// The subnet mask of this network.
+  hidden subnetMask: Ipv4Address
+
+  /// The reverse DNS zone name for this network as specified by [RFC 1035](https://www.rfc-editor.org/info/rfc1035/#section-3.5).
+  ///
+  /// This is [null] if [prefix] is smaller than the largest network representable as a reverse DNS zone.
+  hidden reverseDnsZone: String?
+
+  /// Returns [true] if [ip] is in this network.
+  external function contains(ip: IpAddress): Boolean
+
+  /// Return [true] if this network contains every IP in [other].
+  external function containsNetwork(other: this): Boolean
+
+  /// Return [true] if this network contains every IP in [other] or vice versa.
+  external function overlaps(other: this): Boolean
+
+  /// Returns all subnets of this network with prefix [targetPrefix].
+  external function subdivideTo(
+    targetPrefix: UInt(isBetween(0, bitWidth), this >= prefix),
+  ): List<this>
+
+  /// Returns the [n]th subnet of this network with prefix [targetPrefix].
+  external function subnet(
+    targetPrefix: UInt(isBetween(0, bitWidth), this >= prefix),
+    n: UInt(this < 1.shl(targetPrefix - prefix)),
+  ): this
+
+  external function toString(): Ipv4CidrString
+}
+
+/// Creates an [Ipv6Network] from an [Ipv6CidrString].
+@Since { version = "0.34.0" }
+external const function Ipv6Network(ip: Ipv6CidrString): Ipv6Network
+
+@Since { version = "0.34.0" }
+external class Ipv6Network extends IpNetwork {
+  /// The base IPv6 address of this network.
+  base: Ipv6Address
+
+  /// The CIDR prefix of this network.
+  prefix: UInt(isBetween(0, bitWidth))
+
+  local bitWidth = 128
+
+  /// The first IPv6 address in this network.
+  external hidden firstAddress: Ipv6Address
+
+  /// The last IPv6 address in this network.
+  external hidden lastAddress: Ipv6Address
+
+  /// The reverse DNS zone name for this network as specified by [RFC 8501](https://www.rfc-editor.org/info/rfc8501/).
+  ///
+  /// This is [null] if [prefix] is smaller than the largest network representable as a reverse DNS zone.
+  hidden reverseDnsZone: String?
+
+  /// Returns [true] if [ip] is in this network.
+  external function contains(ip: IpAddress): Boolean
+
+  /// Return [true] if this network contains every IP in [other].
+  external function containsNetwork(other: this): Boolean
+
+  /// Return [true] if this network contains every IP in [other] or vice versa.
+  external function overlaps(other: this): Boolean
+
+  /// Returns all subnets of this network with prefix [targetPrefix].
+  external function subdivideTo(
+    targetPrefix: UInt(isBetween(0, bitWidth), this >= prefix),
+  ): List<this>
+
+  /// Returns the [n]th subnet of this network with prefix [targetPrefix].
+  external function subnet(
+    targetPrefix: UInt(isBetween(0, bitWidth), this >= prefix),
+    n: UInt((targetPrefix - prefix < 64).implies(this < 1.shl(targetPrefix - prefix))),
+  ): this
+
+  external function toString(): Ipv6CidrString
+}
+
+/// A string that contains a MAC address
+@Since { version = "0.34.0" }
+typealias MacAddressString = String(matches(Regex(#"(\#(hex){1,2}[\.:-]){5}(\#(hex){1,2})"#)))
+
+/// Creates an [MacAddress] from an [MacAddressString].
+///
+/// Accepts `:`, `.`, or `-` as octet separators.
+@Since { version = "0.34.0" }
+external const function MacAddress(mac: MacAddressString): MacAddress
+
+/// A [MAC address](https://en.wikipedia.org/wiki/MAC_address) in the EUI-48 numbering space.
+@Since { version = "0.34.0" }
+external class MacAddress {
+  /// The canonical string representation of the address.
+  fixed stringValue: String = toString()
+
+  /// The byte buffer representation of the address.
+  ///
+  /// The highest byte of the address is at index `0`.
+  hidden bytes: Bytes(length == 6)
+
+  /// Given a [base] IPv6 network, return the IPv6 address calculated by stateless address autoconfiguration (SLAAC)
+  /// as specified by [RFC 4862](https://www.rfc-editor.org/info/rfc4862/).   
+  external function toSlaacAddress(base: Ipv6Network(prefix >= 64)): Ipv6Address
+
+  external function toString(): MacAddressString
+}

@@ -35,8 +35,48 @@ public final class NetModule extends StdLibModule {
     return UrlClass.instance;
   }
 
+  public static VmClass getIpv4AddressClass() {
+    return Ipv4AddressClass.instance;
+  }
+
+  public static VmClass getIpv6AddressClass() {
+    return Ipv6AddressClass.instance;
+  }
+
+  public static VmClass getIpv4NetworkClass() {
+    return Ipv4NetworkClass.instance;
+  }
+
+  public static VmClass getIpv6NetworkClass() {
+    return Ipv6NetworkClass.instance;
+  }
+
+  public static VmClass getMacAddressClass() {
+    return MacAddressClass.instance;
+  }
+
   private static final class UrlClass {
     static final VmClass instance = loadClass("Url");
+  }
+
+  private static final class Ipv4AddressClass {
+    static final VmClass instance = loadClass("Ipv4Address");
+  }
+
+  private static final class Ipv6AddressClass {
+    static final VmClass instance = loadClass("Ipv6Address");
+  }
+
+  private static final class Ipv4NetworkClass {
+    static final VmClass instance = loadClass("Ipv4Network");
+  }
+
+  private static final class Ipv6NetworkClass {
+    static final VmClass instance = loadClass("Ipv6Network");
+  }
+
+  private static final class MacAddressClass {
+    static final VmClass instance = loadClass("MacAddress");
   }
 
   @TruffleBoundary

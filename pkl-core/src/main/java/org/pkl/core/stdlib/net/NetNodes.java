@@ -102,4 +102,57 @@ public final class NetNodes {
       return UrlFactory.createQueryParameters(query);
     }
   }
+
+  public abstract static class IpAddress extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String addr) {
+      return addr.indexOf(':') < 0
+          ? IpMacFactories.parseIpv4Address(addr)
+          : IpMacFactories.parseIpv6Address(addr, this);
+    }
+  }
+
+  public abstract static class Ipv4Address extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String addr) {
+      return IpMacFactories.parseIpv4Address(addr);
+    }
+  }
+
+  public abstract static class Ipv6Address extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String addr) {
+      return IpMacFactories.parseIpv6Address(addr, this);
+    }
+  }
+
+  public abstract static class IpNetwork extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String cidr) {
+      return cidr.indexOf(':') < 0
+          ? IpMacFactories.parseIpv4Network(cidr)
+          : IpMacFactories.parseIpv6Network(cidr, this);
+    }
+  }
+
+  public abstract static class Ipv4Network extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String cidr) {
+      return IpMacFactories.parseIpv4Network(cidr);
+    }
+  }
+
+  public abstract static class Ipv6Network extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String cidr) {
+      return IpMacFactories.parseIpv6Network(cidr, this);
+    }
+  }
+
+  public abstract static class MacAddress extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String mac) {
+      return IpMacFactories.parseMacAddress(mac);
+    }
+  }
 }
