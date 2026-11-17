@@ -16,6 +16,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
+  id("pklPublishLibrary")
   alias(libs.plugins.protobuf)
   idea
 }
@@ -37,3 +38,14 @@ sourceSets.main { resources { exclude("**/*.proto") } }
 idea.module { generatedSourceDirs.add(file("build/generated/sources/proto/main/java")) }
 
 protobuf.protoc { artifact = libs.protoc.get().toString() }
+
+publishing {
+  publications {
+    named<MavenPublication>("library") {
+      pom {
+        url.set("https://github.com/apple/pkl/tree/main/pkl-profiler")
+        description.set("Profiling utilities for Pkl.")
+      }
+    }
+  }
+}
