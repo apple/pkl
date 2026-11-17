@@ -38,6 +38,8 @@ dependencies {
     api(projects.pklGradle)
     api(projects.pklParser)
     api(projects.pklTools)
+    api(projects.pklServer)
+    api(projects.pklProfiler)
   }
 }
 
