@@ -17,6 +17,7 @@ plugins {
   id("pklAllProjects")
   id("pklKotlinLibrary")
   id("pklNativeLifecycle")
+  id("pklPublishLibrary")
 }
 
 val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
@@ -97,3 +98,14 @@ tasks.testNativeLinuxAmd64 { dependsOn(testLinuxExecutableAmd64) }
 tasks.testNativeAlpineLinuxAmd64 { dependsOn(testAlpineExecutableAmd64) }
 
 tasks.testNativeWindowsAmd64 { dependsOn(testWindowsExecutableAmd64) }
+
+publishing {
+  publications {
+    named<MavenPublication>("library") {
+      pom {
+        url.set("https://github.com/apple/pkl/tree/main/pkl-server")
+        description.set("Message passing utilities for Pkl.")
+      }
+    }
+  }
+}
