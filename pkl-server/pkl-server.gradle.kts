@@ -104,7 +104,7 @@ publishing {
     named<MavenPublication>("library") {
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-server")
-        description.set("Message passing utilities for Pkl.")
+        description.set("Implementation of the server side of Pkl's messaging passing protocol.")
       }
     }
   }
