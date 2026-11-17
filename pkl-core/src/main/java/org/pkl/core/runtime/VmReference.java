@@ -288,11 +288,20 @@ public final class VmReference extends VmValue {
       if (!(key instanceof Long)) {
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
       }
-      normalizeTypes(ct.getTypeArguments()[0], clazz, clazz.getModuleClass(), result);
+      var typeArgs = ct.getTypeArguments();
+      if (typeArgs.length == 0) {
+        result.add(UnknownType.INSTANCE);
+        return;
+      }
+      normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass(), result);
       return;
     }
     if (clazz.isMappingClass() || clazz.isMapClass()) {
       var typeArgs = ct.getTypeArguments();
+      if (typeArgs.length == 0) {
+        result.add(UnknownType.INSTANCE);
+        return;
+      }
       var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass());
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == UnknownType.INSTANCE
