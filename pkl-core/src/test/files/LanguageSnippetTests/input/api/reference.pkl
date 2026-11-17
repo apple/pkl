@@ -150,6 +150,11 @@ mappingAnyKey = Ref<TypeHolder>(null).mappingAnyKey["foo"]
 // because VmListing/VmMapping don't track their type args
 mappingTypeArgKey = Ref<TypeHolder>(null).mappingTypeArgKey[new Listing<String> { "foo" }]
 
+rawListingSubscript = Ref<Listing>(null)[0].foo
+rawListSubscript = Ref<List>(null)[1].foo
+rawMappingSubscript = Ref<Mapping>(null)["bar"].foo
+rawMapSubscript = Ref<Map>(null)[2].foo
+
 output {
   renderer {
     converters {

@@ -66,3 +66,7 @@ bareFunctionType = "Expected value of type `pkl.ref#Reference<reference#D, Strin
 constraintInConstructor = "${null}"
 mappingAnyKey = "${null.mappingAnyKey[foo]}"
 mappingTypeArgKey = "${null.mappingTypeArgKey[new Listing { \"foo\" }]}"
+rawListingSubscript = "${null[0].foo}"
+rawListSubscript = "${null[1].foo}"
+rawMappingSubscript = "${null[bar].foo}"
+rawMapSubscript = "${null[2].foo}"
