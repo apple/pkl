@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,3 +28,19 @@ fun Path.writeFile(fileName: String, contents: String): Path {
 }
 
 fun Path.writeEmptyFile(fileName: String): Path = writeFile(fileName, "")
+
+/**
+ * The command that launches Pkl in subprocess tests: the native executable if
+ * `org.pkl.cli.testExecutable` is set, otherwise the executable jar given by `org.pkl.cli.testJar`.
+ */
+fun subprocessLauncher(): Array<String> {
+  System.getProperty("org.pkl.cli.testExecutable")?.let {
+    return arrayOf(it)
+  }
+  val jar =
+    checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
+      "neither system property `org.pkl.cli.testExecutable` nor `org.pkl.cli.testJar` is set"
+    }
+  val javaBin = ProcessHandle.current().info().command().orElseThrow()
+  return arrayOf(javaBin, "-jar", jar)
+}

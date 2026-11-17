@@ -122,10 +122,6 @@ public final class VmUtils {
     return Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
   }
 
-  public static void closeEngine() {
-    PKL_ENGINE.close(true);
-  }
-
   static VmTyped createEmptyModule() {
     return new VmTyped(createEmptyMaterializedFrame(), null, EconomicMaps.create());
   }

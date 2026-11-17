@@ -36,29 +36,13 @@ import org.junit.jupiter.api.io.TempDir
  * `-Dorg.pkl.cli.testJar=<path>` (or `-Dorg.pkl.cli.testExecutable=<path>`).
  */
 class SubprocessProfilerOutputTest {
-  /**
-   * The command that launches Pkl: the native executable if `org.pkl.cli.testExecutable` is set,
-   * otherwise the executable jar given by `org.pkl.cli.testJar`.
-   */
-  private fun launcher(): Array<String> {
-    System.getProperty("org.pkl.cli.testExecutable")?.let {
-      return arrayOf(it)
-    }
-    val jar =
-      checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
-        "neither system property `org.pkl.cli.testExecutable` nor `org.pkl.cli.testJar` is set"
-      }
-    val javaBin = ProcessHandle.current().info().command().orElseThrow()
-    return arrayOf(javaBin, "-jar", jar)
-  }
-
   private fun runTest(tempDir: Path, pklCode: String, command: Array<String>) {
     val sourceFile = tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
     val outputFile = tempDir.resolve("profile.pb.gz")
 
     val process =
       ProcessBuilder(
-          *launcher(),
+          *subprocessLauncher(),
           *command,
           "--profile-cpu-output",
           outputFile.absolutePathString(),
