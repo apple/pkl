@@ -1,0 +1,39 @@
+examples {
+  ["single"] {
+    new {
+      imports {
+        ["file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/single.pkl"] {
+          new {
+            uri = "projectpackage://example.com/a@1.0.0#/mods/one.pkl"
+          }
+        }
+        ["projectpackage://example.com/a@1.0.0#/mods/one.pkl"] {}
+      }
+      resolvedImports {
+        ["file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/single.pkl"] = "file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/single.pkl"
+        ["projectpackage://example.com/a@1.0.0#/mods/one.pkl"] = "file:///$snippetsDir/input-helper/projects/analyzeLocalPackageGlob/mods/one.pkl"
+      }
+    }
+  }
+  ["glob"] {
+    new {
+      imports {
+        ["file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/glob.pkl"] {
+          new {
+            uri = "projectpackage://example.com/a@1.0.0#/mods/one.pkl"
+          }
+          new {
+            uri = "projectpackage://example.com/a@1.0.0#/mods/two.pkl"
+          }
+        }
+        ["projectpackage://example.com/a@1.0.0#/mods/one.pkl"] {}
+        ["projectpackage://example.com/a@1.0.0#/mods/two.pkl"] {}
+      }
+      resolvedImports {
+        ["file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/glob.pkl"] = "file:///$snippetsDir/input/projects/analyzeLocalPackageGlob/glob.pkl"
+        ["projectpackage://example.com/a@1.0.0#/mods/one.pkl"] = "file:///$snippetsDir/input-helper/projects/analyzeLocalPackageGlob/mods/one.pkl"
+        ["projectpackage://example.com/a@1.0.0#/mods/two.pkl"] = "file:///$snippetsDir/input-helper/projects/analyzeLocalPackageGlob/mods/two.pkl"
+      }
+    }
+  }
+}

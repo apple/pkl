@@ -1,0 +1,3 @@
+amends "pkl:Project"
+
+dependencies { ["a"] = import(".../input-helper/projects/analyzeLocalPackageGlob/PklProject") }

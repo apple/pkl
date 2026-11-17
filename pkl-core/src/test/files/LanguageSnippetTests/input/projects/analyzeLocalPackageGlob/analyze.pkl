@@ -1,0 +1,26 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:analyze"
+import "pkl:reflect"
+
+import "glob.pkl"
+import "single.pkl"
+
+examples {
+  ["single"] {
+    analyze.importGraph(Set(reflect.Module(single).uri))
+  }
+  ["glob"] {
+    analyze.importGraph(Set(reflect.Module(glob).uri))
+  }
+}
+
+output {
+  renderer {
+    // mimick result of `pkl analyze imports` CLI command
+    converters {
+      [Map] = (it) -> it.toMapping()
+      [Set] = (it) -> it.toListing()
+    }
+  }
+}

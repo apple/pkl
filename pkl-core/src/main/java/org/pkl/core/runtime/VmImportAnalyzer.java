@@ -102,7 +102,8 @@ public class VmImportAnalyzer {
       try {
         if (entry.isGlob()) {
           var theModuleKey =
-              moduleResolver.resolve(moduleKey.resolveUri(IoUtils.toUri(entry.stringValue())));
+              moduleResolver.resolve(
+                  IoUtils.resolve(securityManager, moduleKey, IoUtils.toUri(entry.stringValue())));
           var elements =
               GlobResolver.resolveGlob(
                   securityManager,
