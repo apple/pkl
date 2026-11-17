@@ -1,0 +1,1 @@
+res = import*("@a/mods/*.pkl").toMap().mapValues((_, m) -> m.x)

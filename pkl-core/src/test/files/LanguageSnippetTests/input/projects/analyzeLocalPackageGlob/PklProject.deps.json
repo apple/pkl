@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://example.com/a@1": {
+      "type": "local",
+      "uri": "projectpackage://example.com/a@1.0.0",
+      "path": "../../../input-helper/projects/analyzeLocalPackageGlob"
+    }
+  }
+}

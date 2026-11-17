@@ -1,0 +1,1 @@
+res = Map("@a/mods/one.pkl", 1, "@a/mods/two.pkl", 2)
