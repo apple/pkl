@@ -15,7 +15,6 @@
  */
 package org.pkl.cli
 
-import com.oracle.truffle.api.TruffleOptions
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -110,9 +109,6 @@ constructor(
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
-      if (TruffleOptions.AOT) {
-        VmUtils.closeEngine()
-      }
     }
   }
 

@@ -15,7 +15,6 @@
  */
 package org.pkl.cli
 
-import com.oracle.truffle.api.TruffleOptions
 import java.io.StringWriter
 import java.io.Writer
 import org.pkl.commons.cli.*
@@ -25,7 +24,6 @@ import org.pkl.core.ModuleSource.uri
 import org.pkl.core.PklException
 import org.pkl.core.ProfilerOptions
 import org.pkl.core.TestResults
-import org.pkl.core.runtime.VmUtils
 import org.pkl.core.stdlib.test.report.JUnitReporter
 import org.pkl.core.stdlib.test.report.MinimalReporter
 import org.pkl.core.stdlib.test.report.SpecReporter
@@ -47,9 +45,6 @@ constructor(
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
-      if (TruffleOptions.AOT) {
-        VmUtils.closeEngine()
-      }
     }
   }
 

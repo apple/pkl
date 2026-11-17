@@ -87,8 +87,9 @@ tasks.jar {
 
 tasks.javadoc { enabled = false }
 
-// has its own dedicated task; see `testProfilerOutput` and `testNativeProfilerOutput` below
-tasks.test { exclude("**/SubprocessProfilerOutputTest.class") }
+// subprocess tests have their own dedicated tasks; see `testProfilerOutput` and
+// `testNativeProfilerOutput` below
+tasks.test { exclude("**/Subprocess*Test.class") }
 
 tasks.shadowJar {
   archiveFileName.set("jpkl")
@@ -112,8 +113,9 @@ val testJavaExecutable =
         // executable;
         // to verify that, we don't want to include them here)
         (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
-    // has its own dedicated task; see `testProfilerOutput` and `testNativeProfilerOutput` below
-    exclude("**/SubprocessProfilerOutputTest.class")
+    // subprocess tests have their own dedicated tasks; see `testProfilerOutput` and
+    // `testNativeProfilerOutput` below
+    exclude("**/Subprocess*Test.class")
   }
 
 // Setup `testJavaExecutable` tasks for multi-JDK testing.
@@ -223,7 +225,7 @@ val testProfilerOutput =
     dependsOn(tasks.javaExecutable)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    include("**/SubprocessProfilerOutputTest.class")
+    include("**/Subprocess*Test.class")
     systemProperty(
       "org.pkl.cli.testJar",
       tasks.javaExecutable.get().outputs.files.singleFile.absolutePath,
@@ -236,7 +238,7 @@ val testNativeProfilerOutput =
     dependsOn(tasks.assembleNative)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    include("**/SubprocessProfilerOutputTest.class")
+    include("**/Subprocess*Test.class")
     systemProperty(
       "org.pkl.cli.testExecutable",
       tasks.assembleNative.get().outputs.files.singleFile.absolutePath,
