@@ -275,12 +275,22 @@ public final class ProjectPackager {
               project.getDependencies(), moduleResolver, this.securityManager);
       for (var entry : project.getDependencies().remoteDependencies().entrySet()) {
         var resolved =
-            (RemoteDependency)
-                projectDependenciesManager.getResolvedDependency(entry.getValue().getPackageUri());
-        ret.put(
-            entry.getKey(),
-            new RemoteDependency(
-                resolved.getPackageUri().toExternalPackageUri(), resolved.getChecksums()));
+            projectDependenciesManager.getResolvedDependency(entry.getValue().getPackageUri());
+        if (resolved instanceof LocalDependency localDependency) {
+          var localPath = project.getProjectDir().resolve(localDependency.getPath()).normalize();
+          var packageUri = localDependency.getPackageUri().toExternalPackageUri();
+          var localProject = findLocalProject(project, localPath, packageUri);
+          if (localProject == null) {
+            throw new PackageLoadError("unresolvedProjectDependency", packageUri);
+          }
+          ret.put(entry.getKey(), packageLocalDependency(localProject, packageUri));
+        } else {
+          var remote = (RemoteDependency) resolved;
+          ret.put(
+              entry.getKey(),
+              new RemoteDependency(
+                  remote.getPackageUri().toExternalPackageUri(), remote.getChecksums()));
+        }
       }
       for (var entry : project.getLocalProjectDependencies().entrySet()) {
         var localProject = entry.getValue();
@@ -288,12 +298,9 @@ public final class ProjectPackager {
         var packageUri = localProject.getPackage().uri();
         var resolved = projectDependenciesManager.getResolvedDependency(packageUri);
         if (resolved instanceof LocalDependency) {
-          var packageResult = doPackage(localProject);
           ret.put(
               entry.getKey(),
-              new RemoteDependency(
-                  packageUri.toExternalPackageUri(),
-                  new Checksums(packageResult.metadataChecksum())));
+              packageLocalDependency(localProject, packageUri.toExternalPackageUri()));
         } else {
           var remoteDep = (RemoteDependency) resolved;
           ret.put(
@@ -309,6 +316,28 @@ public final class ProjectPackager {
               "unexpectedPackageLoadError", project.getProjectFileUri(), e.getMessage()),
           e);
     }
+  }
+
+  private static @Nullable Project findLocalProject(
+      Project project, Path projectDir, PackageUri packageUri) {
+    for (var localProject : project.getLocalProjectDependencies().values()) {
+      var pkg = localProject.getPackage();
+      if (localProject.getProjectDir().normalize().equals(projectDir)
+          && pkg != null
+          && pkg.uri().equals(packageUri)) {
+        return localProject;
+      }
+      var match = findLocalProject(localProject, projectDir, packageUri);
+      if (match != null) {
+        return match;
+      }
+    }
+    return null;
+  }
+
+  private RemoteDependency packageLocalDependency(Project project, PackageUri packageUri)
+      throws IOException {
+    return new RemoteDependency(packageUri, new Checksums(doPackage(project).metadataChecksum()));
   }
 
   private DependencyMetadata createDependencyMetadata(
