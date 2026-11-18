@@ -260,6 +260,8 @@ abstract class NativeImageBuild : DefaultTask() {
         }
         if (buildInfo.isNativeArch) {
           add("-march=native")
+        } else if (buildInfo.arch == Target.Arch.AMD64) {
+          add("-march=x86-64-v1")
         } else {
           add("-march=compatibility")
         }
