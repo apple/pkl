@@ -27,6 +27,7 @@ val svm: SourceSet = sourceSets.create("svm") { compileClasspath = svmClasspath 
 
 dependencies {
   api(projects.pklCore)
+  api(projects.pklMessaging)
   api(libs.clikt)
   implementation(libs.cliktMarkdown)
 

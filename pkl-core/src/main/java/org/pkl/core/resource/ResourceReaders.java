@@ -32,10 +32,6 @@ import java.util.ServiceLoader;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcess;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.externalreader.ExternalResourceResolver;
-import org.pkl.core.externalreader.ResourceReaderSpec;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -49,6 +45,10 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcess;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
+import org.pkl.messaging.externalreader.ExternalResourceResolver;
+import org.pkl.messaging.externalreader.ResourceReaderSpec;
 
 /** Predefined resource readers for OS environment variables and external properties. */
 public final class ResourceReaders {
@@ -747,19 +747,27 @@ public final class ResourceReaders {
 
     @Override
     public Optional<Object> read(URI uri) throws IOException {
-      return resolver.read(uri);
+      return resolver.read(uri).map((it) -> new Resource(uri, it));
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
         throws SecurityManagerException {
-      return resolver.hasElement(securityManager, elementUri);
+      securityManager.checkResolveResource(elementUri);
+      try {
+        return resolver.hasElement(elementUri);
+      } catch (IOException e) {
+        return false;
+      }
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
         throws IOException, SecurityManagerException {
-      return resolver.listElements(securityManager, baseUri);
+      securityManager.checkResolveResource(baseUri);
+      return resolver.listElements(baseUri).stream()
+          .map((it) -> new PathElement(it.getName(), it.isDirectory()))
+          .toList();
     }
   }
 }

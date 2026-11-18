@@ -134,7 +134,11 @@ class BaseDirectoryTest {
   ) {
     val appData = tempDir.resolve("app-data").createDirectories()
     appData.resolve("pkl/settings.pkl").createParentDirectories().createFile()
-    val envVars = mapOf("APPDATA" to appData.toString())
+    val envVars =
+      mapOf(
+        "APPDATA" to appData.toString(),
+        "XDG_CONFIG_HOME" to tempDir.resolve("empty").toString(),
+      )
 
     assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists)).isNull()
   }

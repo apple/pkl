@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ package org.pkl.server
 
 import java.net.URI
 import java.util.Optional
-import org.pkl.core.externalreader.ExternalModuleResolver
-import org.pkl.core.externalreader.ModuleReaderSpec
-import org.pkl.core.messaging.*
 import org.pkl.core.module.*
+import org.pkl.messaging.MessageTransport
+import org.pkl.messaging.externalreader.ExternalModuleResolver
+import org.pkl.messaging.externalreader.ModuleReaderSpec
 
 internal class ClientModuleKeyFactory(
   private val readerSpecs: Collection<ModuleReaderSpec>,

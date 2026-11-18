@@ -30,6 +30,7 @@ dependencies {
   api(projects.pklCommons) // for convenience
   implementation(projects.pklCore)
   implementation(projects.pklServer)
+  implementation(projects.pklMessaging)
   implementation(libs.assertj)
   implementation(libs.msgpack)
 }

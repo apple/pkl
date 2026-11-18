@@ -24,11 +24,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public abstract class AbstractReadNode extends UnaryExpressionNode {
   protected final ModuleKey currentModule;

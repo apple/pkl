@@ -18,22 +18,22 @@
 package org.pkl.core.externalreaderfixture
 
 import java.net.URI
-import org.pkl.core.externalreader.ExternalModuleReader
-import org.pkl.core.externalreader.ExternalReaderClient
-import org.pkl.core.externalreader.ExternalResourceReader
 import org.pkl.core.externalreader.stdioTransport
-import org.pkl.core.module.PathElement
+import org.pkl.messaging.PathElement
+import org.pkl.messaging.externalreader.ExternalModuleReader
+import org.pkl.messaging.externalreader.ExternalReaderClient
+import org.pkl.messaging.externalreader.ExternalResourceReader
 
 object ModuleReader : ExternalModuleReader {
-  override val isLocal: Boolean = true
+  override fun isLocal(): Boolean = true
 
   override fun read(uri: URI): String = "hello"
 
-  override val scheme: String = "foo"
+  override fun scheme(): String = "foo"
 
-  override val hasHierarchicalUris: Boolean = false
+  override fun hasHierarchicalUris(): Boolean = false
 
-  override val isGlobbable: Boolean = false
+  override fun isGlobbable(): Boolean = false
 
   override fun listElements(uri: URI): List<PathElement> {
     throw NotImplementedError()
@@ -43,11 +43,11 @@ object ModuleReader : ExternalModuleReader {
 object ResourceReader : ExternalResourceReader {
   override fun read(uri: URI): ByteArray = "hello".toByteArray()
 
-  override val scheme: String = "foo"
+  override fun scheme(): String = "foo"
 
-  override val hasHierarchicalUris: Boolean = false
+  override fun hasHierarchicalUris(): Boolean = false
 
-  override val isGlobbable: Boolean = false
+  override fun isGlobbable(): Boolean = false
 
   override fun listElements(uri: URI): List<PathElement> {
     throw NotImplementedError()

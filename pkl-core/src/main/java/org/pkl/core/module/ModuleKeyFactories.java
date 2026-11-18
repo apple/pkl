@@ -29,11 +29,11 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Closeables;
-import org.pkl.core.externalreader.ExternalModuleResolver;
-import org.pkl.core.externalreader.ExternalReaderProcess;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalModuleResolver;
+import org.pkl.messaging.externalreader.ExternalReaderProcess;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 /** Utilities for obtaining and using module key factories. */
 public final class ModuleKeyFactories {

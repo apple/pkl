@@ -27,7 +27,6 @@ import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;
@@ -37,6 +36,7 @@ import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 @NodeInfo(shortName = "read*")
 public abstract class ReadGlobNode extends AbstractReadNode {

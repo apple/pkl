@@ -21,10 +21,10 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
 import org.pkl.core.evaluatorSettings.Color
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
+import org.pkl.messaging.externalreader.ExternalReader
 
 /** Base options shared between CLI commands. */
 data class CliBaseOptions(

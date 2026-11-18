@@ -25,7 +25,6 @@ import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.TraceMode
-import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -36,6 +35,8 @@ import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.settings.PklSettings
 import org.pkl.core.util.DebugLogger
 import org.pkl.core.util.IoUtils
+import org.pkl.messaging.externalreader.ExternalReader
+import org.pkl.messaging.externalreader.ExternalReaderProcess
 
 /** Building block for CLI commands. Configured programmatically to allow for embedding. */
 abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
@@ -204,16 +205,15 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     cliOptions.httpHeaders ?: evaluatorSettings?.http?.headers ?: settings.http?.headers
   }
 
-  protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+  protected val externalModuleReaders: Map<String, ExternalReader> by lazy {
     cliOptions.externalModuleReaders ?: evaluatorSettings?.externalModuleReaders ?: mapOf()
   }
 
-  protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+  protected val externalResourceReaders: Map<String, ExternalReader> by lazy {
     cliOptions.externalResourceReaders ?: evaluatorSettings?.externalResourceReaders ?: mapOf()
   }
 
-  private val externalProcesses:
-    Map<PklEvaluatorSettings.ExternalReader, ExternalReaderProcess> by lazy {
+  private val externalProcesses: Map<ExternalReader, ExternalReaderProcess> by lazy {
     // Share ExternalReaderProcess instances between configured external resource/module readers
     // with the same spec. This avoids spawning multiple subprocesses if the same reader implements
     // both reader types and/or multiple schemes.

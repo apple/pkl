@@ -24,15 +24,8 @@ import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import kotlin.random.Random
 import org.pkl.core.*
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.externalreader.ExternalReaderProcess
-import org.pkl.core.externalreader.ExternalResourceResolver
-import org.pkl.core.externalreader.ModuleReaderSpec
-import org.pkl.core.externalreader.ResourceReaderSpec
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
-import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransports
-import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
@@ -41,6 +34,17 @@ import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransport
+import org.pkl.messaging.MessageTransports
+import org.pkl.messaging.Messages.*
+import org.pkl.messaging.ProtocolException
+import org.pkl.messaging.externalreader.ExternalReader
+import org.pkl.messaging.externalreader.ExternalReaderProcess
+import org.pkl.messaging.externalreader.ExternalResourceResolver
+import org.pkl.messaging.externalreader.ModuleReaderSpec
+import org.pkl.messaging.externalreader.ResourceReaderSpec
 
 class Server(private val transport: MessageTransport) : AutoCloseable {
   private val evaluators: MutableMap<Long, Evaluator> = ConcurrentHashMap()
@@ -57,8 +61,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     fun stream(inputStream: InputStream, outputStream: OutputStream): Server =
       Server(
         MessageTransports.stream(
-          ServerMessagePackDecoder(inputStream),
-          ServerMessagePackEncoder(outputStream),
+          MessagePackDecoder(inputStream),
+          MessagePackEncoder(outputStream),
           ::log,
         )
       )
@@ -99,27 +103,34 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
   private fun handleCreateEvaluator(message: CreateEvaluatorRequest) {
     val evaluatorId = Random.nextLong()
-    val baseResponse = CreateEvaluatorResponse(message.requestId(), null, null)
-
     val evaluator =
       try {
         createEvaluator(message, evaluatorId)
       } catch (e: ProtocolException) {
-        transport.send(baseResponse.copy(error = e.message ?: ""))
+        transport.send(
+          CreateEvaluatorResponse(
+            message.requestId,
+            null,
+            e.message ?: "An unexpected error happened during decoding",
+          )
+        )
         return
       }
 
     evaluators[evaluatorId] = evaluator
-    transport.send(baseResponse.copy(evaluatorId = evaluatorId))
+    transport.send(CreateEvaluatorResponse(message.requestId, evaluatorId, null))
   }
 
   private fun handleEvaluate(msg: EvaluateRequest) {
-    val baseResponse = EvaluateResponse(msg.requestId(), msg.evaluatorId, null, null)
-
     val evaluator = evaluators[msg.evaluatorId]
     if (evaluator == null) {
       transport.send(
-        baseResponse.copy(error = "Evaluator with ID ${msg.evaluatorId} was not found.")
+        EvaluateResponse(
+          msg.requestId,
+          msg.evaluatorId,
+          null,
+          "Evaluator with ID ${msg.evaluatorId} was not found.",
+        )
       )
       return
     }
@@ -128,11 +139,18 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       try {
         val src = ModuleSource.create(msg.moduleUri, msg.moduleText)
         val resp = evaluator.evaluateExpressionPklBinary(src, msg.expr ?: "module")
-        transport.send(baseResponse.copy(result = resp))
+        transport.send(EvaluateResponse(msg.requestId, msg.evaluatorId, resp, null))
       } catch (e: PklBugException) {
-        transport.send(baseResponse.copy(error = e.toString()))
+        transport.send(EvaluateResponse(msg.requestId, msg.evaluatorId, null, e.toString()))
       } catch (e: PklException) {
-        transport.send(baseResponse.copy(error = e.message ?: ""))
+        transport.send(
+          EvaluateResponse(
+            msg.requestId,
+            msg.evaluatorId,
+            null,
+            e.message ?: "An error occured during evaluation",
+          )
+        )
       }
     }
   }
@@ -161,7 +179,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
             key,
             org.pkl.core.packages.Dependency.RemoteDependency(
               PackageUri(dep.packageUri),
-              dep.checksums,
+              dep.checksums?.let { org.pkl.core.packages.Checksums(it.sha256) },
             ),
           )
         }
@@ -228,7 +246,19 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
           setProjectDependencies(dependencies)
         }
         outputFormat = message.outputFormat
-        message.traceMode?.let { traceMode = it }
+        val decodedTraceMode =
+          when (message.traceMode?.lowercase()) {
+            "compact" -> TraceMode.COMPACT
+            "pretty" -> TraceMode.PRETTY
+            null -> null
+            else ->
+              throw ProtocolException(
+                "Unexpected traceMode: ${message.traceMode}. Allowed values are 'compact', 'pretty'."
+              )
+          }
+        if (decodedTraceMode != null) {
+          traceMode = decodedTraceMode
+        }
         build()
       }
     } catch (e: IllegalArgumentException) {
@@ -279,7 +309,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     // add client-side module key factory first to ensure it wins over builtin ones
     if (message.clientModuleReaders?.isNotEmpty() == true) {
       val readerSpecs =
-        message.clientModuleReaders.map {
+        message.clientModuleReaders!!.map {
           ModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
         }
       add(ClientModuleKeyFactory(readerSpecs, transport, evaluatorId))
@@ -307,8 +337,6 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
       .computeIfAbsent(spec) {
-        ExternalReaderProcess.of(
-          PklEvaluatorSettings.ExternalReader(it.executable, it.arguments, it.workingDir)
-        )
+        ExternalReaderProcess.of(ExternalReader(it.executable, it.arguments, it.workingDir))
       }
 }

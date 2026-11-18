@@ -21,14 +21,17 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.pkl.commons.test.server.AbstractHttpServerTest
 import org.pkl.commons.test.server.TestTransport
-import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.util.Pair
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransport
+import org.pkl.messaging.MessageTransports
 
 class JvmServerTest : AbstractHttpServerTest() {
   private val transports: Pair<MessageTransport, MessageTransport> = run {
     if (USE_DIRECT_TRANSPORT) {
-      MessageTransports.direct(::log)
+      val transports = MessageTransports.direct(::log)
+      Pair.of(transports.clientTransport(), transports.serverTransport())
     } else {
       val in1 =
         PipedInputStream(10240) // use larger pipe size since large messages can be >1024 bytes
@@ -36,16 +39,8 @@ class JvmServerTest : AbstractHttpServerTest() {
       val in2 = PipedInputStream()
       val out2 = PipedOutputStream(in2)
       Pair.of(
-        MessageTransports.stream(
-          ServerMessagePackDecoder(in1),
-          ServerMessagePackEncoder(out2),
-          ::log,
-        ),
-        MessageTransports.stream(
-          ServerMessagePackDecoder(in2),
-          ServerMessagePackEncoder(out1),
-          ::log,
-        ),
+        MessageTransports.stream(MessagePackDecoder(in1), MessagePackEncoder(out2), ::log),
+        MessageTransports.stream(MessagePackDecoder(in2), MessagePackEncoder(out1), ::log),
       )
     }
   }

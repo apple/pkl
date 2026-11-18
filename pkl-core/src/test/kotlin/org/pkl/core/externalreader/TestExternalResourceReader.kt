@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 package org.pkl.core.externalreader
 
 import java.net.URI
-import org.pkl.core.module.PathElement
+import org.pkl.messaging.PathElement
+import org.pkl.messaging.externalreader.ExternalResourceReader
 
 class TestExternalResourceReader : ExternalResourceReader {
-  override val scheme: String = "test"
+  override fun scheme(): String = "test"
 
-  override val hasHierarchicalUris: Boolean = false
+  override fun hasHierarchicalUris(): Boolean = false
 
-  override val isGlobbable: Boolean = false
+  override fun isGlobbable(): Boolean = false
 
   override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
 

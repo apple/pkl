@@ -27,7 +27,6 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
@@ -35,6 +34,7 @@ import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class ResourceManager {
   private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
