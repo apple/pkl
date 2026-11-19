@@ -20,9 +20,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -113,40 +115,77 @@ final class RequestRewritingClient implements HttpClient {
     var redirectCount = 0;
     var currentRequestUri = rewriteUri(request.uri());
     var currentRequest = rewriteRequest(request, currentRequestUri);
-    while (true) {
-      httpRequestChecker.check(currentRequestUri);
-      var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
-      if (!HttpUtils.isRedirectStatusCode(response.statusCode())) {
-        return response;
+    var wasRewritten = currentRequestUri != request.uri();
+    var requestChanges =
+        !wasRewritten
+            ? ""
+            : " (request was rewritten: %s -> %s)".formatted(request.uri(), currentRequestUri);
+    try {
+      while (true) {
+        httpRequestChecker.check(currentRequestUri);
+        var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
+        if (!HttpUtils.isRedirectStatusCode(response.statusCode())) {
+          return response;
+        }
+        if (response.body() instanceof Closeable closeable) {
+          closeable.close();
+        }
+        if (redirectCount >= MAX_HTTP_REDIRECTS) {
+          throw new HttpClientException(
+              ErrorMessages.create("httpTooManyRedirects", MAX_HTTP_REDIRECTS));
+        }
+        var location = response.headers().firstValue("Location");
+        if (location.isEmpty()) {
+          throw new HttpClientException(
+              ErrorMessages.create("httpRedirectNoLocation", currentRequestUri));
+        }
+        URI redirectUri;
+        try {
+          redirectUri = currentRequestUri.resolve(location.get());
+        } catch (IllegalArgumentException e) {
+          throw new HttpClientException(
+              ErrorMessages.create("httpRedirectInvalidUri", currentRequestUri, location.get()));
+        }
+        if (currentRequestUri.getScheme().equalsIgnoreCase("https")
+            && redirectUri.getScheme().equalsIgnoreCase("http")) {
+          throw new HttpClientException(
+              ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
+        }
+        requestChanges +=
+            " (request was redirected: %s -> %s)"
+                .formatted(diagnosticOrigin(currentRequestUri), diagnosticOrigin(redirectUri));
+        var rewrittenRedirectUri = rewriteUri(redirectUri);
+        if (rewrittenRedirectUri != redirectUri) {
+          wasRewritten = true;
+          requestChanges +=
+              " (request was rewritten: %s -> %s)"
+                  .formatted(diagnosticOrigin(redirectUri), diagnosticOrigin(rewrittenRedirectUri));
+        }
+        currentRequestUri = rewrittenRedirectUri;
+        currentRequest = rewriteRequest(request, currentRequestUri);
+        redirectCount++;
       }
-      if (response.body() instanceof Closeable closeable) {
-        closeable.close();
+    } catch (IOException e) {
+      if (!wasRewritten) throw e;
+      var message = e.getMessage() + requestChanges;
+      if (e instanceof HttpConnectTimeoutException) {
+        var timeout = new HttpConnectTimeoutException(message);
+        timeout.initCause(e);
+        throw timeout;
       }
-      if (redirectCount >= MAX_HTTP_REDIRECTS) {
-        throw new HttpClientException(
-            ErrorMessages.create("httpTooManyRedirects", MAX_HTTP_REDIRECTS));
+      if (e instanceof HttpTimeoutException) {
+        var timeout = new HttpTimeoutException(message);
+        timeout.initCause(e);
+        throw timeout;
       }
-      var location = response.headers().firstValue("Location");
-      if (location.isEmpty()) {
-        throw new HttpClientException(
-            ErrorMessages.create("httpRedirectNoLocation", currentRequestUri));
-      }
-      URI redirectUri;
-      try {
-        redirectUri = currentRequestUri.resolve(location.get());
-      } catch (IllegalArgumentException e) {
-        throw new HttpClientException(
-            ErrorMessages.create("httpRedirectInvalidUri", currentRequestUri, location.get()));
-      }
-      if (currentRequestUri.getScheme().equalsIgnoreCase("https")
-          && redirectUri.getScheme().equalsIgnoreCase("http")) {
-        throw new HttpClientException(
-            ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
-      }
-      currentRequestUri = rewriteUri(redirectUri);
-      currentRequest = rewriteRequest(request, currentRequestUri);
-      redirectCount++;
+      throw new IOException(message, e);
     }
+  }
+
+  private static String diagnosticOrigin(URI uri) {
+    var host = uri.getHost();
+    if (host == null) return uri.getScheme() + "://<unknown host>";
+    return uri.getScheme() + "://" + host + (uri.getPort() < 0 ? "" : ":" + uri.getPort());
   }
 
   @Override
@@ -156,18 +195,7 @@ final class RequestRewritingClient implements HttpClient {
       HttpRequestChecker httpRequestChecker)
       throws IOException, SecurityManagerException {
     checkNotClosed(request);
-    try {
-      return doSend(request, responseBodyHandler, httpRequestChecker);
-    } catch (IOException e) {
-      var rewrittenUri = rewriteUri(request.uri());
-      if (rewrittenUri != request.uri()) {
-        throw new IOException(
-            e.getMessage()
-                + " (request was rewritten: %s -> %s)".formatted(request.uri(), rewrittenUri),
-            e);
-      }
-      throw e;
-    }
+    return doSend(request, responseBodyHandler, httpRequestChecker);
   }
 
   @Override
