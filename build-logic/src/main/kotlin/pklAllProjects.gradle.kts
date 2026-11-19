@@ -22,6 +22,14 @@ val buildInfo = extensions.create<BuildInfo>("buildInfo", project)
 
 configurations {
   val rejectedVersionSuffix = Regex("-alpha|-beta|-eap|-m|-rc|-snapshot", RegexOption.IGNORE_CASE)
+  val versionSuffixRejectionExemptions =
+    setOf(
+      // I know.
+      // This looks odd.
+      // But yes, it's transitively required by one of the release versions of `zinc`
+      // https://github.com/sbt/zinc/blame/57a2df7104b3ce27b46404bb09a0126bd4013427/project/Dependencies.scala#L85
+      "com.eed3si9n:shaded-scalajson_2.13:1.0.0-M4"
+    )
   configureEach {
     resolutionStrategy {
       // forbid dependencies whose pom.xml's include version ranges, because this will lead to
@@ -30,7 +38,12 @@ configurations {
       failOnDynamicVersions()
       componentSelection {
         all {
-          if (rejectedVersionSuffix.containsMatchIn(candidate.version)) {
+          if (
+            rejectedVersionSuffix.containsMatchIn(candidate.version) &&
+              !versionSuffixRejectionExemptions.contains(
+                "${candidate.group}:${candidate.module}:${candidate.version}"
+              )
+          ) {
             reject(
               "Rejected dependency $candidate " +
                 "because it has a prelease version suffix matching `$rejectedVersionSuffix`."
