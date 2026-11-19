@@ -107,14 +107,17 @@ examples {
   ["division"] {
     1.3333333333333333
     1.3333333333333333
+    Infinity
   }
   ["integer division"] {
     1
     1
+    "Division by zero."
   }
   ["remainder"] {
     5
     5
+    "Division by zero."
   }
   ["negation"] {
     -1
