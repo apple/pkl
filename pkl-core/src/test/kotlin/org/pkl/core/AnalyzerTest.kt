@@ -39,6 +39,7 @@ class AnalyzerTest {
       null,
       HttpClient.dummyClient(),
       TraceMode.COMPACT,
+      emptyMap(),
     )
 
   @Test
@@ -118,6 +119,7 @@ class AnalyzerTest {
         null,
         HttpClient.dummyClient(),
         TraceMode.COMPACT,
+        emptyMap(),
       )
     PackageServer.populateCacheDir(tempDir.resolve("packages"))
     val file1 =
@@ -194,6 +196,7 @@ class AnalyzerTest {
         project.dependencies,
         HttpClient.dummyClient(),
         TraceMode.COMPACT,
+        emptyMap(),
       )
     val file1 =
       tempDir
@@ -307,6 +310,7 @@ class AnalyzerTest {
         project.dependencies,
         HttpClient.dummyClient(),
         TraceMode.COMPACT,
+        emptyMap(),
       )
     val result = analyzer.importGraph(mainPkl.toUri())
     val birdUri = URI("projectpackage://localhost:0/birds@1.0.0#/bird.pkl")
