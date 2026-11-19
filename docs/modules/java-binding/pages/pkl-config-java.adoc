@@ -15,6 +15,10 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-config-java-ConverterFactories: {uri-pkl-config-java-main-sources}/mapper/ConverterFactories.java
 :uri-pkl-config-java-Converter: {uri-pkl-config-java-main-sources}/mapper/Converter.java
 :uri-pkl-config-java-ConverterFactory: {uri-pkl-config-java-main-sources}/mapper/ConverterFactory.java
+:uri-pkl-config-java-ValueMapperBuilder: {uri-pkl-config-java-main-sources}/mapper/ValueMapperBuilder.java
+:uri-pkl-config-java-TypeMapping: {uri-pkl-config-java-main-sources}/mapper/TypeMapping.java
+:uri-pkl-config-java-TypeMappings: {uri-pkl-config-java-main-sources}/mapper/TypeMappings.java
+:uri-pkl-config-java-Types: {uri-pkl-config-java-main-sources}/mapper/Types.java
 :uri-pkl-config-java-PObjectToDataObjectTestJava: {uri-pkl-config-java-test-sources}/mapper/PObjectToDataObjectTest.java
 
 The _pkl-config-java_ library builds upon xref:pkl-core:index.adoc[pkl-core].
@@ -213,6 +217,84 @@ The returned `Converter`s are cached.
 . Create a `ValueMapperBuilder`, add all desired conversions, and build a `ValueMapper`.
 
 . Either use the `ValueMapper` directly, or connect it to a `ConfigEvaluator` through `ConfigEvaluatorBuilder`.
+
+===== Overriding Built-in Conversions, Converter Factories and Type Mappings
+
+When a {uri-pkl-config-java-ValueMapperBuilder}[`ValueMapperBuilder`] builds a `ValueMapper`,
+every {uri-pkl-config-java-Conversion}[`Conversion`] is registered under the exact pair of its Pkl source type and Java target type,
+and every {uri-pkl-config-java-TypeMapping}[`TypeMapping`] is registered under its requested Java type.
+To convert a value of a given source type to a given target type, the mapper consults these registrations in the following order:
+
+. If one of the registered `Conversion`s matches the exact source type and target type, its `Converter` is used directly.
++
+If multiple `Conversion`s were added for the same source/target pair, the one added last wins.
+The same holds for `TypeMapping`s registered for the same requested type.
+This makes it possible to override a built-in conversion with the short form:
++
+[source,java]
+----
+ValueMapper mapper =
+    ValueMapperBuilder.preconfigured()
+        .addConversion(Conversion.of(PClassInfo.Int, int.class, myIntConverter))
+        .build();
+----
++
+When a `Conversion` targeting a primitive type is added, a conversion targeting the corresponding wrapper type is registered automatically,
+so the override above also applies to `Integer.class`.
+
+. Otherwise, if a `TypeMapping` is registered for the target type's raw type --
+{uri-pkl-config-java-TypeMappings}[`TypeMappings`] maps, for example, `java.util.Set` to `java.util.HashSet` --
+the target type is rewritten accordingly, and a `Conversion` registered for the rewritten target type is used if one exists.
++
+Because a later `TypeMapping` overrides an earlier one for the same requested type, built-in type mappings can be overridden with the short form as well:
++
+[source,java]
+----
+ValueMapper mapper =
+    ValueMapperBuilder.preconfigured()
+        .addTypeMapping(TypeMapping.of(Set.class, TreeSet.class))
+        .build();
+----
+
+. Otherwise, the {uri-pkl-config-java-ConverterFactory}[`ConverterFactory`]s are consulted in the order they were added,
+and the first factory that returns a `Converter` wins. The returned `Converter` is cached.
++
+Because converter factories are first-added-wins -- unlike conversions and type mappings, which are last-added-wins --
+`ValueMapperBuilder.preconfigured().addConverterFactory(myFactory)` cannot override a built-in factory.
+There are two ways to override one:
++
+* Register the custom factories before the built-in ones:
++
+[source,java]
+----
+ValueMapper mapper =
+    ValueMapperBuilder.unconfigured()
+        .addConversions(Conversions.all)
+        .addConverterFactories(myConverterFactories)
+        .addConverterFactories(ConverterFactories.all)
+        .addTypeMappings(TypeMappings.all)
+        .build();
+----
+
+* For a specific source type and target type, add an explicit `Conversion` instead.
+Because conversions are consulted before any factory (steps 1 and 2 above),
+the `Conversion` shadows the built-in factory for that pair
+(parameterized target types can be created with {uri-pkl-config-java-Types}[`Types`]):
++
+[source,java]
+----
+ValueMapper mapper =
+    ValueMapperBuilder.preconfigured()
+        .addConversion(
+            Conversion.of(
+                PClassInfo.List,
+                Types.parameterizedType(Set.class, String.class),
+                mySetConverter))
+        .build();
+----
+
+NOTE: `ValueMapperBuilder.build()` copies the configured conversions, converter factories and type mappings into the returned `ValueMapper`.
+Modifying the builder after a call to `build()` only affects mappers built afterwards.
 
 == Further Information
 
