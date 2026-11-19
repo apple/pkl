@@ -39,11 +39,16 @@ public final class DurationUtils {
     }
 
     var absoluteSeconds = Math.abs(totalSeconds);
-    var hours = (long) (absoluteSeconds / 3600);
-    var minutes = (long) (absoluteSeconds / 60) % 60;
-    var seconds = (long) (absoluteSeconds % 60);
-    var nanos =
-        (long) (absoluteSeconds * 1_000_000_000 - Math.floor(absoluteSeconds) * 1_000_000_000);
+    var wholeSeconds = Math.floor(absoluteSeconds);
+    // round rather than truncate: the double closest to e.g. 1.001 lies just below it
+    var nanos = Math.round((absoluteSeconds - wholeSeconds) * 1_000_000_000);
+    if (nanos == 1_000_000_000) {
+      wholeSeconds += 1;
+      nanos = 0;
+    }
+    var hours = (long) (wholeSeconds / 3600);
+    var minutes = (long) (wholeSeconds / 60) % 60;
+    var seconds = (long) (wholeSeconds % 60);
 
     var builder = new StringBuilder();
 
