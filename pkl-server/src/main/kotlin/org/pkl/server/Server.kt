@@ -148,7 +148,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
             msg.requestId,
             msg.evaluatorId,
             null,
-            e.message ?: "An error occured during evaluation",
+            e.message
+              ?: e.cause?.message
+              ?: "An error occured during evaluation: ${e.javaClass.simpleName}",
           )
         )
       }
