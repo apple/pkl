@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
+import org.gradle.api.tasks.testing.Test
 
 plugins {
   id("pklAllProjects")
@@ -56,6 +57,10 @@ dependencies {
   firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-server", "sourcesJar"))
+
+  testImplementation(libs.junitApi)
+  testRuntimeOnly(libs.junitEngine)
+  testRuntimeOnly(libs.junitLauncher)
 }
 
 // TODO: need to figure out how to properly generate javadoc here.
@@ -115,6 +120,18 @@ val testStartFatJar =
   tasks.register<Exec>("testStartFatJar") { configureTestStartFatJar(buildInfo.javaTestLauncher) }
 
 tasks.validateFatJar { dependsOn(testStartFatJar) }
+
+tasks.named<Test>("testFatJar") {
+  useJUnitPlatform()
+  javaLauncher = buildInfo.javaTestLauncher
+}
+
+tasks.test {
+  useJUnitPlatform()
+  javaLauncher = buildInfo.javaTestLauncher
+  // fat-JAR tests exercise the shaded artifact and only pass via `testFatJar`.
+  exclude("org/pkl/tools/FatJar*")
+}
 
 for (jdkTarget in buildInfo.jdkTestRange) {
   if (buildInfo.jdkToolchainVersion == jdkTarget) {
