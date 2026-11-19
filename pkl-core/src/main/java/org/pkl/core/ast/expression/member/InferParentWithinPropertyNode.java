@@ -45,7 +45,22 @@ public abstract class InferParentWithinPropertyNode extends ExpressionNode {
     }
 
     try {
-      var result = VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false, callNode);
+      var property = owner.getVmClass().getProperty(ownPropertyName);
+      assert property != null : "every property has a default";
+      var initializer = property.getInitializer();
+      // Call the initializer directly with `owner` as the receiver so the default
+      // can see sibling overrides. Using `VmUtils.doReadMember` would cache the
+      // class default as `owner`'s own value, poisoning subsequent reads if the
+      // outer evaluation throws.
+      var result =
+          initializer.isConst() || initializer.getConstantValue() != null
+              ? VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false, callNode)
+              : callNode.call(
+                  initializer.getCallTarget(),
+                  owner,
+                  property.getOwner(),
+                  ownPropertyName,
+                  VmUtils.SKIP_TYPECHECK_MARKER);
       assert result != null : "every property has a default";
       return result;
     } catch (VmUndefinedValueException e) {
