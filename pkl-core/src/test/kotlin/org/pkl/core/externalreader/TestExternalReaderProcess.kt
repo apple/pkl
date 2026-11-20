@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,20 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.core.externalreader.ExternalReaderMessages.*
-import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransports
-import org.pkl.core.messaging.ProtocolException
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransport
+import org.pkl.messaging.MessageTransports
+import org.pkl.messaging.Messages
+import org.pkl.messaging.ProtocolException
+import org.pkl.messaging.externalreader.ExternalModuleReader
+import org.pkl.messaging.externalreader.ExternalModuleResolver
+import org.pkl.messaging.externalreader.ExternalReaderClient
+import org.pkl.messaging.externalreader.ExternalReaderProcess
+import org.pkl.messaging.externalreader.ExternalResourceReader
+import org.pkl.messaging.externalreader.ExternalResourceResolver
+import org.pkl.messaging.externalreader.ModuleReaderSpec
+import org.pkl.messaging.externalreader.ResourceReaderSpec
 
 class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
   private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
@@ -35,7 +45,7 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     ConcurrentHashMap()
 
   override fun close() {
-    transport.send(CloseExternalProcess())
+    transport.send(Messages.CloseExternalProcess())
     transport.close()
   }
 
@@ -62,10 +72,10 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     initializeModuleReaderResponses
       .computeIfAbsent(scheme) {
         CompletableFuture<ModuleReaderSpec?>().apply {
-          val request = InitializeModuleReaderRequest(Random.nextLong(), scheme)
+          val request = Messages.InitializeModuleReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
-              is InitializeModuleReaderResponse -> {
+              is Messages.InitializeModuleReaderResponse -> {
                 val spec =
                   response.spec?.let {
                     ModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
@@ -83,10 +93,10 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     initializeResourceReaderResponses
       .computeIfAbsent(scheme) {
         CompletableFuture<ResourceReaderSpec?>().apply {
-          val request = InitializeResourceReaderRequest(Random.nextLong(), scheme)
+          val request = Messages.InitializeResourceReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
-              is InitializeResourceReaderResponse -> {
+              is Messages.InitializeResourceReaderResponse -> {
                 val spec =
                   response.spec?.let {
                     ResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
@@ -110,15 +120,9 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
       val txIn = PipedInputStream(10240)
       val txOut = PipedOutputStream(txIn)
       val serverTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(rxIn),
-          ExternalReaderMessagePackEncoder(txOut),
-        ) {}
+        MessageTransports.stream(MessagePackDecoder(rxIn), MessagePackEncoder(txOut)) {}
       val clientTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(txIn),
-          ExternalReaderMessagePackEncoder(rxOut),
-        ) {}
+        MessageTransports.stream(MessagePackDecoder(txIn), MessagePackEncoder(rxOut)) {}
 
       val client =
         ExternalReaderClient(externalModuleReaders, externalResourceReaders, clientTransport)

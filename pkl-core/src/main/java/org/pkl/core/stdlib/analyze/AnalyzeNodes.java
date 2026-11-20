@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import org.pkl.core.ImportGraph;
 import org.pkl.core.ImportGraph.Import;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.AnalyzeModule;
 import org.pkl.core.runtime.VmContext;
@@ -33,6 +32,7 @@ import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.VmObjectFactory;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class AnalyzeNodes {
   private AnalyzeNodes() {}

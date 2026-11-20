@@ -37,7 +37,6 @@ import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.evaluatorSettings.TraceMode;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
@@ -63,6 +62,7 @@ import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class EvaluatorImpl implements Evaluator {
   private final StackFrameTransformer frameTransformer;

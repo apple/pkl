@@ -26,7 +26,6 @@ import java.net.URI;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
@@ -36,6 +35,7 @@ import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.runtime.ReaderBase;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 /**
  * SPI for reading external resources from Pkl. Once a resource reader has been registered, Pkl code

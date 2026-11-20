@@ -15,10 +15,12 @@
  */
 package org.pkl.core.externalreader
 
-import org.pkl.core.messaging.MessageTransports
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransports
 
-private val systemInDecoder = ExternalReaderMessagePackDecoder(System.`in`)
+private val systemInDecoder = MessagePackDecoder(System.`in`)
 
-private val systemOutEncoder = ExternalReaderMessagePackEncoder(System.out)
+private val systemOutEncoder = MessagePackEncoder(System.out)
 
 val stdioTransport = MessageTransports.stream(systemInDecoder, systemOutEncoder) {}

@@ -23,11 +23,11 @@ import java.util.Collection;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ModuleSource;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class ModuleResolver {
   private final Collection<ModuleKeyFactory> factories;

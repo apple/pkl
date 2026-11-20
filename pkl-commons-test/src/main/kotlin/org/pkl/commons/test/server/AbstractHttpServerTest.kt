@@ -28,9 +28,9 @@ import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.pkl.server.EvaluateRequest
-import org.pkl.server.EvaluateResponse
-import org.pkl.server.Http
+import org.pkl.messaging.Messages.EvaluateRequest
+import org.pkl.messaging.Messages.EvaluateResponse
+import org.pkl.messaging.Messages.Http
 
 /**
  * Extends [AbstractServerTest] with HTTP tests backed by a WireMock server.
@@ -49,13 +49,7 @@ abstract class AbstractHttpServerTest : AbstractServerTest() {
       stubFor(get(urlEqualTo("/foo.pkl")).willReturn(ok("foo = 1")))
       val evaluatorId =
         client.sendCreateEvaluatorRequest(
-          http =
-            Http(
-              caCertificates = null,
-              proxy = null,
-              rewrites = null,
-              headers = mapOf("**" to mapOf("X-Foo" to listOf("Foo"))),
-            )
+          http = Http(null, null, null, mapOf("**" to mapOf("X-Foo" to listOf("Foo"))))
         )
       client.send(
         EvaluateRequest(

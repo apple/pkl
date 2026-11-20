@@ -56,6 +56,7 @@ dependencies {
 
   implementation(projects.pklCore)
   implementation(projects.pklServer)
+  implementation(projects.pklMessaging)
 
   implementation(libs.msgpack)
   implementation(libs.truffleApi)

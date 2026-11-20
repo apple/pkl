@@ -38,8 +38,13 @@ import org.msgpack.core.MessagePack
 import org.pkl.commons.test.Executables
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.debugRendering
-import org.pkl.core.messaging.Messages.*
-import org.pkl.core.module.PathElement
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.Messages.*
+import org.pkl.messaging.PathElement
+import org.pkl.messaging.externalreader.ExternalReader
+import org.pkl.messaging.externalreader.ModuleReaderSpec
+import org.pkl.messaging.externalreader.ResourceReaderSpec
 import org.pkl.server.*
 
 @Suppress("FunctionName")
@@ -94,27 +99,6 @@ abstract class AbstractServerTest {
   }
 
   abstract val client: TestTransport
-
-  private val blankCreateEvaluatorRequest =
-    CreateEvaluatorRequest(
-      requestId = 1,
-      http = null,
-      allowedModules = null,
-      allowedResources = null,
-      clientModuleReaders = null,
-      clientResourceReaders = null,
-      modulePaths = null,
-      env = null,
-      properties = null,
-      timeout = null,
-      rootDir = null,
-      cacheDir = null,
-      outputFormat = null,
-      project = null,
-      externalModuleReaders = null,
-      externalResourceReaders = null,
-      traceMode = null,
-    )
 
   @Test
   fun `create and close evaluator`() {
@@ -246,11 +230,11 @@ abstract class AbstractServerTest {
 
     client.send(
       EvaluateRequest(
-        requestId = 1,
-        evaluatorId = evaluatorId,
-        moduleUri = URI("repl:text"),
-        moduleText = """res = read("bahumbug:/foo.pkl").text""",
-        expr = "res",
+        1,
+        evaluatorId,
+        URI("repl:text"),
+        """res = read("bahumbug:/foo.pkl").text""",
+        "res",
       )
     )
 
@@ -462,11 +446,11 @@ abstract class AbstractServerTest {
 
     client.send(
       EvaluateRequest(
-        requestId = 1,
-        evaluatorId = evaluatorId,
-        moduleUri = URI("repl:text"),
-        moduleText = """res = import("bird:/pigeon.pkl")""",
-        expr = "res",
+        1,
+        evaluatorId,
+        URI("repl:text"),
+        """res = import("bird:/pigeon.pkl")""",
+        "res",
       )
     )
 
@@ -885,8 +869,8 @@ abstract class AbstractServerTest {
 
     val pipeIn = PipedInputStream(1 shl 20) // 1 MB buffer
     val pipeOut = PipedOutputStream(pipeIn)
-    val encoder = ServerMessagePackEncoder(pipeOut)
-    val decoder = ServerMessagePackDecoder(pipeIn)
+    val encoder = MessagePackEncoder(pipeOut)
+    val decoder = MessagePackDecoder(pipeIn)
 
     val iterations = 2000
     val padding = ByteArray(8192) // large payload to widen the race window
@@ -1083,10 +1067,10 @@ abstract class AbstractServerTest {
       client.sendCreateEvaluatorRequest(
         http =
           Http(
-            caCertificates = null,
-            proxy = null,
-            rewrites = mapOf(URI("https://example.com/") to URI("https://example.example/")),
-            headers = null,
+            null,
+            null,
+            mapOf(URI("https://example.com/") to URI("https://example.example/")),
+            null,
           )
       )
     client.send(
@@ -1108,14 +1092,29 @@ abstract class AbstractServerTest {
   @Test
   fun `http rewrites -- invalid rule`() {
     client.send(
-      blankCreateEvaluatorRequest.copy(
-        http =
-          Http(
-            caCertificates = null,
-            proxy = null,
-            rewrites = mapOf(URI("https://example.com") to URI("https://example.example/")),
-            headers = null,
-          )
+      CreateEvaluatorRequest(
+        1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        Http(
+          null,
+          null,
+          mapOf(URI("https://example.com") to URI("https://example.example/")),
+          null,
+        ),
+        null,
+        null,
+        null,
       )
     )
     val response = client.receive<CreateEvaluatorResponse>()

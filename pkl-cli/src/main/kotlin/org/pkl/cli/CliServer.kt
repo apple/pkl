@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.cli
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
-import org.pkl.core.messaging.ProtocolException
+import org.pkl.messaging.ProtocolException
 import org.pkl.server.Server
 
 class CliServer(options: CliBaseOptions) : CliCommand(options) {

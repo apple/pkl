@@ -25,8 +25,8 @@ import org.graalvm.nativeimage.c.type.CCharPointerPointer;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.word.WordFactory;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.messaging.MessageTransports.Logger;
-import org.pkl.core.messaging.ProtocolException;
+import org.pkl.messaging.MessageTransports.Logger;
+import org.pkl.messaging.ProtocolException;
 import org.pkl.server.Server;
 
 @SuppressWarnings("unused")

@@ -25,7 +25,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.cli.commands.BaseCommand
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.messaging.externalreader.ExternalReader
 
 class BaseCommandTest {
 

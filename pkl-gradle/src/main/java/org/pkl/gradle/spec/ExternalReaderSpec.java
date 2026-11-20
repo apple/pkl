@@ -24,7 +24,7 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
+import org.pkl.messaging.externalreader.ExternalReader;
 
 public abstract class ExternalReaderSpec implements Named {
   private final String name;

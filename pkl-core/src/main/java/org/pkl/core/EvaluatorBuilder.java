@@ -21,9 +21,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagers.StandardBuilder;
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.evaluatorSettings.TraceMode;
-import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -34,6 +32,8 @@ import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.LoggerImpl;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReader;
+import org.pkl.messaging.externalreader.ExternalReaderProcess;
 
 /** A builder for an {@link Evaluator}. Can be reused to build multiple evaluators. */
 @SuppressWarnings({"UnusedReturnValue", "unused"})

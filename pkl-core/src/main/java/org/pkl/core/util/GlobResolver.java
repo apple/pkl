@@ -32,10 +32,10 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.runtime.ReaderBase;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class GlobResolver {
   private GlobResolver() {}

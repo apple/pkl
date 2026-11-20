@@ -32,11 +32,11 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
 import org.pkl.core.evaluatorSettings.Color
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.GlobResolver
 import org.pkl.core.util.IoUtils
+import org.pkl.messaging.externalreader.ExternalReader
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseOptions : OptionGroup() {

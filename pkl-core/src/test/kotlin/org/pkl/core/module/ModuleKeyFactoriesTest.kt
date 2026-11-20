@@ -32,11 +32,11 @@ import org.pkl.commons.writeString
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.SecurityManagers
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.externalreader.TestExternalModuleReader
 import org.pkl.core.externalreader.TestExternalReaderProcess
 import org.pkl.core.resource.ResourceReaders
+import org.pkl.messaging.externalreader.ExternalReader
+import org.pkl.messaging.externalreader.ExternalReaderProcess
 
 class ModuleKeyFactoriesTest {
   companion object {
@@ -153,7 +153,7 @@ class ModuleKeyFactoriesTest {
     val (proc, runtime) =
       TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
 
-    val factory = ModuleKeyFactories.externalProcess(extReader.scheme, proc)
+    val factory = ModuleKeyFactories.externalProcess(extReader.scheme(), proc)
 
     val module = factory.create(URI("test:foo"))
     assertThat(module).isPresent
@@ -187,8 +187,7 @@ class ModuleKeyFactoriesTest {
 
   private fun makeEvaluatorWithExternalReader(reader: String) =
     with(EvaluatorBuilder.preconfigured()) {
-      val process =
-        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(reader, listOf(), null))
+      val process = ExternalReaderProcess.of(ExternalReader(reader, listOf(), null))
       addModuleKeyFactory(ModuleKeyFactories.externalProcess("foo", process))
       addResourceReader(ResourceReaders.externalProcess("foo", process))
       setAllowedModules(allowedModules + listOf(Pattern.compile("foo:")))

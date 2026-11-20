@@ -62,8 +62,9 @@ dependencies {
   implementation(projects.pklServer)
   implementation(projects.pklFormatter)
   implementation(projects.pklProfiler)
-  implementation(libs.truffleProfiler)
+  implementation(projects.pklMessaging)
   implementation(libs.clikt)
+  implementation(libs.truffleProfiler)
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.wiremock)

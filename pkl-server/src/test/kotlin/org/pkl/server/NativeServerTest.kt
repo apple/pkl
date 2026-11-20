@@ -20,7 +20,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.pkl.commons.test.Executables
 import org.pkl.commons.test.server.AbstractHttpServerTest
 import org.pkl.commons.test.server.TestTransport
-import org.pkl.core.messaging.MessageTransports
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransports
 
 class NativeServerTest : AbstractHttpServerTest() {
   private lateinit var server: Process
@@ -33,8 +35,8 @@ class NativeServerTest : AbstractHttpServerTest() {
     client =
       TestTransport(
         MessageTransports.stream(
-          ServerMessagePackDecoder(server.inputStream),
-          ServerMessagePackEncoder(server.outputStream),
+          MessagePackDecoder(server.inputStream),
+          MessagePackEncoder(server.outputStream),
         ) { _ ->
         }
       )

@@ -59,6 +59,8 @@ include("pkl-tools")
 
 include("pkl-profiler")
 
+include("pkl-messaging")
+
 include("stdlib")
 
 pluginManagement {

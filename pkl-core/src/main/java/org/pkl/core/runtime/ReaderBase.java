@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import java.net.URI;
 import java.util.List;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public interface ReaderBase {
   /**

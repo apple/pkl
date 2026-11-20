@@ -43,6 +43,7 @@ dependencies {
   api(projects.pklCore)
   api(projects.pklDoc)
   api(projects.pklCommons)
+  api(projects.pklMessaging)
 
   // used by `pklFatJar` plugin (ideally this would be inferred automatically)
   firstPartySourcesJars(project(":pkl-cli", "sourcesJar"))
@@ -56,6 +57,7 @@ dependencies {
   firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-server", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-messaging", "sourcesJar"))
 }
 
 // TODO: need to figure out how to properly generate javadoc here.
