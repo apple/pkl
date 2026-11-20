@@ -17,6 +17,7 @@ package org.pkl.messaging.externalreader;
 
 import java.io.IOException;
 import org.jspecify.annotations.Nullable;
+import org.pkl.messaging.Messages.CloseExternalProcess;
 
 /** An external process that reads Pkl modules and resources. */
 public interface ExternalReaderProcess extends AutoCloseable {
@@ -69,8 +70,7 @@ public interface ExternalReaderProcess extends AutoCloseable {
    * <p>This method can be safely called multiple times. Subsequent calls have no effect.
    *
    * <p><b>Implementation Note:</b> Implementers should request a graceful termination by sending a
-   * {@link ExternalReaderMessages.CloseExternalProcess CloseExternalProcess} message to the process
-   * before terminating it forcibly.
+   * {@link CloseExternalProcess} message to the process before terminating it forcibly.
    */
   @Override
   void close();

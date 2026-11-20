@@ -19,10 +19,10 @@ import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
 import org.assertj.core.api.Assertions.assertThat
 import org.msgpack.core.MessagePack
-import org.pkl.core.messaging.Message
-import org.pkl.core.messaging.MessageTransports
-import org.pkl.server.ServerMessagePackDecoder
-import org.pkl.server.ServerMessagePackEncoder
+import org.pkl.messaging.Message
+import org.pkl.messaging.MessagePackDecoder
+import org.pkl.messaging.MessagePackEncoder
+import org.pkl.messaging.MessageTransports
 
 class LibPklMessageTransport : MessageTransports.AbstractMessageTransport({}) {
   private val messageResponseHandler: LibPklJNA.PklMessageResponseHandler =
@@ -59,13 +59,13 @@ class LibPklMessageTransport : MessageTransports.AbstractMessageTransport({}) {
 
   private fun encode(message: Message): ByteArray {
     val packer = MessagePack.newDefaultBufferPacker()
-    val encoder = ServerMessagePackEncoder(packer)
+    val encoder = MessagePackEncoder(packer)
     encoder.encode(message)
     return packer.toByteArray()
   }
 
   private fun decode(receivedBytes: ByteArray): Message {
     val unpacker = MessagePack.newDefaultUnpacker(receivedBytes)
-    return ServerMessagePackDecoder(unpacker).decode()!!
+    return MessagePackDecoder(unpacker).decode()!!
   }
 }
