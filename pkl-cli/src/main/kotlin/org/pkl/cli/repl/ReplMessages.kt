@@ -95,7 +95,7 @@ internal object ReplMessages {
 
     For more examples, see the Language Reference${if (isMacOs()) " (Command+Double-click the link below)" else ""}:
 
-    ${Release.current().documentation().homepage()}language-reference/
+    https://pkl-lang.org/main/current/language-reference/index.html
 
   """
       .trimIndent()
