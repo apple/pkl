@@ -1,0 +1,9 @@
+facts {
+  ["MacAddress =="] {
+    true
+    true
+  }
+  ["MacAddress.toSlaacAddress()"] {
+    true
+  }
+}

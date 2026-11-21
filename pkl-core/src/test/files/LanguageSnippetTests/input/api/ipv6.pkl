@@ -1,0 +1,524 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:net"
+
+facts {
+  ["Ipv6Address =="] {
+    net.Ipv6Address("fe80::1") == net.Ipv6Address("fe80::1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80::2")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80::1:1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80::1:0:1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80::1:0:0:1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80:0:0:1::1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80:0:1::1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe80:1::1")
+    net.Ipv6Address("fe80::1") != net.Ipv6Address("fe81::1")
+    net.Ipv6Address("fe80::1%1") == net.Ipv6Address("fe80::1%1")
+    net.Ipv6Address("fe80::1%1") != net.Ipv6Address("fe80::1%2")
+    net.Ipv6Address("fe80::1%1") != net.Ipv6Address("fe80::1")
+    net.Ipv6Address("fe80::1%0") != net.Ipv6Address("fe80::1")
+  }
+  // similarly Ipv6Network() must be invoked prior to using Ipv6CidrString
+  ["Ipv6Network =="] {
+    net.Ipv6Network("2001:db8::/96") == net.Ipv6Network("2001:db8::/96")
+    net.Ipv6Network("2001:db8::/96") != net.Ipv6Network("2001:db8::/48")
+    net.Ipv6Network("2001:db8::/96") != net.Ipv6Network("2001:db8::1/96")
+  }
+  ["Ipv6AddressString (pure Ipv6)"] {
+    "0:0:0:0:0:0:0:0" is net.Ipv6AddressString
+    "1:2:3:4:5:6:7:8" is net.Ipv6AddressString
+    "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF" is net.Ipv6AddressString
+    "ffff::" is net.Ipv6AddressString
+    "::" is net.Ipv6AddressString
+    "::1" is net.Ipv6AddressString
+    "::1:2:3:4:5:6:7" is net.Ipv6AddressString
+    "1::" is net.Ipv6AddressString
+    "1:2:3:4:5:6:7::" is net.Ipv6AddressString
+    "::1" is net.Ipv6AddressString
+    "::1:2:3:4:5:6:7" is net.Ipv6AddressString
+    "1:2:3:4:5:6::7" is net.Ipv6AddressString
+    "1:2:3:4:5::6:7" is net.Ipv6AddressString
+    "1:2:3:4::5:6:7" is net.Ipv6AddressString
+    "1:2:3::4:5:6:7" is net.Ipv6AddressString
+    "1:2::3:4:5:6:7" is net.Ipv6AddressString
+    "1::2:3:4:5:6:7" is net.Ipv6AddressString
+    "1:2:3:4:5::6" is net.Ipv6AddressString
+    "1:2:3:4::5" is net.Ipv6AddressString
+    "1:2:3::4" is net.Ipv6AddressString
+    "1:2::3" is net.Ipv6AddressString
+    "1::2" is net.Ipv6AddressString
+    !("1:2:3:4:5:6:7:8:9" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6:7:" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6:7:8:" is net.Ipv6AddressString)
+    !(":1:2:3:4:5:6:7" is net.Ipv6AddressString)
+    !(":1:2:3:4:5:6:7:8" is net.Ipv6AddressString)
+    !("::1:2:3:4:5:6:7:8" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6:7:8::" is net.Ipv6AddressString)
+    !("1::2::" is net.Ipv6AddressString)
+    !("::1::2" is net.Ipv6AddressString)
+    !("1::g" is net.Ipv6AddressString)
+    !("1:::2" is net.Ipv6AddressString)
+    !("FFFFF::" is net.Ipv6AddressString)
+    !("1.2.3.4" is net.Ipv6AddressString)
+    !("" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressString (Ipv4-compatible)"] {
+    "::0.0.0.0" is net.Ipv6AddressString
+    "::000.000.000.000" is net.Ipv6AddressString
+    "::255.255.255.255" is net.Ipv6AddressString
+    !("::256.0.0.0" is net.Ipv6AddressString)
+    !("::260.0.0.0" is net.Ipv6AddressString)
+    !("::300.0.0.0" is net.Ipv6AddressString)
+    !("::0000.0.0.0" is net.Ipv6AddressString)
+    !("::a.0.0.0" is net.Ipv6AddressString)
+    !("::0.0.0" is net.Ipv6AddressString)
+    !("::0.0.0." is net.Ipv6AddressString)
+    !("::0.0.0.0." is net.Ipv6AddressString)
+    !("::0.0.0.0.0" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressString (Ipv4-mapped)"] {
+    "::ffff:0.0.0.0" is net.Ipv6AddressString
+    "::ffff:000.000.000.000" is net.Ipv6AddressString
+    "::ffff:255.255.255.255" is net.Ipv6AddressString
+    !("::ffff:256.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:260.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:300.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0000.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:a.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0.0.0." is net.Ipv6AddressString)
+    !("::ffff:0.0.0.0." is net.Ipv6AddressString)
+    !("::ffff:0.0.0.0.0" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressString (Ipv4-translated)"] {
+    "::ffff:0:0.0.0.0" is net.Ipv6AddressString
+    "::ffff:0000:0.0.0.0" is net.Ipv6AddressString
+    "::ffff:0:255.255.255.255" is net.Ipv6AddressString
+    "::ffff:0:000.000.000.000" is net.Ipv6AddressString
+    !("::ffff:0:256.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:260.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:300.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:0000.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:a.0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:0.0.0" is net.Ipv6AddressString)
+    !("::ffff:0:0.0.0." is net.Ipv6AddressString)
+    !("::ffff:0:0.0.0.0." is net.Ipv6AddressString)
+    !("::ffff:0:0.0.0.0.0" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressString (Ipv4-embedded)"] {
+    "64:ff9b::0.0.0.0" is net.Ipv6AddressString
+    "0::0.0.0.0" is net.Ipv6AddressString
+    "0:0:0:0::0.0.0.0" is net.Ipv6AddressString
+    "ffff:ffff:ffff:ffff::255.255.255.255" is net.Ipv6AddressString
+    "64:ff9b::255.255.255.255" is net.Ipv6AddressString
+    "64:ff9b::000.000.000.000" is net.Ipv6AddressString
+    !("64:ff9b::256.0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::260.0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::300.0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::0000.0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::a.0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::0.0.0" is net.Ipv6AddressString)
+    !("64:ff9b::0.0.0." is net.Ipv6AddressString)
+    !("64:ff9b::0.0.0.0." is net.Ipv6AddressString)
+    !("64:ff9b::0.0.0.0.0" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressString (miscellaneous Ipv4)"] {
+    "0:0:0:0:0:0:0.0.0.0" is net.Ipv6AddressString
+    "1:2:3:4:5:6:1.2.3.4" is net.Ipv6AddressString
+    "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:255.255.255.255" is net.Ipv6AddressString
+    "::1:1.2.3.4" is net.Ipv6AddressString
+    "::1:2:3:4:5:1.2.3.4" is net.Ipv6AddressString
+    "1::1.2.3.4" is net.Ipv6AddressString
+    "1:2:3:4:5::1.2.3.4" is net.Ipv6AddressString
+    "1:2:3:4::5:1.2.3.4" is net.Ipv6AddressString
+    "1:2:3::4:5:1.2.3.4" is net.Ipv6AddressString
+    "1:2::3:4:5:1.2.3.4" is net.Ipv6AddressString
+    "1::2:3:4:5:1.2.3.4" is net.Ipv6AddressString
+    "1:2:3::4:1.2.3.4" is net.Ipv6AddressString
+    "1:2::3:1.2.3.4" is net.Ipv6AddressString
+    "1::2:1.2.3.4" is net.Ipv6AddressString
+    "::1.2.3.4" is net.Ipv6AddressString
+    "::0.0.0.0" is net.Ipv6AddressString
+    !("1:2:3:4:5:6:7:1.2.3.4" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6:1.2.3" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6:1.2.3.4.5" is net.Ipv6AddressString)
+    !("1:2:3:4:5:6::1.2.3.4" is net.Ipv6AddressString)
+    !(":1:2:3:4:5:1.2.3.4" is net.Ipv6AddressString)
+    !(":1:2:3:4:5:6:1.2.3.4" is net.Ipv6AddressString)
+    !("::1:2:3:4:5:6:1.2.3.4" is net.Ipv6AddressString)
+    !("1::2::1.2.3.4" is net.Ipv6AddressString)
+    !("1::2::3:1.2.3.4" is net.Ipv6AddressString)
+    !("::1::2:1.2.3.4" is net.Ipv6AddressString)
+    !("::1::1.2.3.4" is net.Ipv6AddressString)
+    !("1:::2:1.2.3.4" is net.Ipv6AddressString)
+    !("FFFFF::1.2.3.4" is net.Ipv6AddressString)
+    !("1.2.3.4::" is net.Ipv6AddressString)
+  }
+  ["Scoped Ipv6AddressString (link-local unicast)"] {
+    "fe80::%1" is net.Ipv6AddressString
+    "FE80::%1" is net.Ipv6AddressString
+    "fe80::%999" is net.Ipv6AddressString
+    "fe80:0:0:0:0:0:0:0%1" is net.Ipv6AddressString
+    "fe80:0:0:0:a:b:c:d%2" is net.Ipv6AddressString
+    "fe80::aaaa%0" is net.Ipv6AddressString
+    "fe80:0:0:0:1::%1" is net.Ipv6AddressString
+    "fe80:0:0::1%2" is net.Ipv6AddressString
+    !("fe80:1::%0" is net.Ipv6AddressString)
+    !("fe80::a:b:c:d:e%0" is net.Ipv6AddressString)
+    !("fe81::%1" is net.Ipv6AddressString)
+    !("febf::%1" is net.Ipv6AddressString)
+    !("fe80::%" is net.Ipv6AddressString)
+    "fe80::%a" is net.Ipv6AddressString
+    "fe80::%eth0" is net.Ipv6AddressString
+    !("fe80:0:0:1::%1" is net.Ipv6AddressString)
+    "fe80::%-1" is net.Ipv6AddressString
+    "fe80::% 1" is net.Ipv6AddressString
+    !("fe80::%%1" is net.Ipv6AddressString)
+    !("fe80::%1%1" is net.Ipv6AddressString)
+  }
+  ["Scoped Ipv6AddressString (multicast)"] {
+    "ff00::%1" is net.Ipv6AddressString
+    "FF00::%1" is net.Ipv6AddressString
+    "ff0d::%1" is net.Ipv6AddressString
+    "ff1d::%1" is net.Ipv6AddressString
+    "fffd::%1" is net.Ipv6AddressString // we don't restrict flags, for future compatibility reasons
+    "ff00::%999" is net.Ipv6AddressString
+    "ff0d:0:0:0:0:0:0:0%0" is net.Ipv6AddressString
+    "ff00::7:8%0" is net.Ipv6AddressString
+    "ff00:2:3:4::8%0" is net.Ipv6AddressString
+    !("ff0e::%1" is net.Ipv6AddressString) // global scope
+    !("fffe::%1" is net.Ipv6AddressString) // global scope
+    !("FF0E::%1" is net.Ipv6AddressString) // global scope
+    "ff00::%-1" is net.Ipv6AddressString
+    "ff00::% 1" is net.Ipv6AddressString
+    !("ff00::%" is net.Ipv6AddressString)
+    "ff00::%a" is net.Ipv6AddressString
+    "ff00::%eth0" is net.Ipv6AddressString
+    !("ff00::%1%1" is net.Ipv6AddressString)
+    !("ff00:1:2:3:4:5:6:7:8%1" is net.Ipv6AddressString)
+  }
+  ["Global Ipv6AddressString can't be scoped"] {
+    !("::%0" is net.Ipv6AddressString) // technically this is implementation-defined, we don't support it
+    !("::1%0" is net.Ipv6AddressString)
+    !("0:0:0:0:0:0:0:0%0" is net.Ipv6AddressString)
+    !("a:b:c:d:1:2:3:4%0" is net.Ipv6AddressString)
+    !("fec0::%1" is net.Ipv6AddressString) // site-local unicast is deprecated, considered global now
+    !("::1.2.3.4%0" is net.Ipv6AddressString) // Ipv6+Ipv4 syntax implies global scope
+    !("::ffff:1.2.3.4%0" is net.Ipv6AddressString) // Ipv4-mapped can be scoped in some implementations, but not ours
+    !("0:fe80::%0" is net.Ipv6AddressString)
+    !("::fe80%0" is net.Ipv6AddressString)
+    !("fdff::%0" is net.Ipv6AddressString)
+  }
+  ["Ipv6CidrString"] {
+    "fe80::/10" is net.Ipv6CidrString
+    "::1/128" is net.Ipv6CidrString
+    "::1.2.3.4/96" is net.Ipv6CidrString
+    "fe80::%2/10" is net.Ipv6CidrString
+    !("fe80::/" is net.Ipv6CidrString)
+    !("fe80::/1000" is net.Ipv6CidrString)
+    !("fe80::/a" is net.Ipv6CidrString)
+    !("/10" is net.Ipv6CidrString)
+    !("" is net.Ipv6CidrString)
+    !("0.0.0.0/10" is net.Ipv6CidrString)
+  }
+  ["Ipv6NetworkString"] {
+    "2001:db8::/32" is net.Ipv6NetworkString
+    "::/0" is net.Ipv6NetworkString // whole address space: no host bits to be non-zero
+    "::1/128" is net.Ipv6NetworkString // single host: every bit is a network bit
+    "fe80::%1/64" is net.Ipv6NetworkString // scoped, but still canonical
+    !("2001:db8::1/32" is net.Ipv6NetworkString) // host bits set
+    !("fe80::1/64" is net.Ipv6NetworkString) // host bits set
+    !("fe80::1%1/64" is net.Ipv6NetworkString) // scoped, host bits set
+    !("not a cidr" is net.Ipv6NetworkString)
+    !("" is net.Ipv6NetworkString)
+  }
+  ["Ipv6AddressPortString"] {
+    "[::1]:80" is net.Ipv6AddressPortString
+    "[::]:1" is net.Ipv6AddressPortString
+    "[fe80::]:65535" is net.Ipv6AddressPortString
+    "[fe80::%2]:65535" is net.Ipv6AddressPortString
+    !("[::1]:" is net.Ipv6AddressPortString)
+    !("[::1]:123456" is net.Ipv6AddressPortString)
+    !(":1" is net.Ipv6AddressPortString)
+    !("" is net.Ipv6AddressPortString)
+    !("[::1]:a" is net.Ipv6AddressPortString)
+    !("0.0.0.0:1" is net.Ipv6AddressPortString)
+    !("[0.0.0.0]:1" is net.Ipv6AddressPortString)
+    !("::1:10" is net.Ipv6AddressPortString)
+  }
+  ["Ipv6Address()"] {
+    net.Ipv6Address("fe80::1").bytes == Bytes(0xFE, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)
+    net.Ipv6Address("1:10:100:1000:ff00:0ff0:00ff:f00f").bytes
+      == Bytes(0, 1, 0, 0x10, 1, 0, 0x10, 0, 0xff, 0, 0xf, 0xf0, 0, 0xff, 0xf0, 0xf)
+    net.Ipv6Address("::a:b").bytes == Bytes(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xa, 0, 0xb)
+    net.Ipv6Address("2001::").bytes == Bytes(0x20, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    net.Ipv6Address("::ffff:129.144.52.38").bytes
+      == Bytes(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0x81, 0x90, 0x34, 0x26)
+    net.Ipv6Address("fe80::127.0.0.1").bytes
+      == Bytes(0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7f, 0, 0, 1)
+  }
+  ["Ipv6Address() scopeId"] {
+    net.Ipv6Address("fe80::1").scopeId == null
+    net.Ipv6Address("fe80::127.0.0.1").scopeId == null
+    net.Ipv6Address("fe80:3::1ff:fe23:4567:890a").scopeId == null // non-standard alternative we don't support
+    net.Ipv6Address("fe80::1%1").scopeId == "1"
+    net.Ipv6Address("ff00::%2").scopeId == "2"
+    net.Ipv6Address("fe80::%123").scopeId == "123"
+    net.Ipv6Address("fe80::%0").scopeId == "0"
+    net.Ipv6Address("fe80::%eth0").scopeId == "eth0"
+    // check that manually-constructed addresses respect restrictions on scopeId
+    let (ip = net.Ipv6Address("::")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("::1")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("fec0::")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("2001:db8::"))
+      module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("ff0e::")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("ff0f::")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("fe7f::")) module.catch(() -> ip.withScopeId("1")) != null
+    let (ip = net.Ipv6Address("fe80:0:0:1::"))
+      module.catch(() -> ip.withScopeId("1")) != null
+  }
+  ["Ipv6Address methods work with scopeId"] {
+    net.Ipv6Address("fe80::%1").add(1) == net.Ipv6Address("fe80::1%1")
+    net.Ipv6Address("fe80::1:2%1").reverseDnsHostname
+      == net.Ipv6Address("fe80::1:2").reverseDnsHostname // scopeId gets ignored here
+  }
+  ["Ipv6Address.isUnspecified"] {
+    net.Ipv6Address("::").isUnspecified
+    !net.Ipv6Address("::1").isUnspecified
+    !net.Ipv6Address("1::").isUnspecified
+  }
+  ["Ipv6Address.isLoopback"] {
+    net.Ipv6Address("::1").isLoopback
+    !net.Ipv6Address("::").isLoopback
+    !net.Ipv6Address("1::").isLoopback
+    !net.Ipv6Address("::127.0.0.1").isLoopback
+    !net.Ipv6Address("::ffff:127.0.0.1").isLoopback
+    !net.Ipv6Address("::ffff:0:127.0.0.1").isLoopback
+    !net.Ipv6Address("64:ff9b::127.0.0.1").isLoopback
+  }
+  ["Ipv6Address.isIpv4Mapped"] {
+    net.Ipv6Address("::ffff:192.168.1.1").isIpv4Mapped
+    net.Ipv6Address("::ffff:0.0.0.0").isIpv4Mapped
+    net.Ipv6Address("::ffff:255.255.255.255").isIpv4Mapped
+    !net.Ipv6Address("::192.168.1.1").isIpv4Mapped
+    !net.Ipv6Address("::ffff:0:192.168.1.1").isIpv4Mapped
+    !net.Ipv6Address("::ffff:255.255.255.255").add(1).isIpv4Mapped
+    !net.Ipv6Address("::fffe:255.255.255.255").isIpv4Mapped
+    !net.Ipv6Address("64:ff9b::192.168.1.1").isIpv4Mapped
+  }
+  ["Ipv6Address.isIpv4Embedded"] {
+    net.Ipv6Address("64:ff9b::192.168.1.1").isIpv4Embedded
+    net.Ipv6Address("64:ff9b::0.0.0.0").isIpv4Embedded
+    net.Ipv6Address("64:ff9b::255.255.255.255").isIpv4Embedded
+    !net.Ipv6Address("64:ff9b::255.255.255.255").add(1).isIpv4Embedded
+    !net.Ipv6Address("64:ff9a::255.255.255.255").isIpv4Embedded
+    !net.Ipv6Address("::ffff:192.168.1.1").isIpv4Embedded
+    !net.Ipv6Address("0:64:ff9b::192.168.1.1").isIpv4Embedded
+  }
+  ["Ipv6Address.isNonGlobalScope"] {
+    // link-local unicast
+    net.Ipv6Address("fe80::").isNonGlobalScope
+    net.Ipv6Address("fe80::ffff:ffff:ffff:ffff").isNonGlobalScope
+    net.Ipv6Address("fe80:0:0:0:1::").isNonGlobalScope
+    !net.Ipv6Address("fe80:0:0:1::").isNonGlobalScope
+    !net.Ipv6Address("fe81::").isNonGlobalScope
+    // multicast
+    net.Ipv6Address("ff00::").isNonGlobalScope
+    net.Ipv6Address("ff10::").isNonGlobalScope
+    net.Ipv6Address("fffd::").isNonGlobalScope
+    !net.Ipv6Address("ff0e::").isNonGlobalScope // scop=e
+    !net.Ipv6Address("ff0f::").isNonGlobalScope // scop>e
+    !net.Ipv6Address("fe00::").isNonGlobalScope
+    // addresses that don't count
+    !net.Ipv6Address("::").isNonGlobalScope
+    !net.Ipv6Address("::1").isNonGlobalScope
+    !net.Ipv6Address("fec0::").isNonGlobalScope // site-local, deprecated
+  }
+  ["Ipv6Network.contains() and scopeId"] {
+    net.Ipv6Network("fe80::%1/96").contains(net.Ipv6Address("fe80::1"))
+    net.Ipv6Network("fe80::%1/96").contains(net.Ipv6Address("fe80::1%1"))
+    net.Ipv6Network("fe80::/96").contains(net.Ipv6Address("fe80::1%1"))
+    !net.Ipv6Network("fe80::%1/96").contains(net.Ipv6Address("fe80::1%2"))
+  }
+  ["Ipv6Network.containsNetwork()"] {
+    net.Ipv6Network("2001:db8::/32").containsNetwork(net.Ipv6Network("2001:db8:0:1::/64")) // narrower prefix inside wider
+    !net.Ipv6Network("2001:db8:0:1::/64").containsNetwork(net.Ipv6Network("2001:db8::/32")) // wider isn't a subnet of narrower
+    net.Ipv6Network("2001:db8::/32").containsNetwork(net.Ipv6Network("2001:db8::/32")) // identical
+    !net.Ipv6Network("2001:db8::/32").containsNetwork(net.Ipv6Network("2001:db9::/32")) // disjoint
+    !net.Ipv6Network("2001:db8::/32").containsNetwork(net.Ipv6Network("::/0")) // other is wider than self, not narrower
+    // ::/0 is the entire address space: it contains every other network, including itself
+    net.Ipv6Network("::/0").containsNetwork(net.Ipv6Network("2001:db8::/32"))
+    net.Ipv6Network("::/0").containsNetwork(net.Ipv6Network("::1/128"))
+    net.Ipv6Network("::/0").containsNetwork(net.Ipv6Network("::/0"))
+    // ::1/128 is a single host: it only contains itself
+    net.Ipv6Network("::1/128").containsNetwork(net.Ipv6Network("::1/128"))
+    !net.Ipv6Network("::1/128").containsNetwork(net.Ipv6Network("2001:db8::/32"))
+    !net.Ipv6Network("::1/128").containsNetwork(net.Ipv6Network("::2/128"))
+  }
+  ["Ipv6Network.containsNetwork() and scopeId"] {
+    net.Ipv6Network("fe80::%1/64").containsNetwork(net.Ipv6Network("fe80::%1/96")) // same scope
+    net.Ipv6Network("fe80::/64").containsNetwork(net.Ipv6Network("fe80::%1/96")) // self unscoped: ignored
+    net.Ipv6Network("fe80::%1/64").containsNetwork(net.Ipv6Network("fe80::/96")) // other unscoped: ignored
+    !net.Ipv6Network("fe80::%1/64").containsNetwork(net.Ipv6Network("fe80::%2/96")) // different scope
+  }
+  ["Ipv6Network.overlaps()"] {
+    net.Ipv6Network("2001:db8::/32").overlaps(net.Ipv6Network("2001:db8::/32")) // identical
+    net.Ipv6Network("2001:db8::/32").overlaps(net.Ipv6Network("2001:db8:0:1::/64")) // other nested inside self
+    net.Ipv6Network("2001:db8:0:1::/64").overlaps(net.Ipv6Network("2001:db8::/32")) // self nested inside other
+    net.Ipv6Network("::/0").overlaps(net.Ipv6Network("2001:db8::/32")) // /0 overlaps everything
+    !net.Ipv6Network("2001:db8::/32").overlaps(net.Ipv6Network("2001:db9::/32")) // disjoint
+    !net.Ipv6Network("2001:db8::/33").overlaps(net.Ipv6Network("2001:db8:8000::/33")) // adjacent halves of a /32
+  }
+  ["Ipv6Network.overlaps() and scopeId"] {
+    net.Ipv6Network("fe80::%1/64").overlaps(net.Ipv6Network("fe80::%1/96")) // same scope
+    net.Ipv6Network("fe80::/64").overlaps(net.Ipv6Network("fe80::%1/96")) // self unscoped: ignored
+    net.Ipv6Network("fe80::%1/64").overlaps(net.Ipv6Network("fe80::/96")) // other unscoped: ignored
+    !net.Ipv6Network("fe80::%1/64").overlaps(net.Ipv6Network("fe80::%2/96")) // different scope
+  }
+  ["Ipv6Network.subdivideTo() preserves scopeId"] {
+    net.Ipv6Network("fe80::%1/64").subdivideTo(67).toList().every((it) -> it.base.scopeId == "1")
+    net.Ipv6Network("fe80::/64").subdivideTo(67).toList().every((it) -> it.base.scopeId == null)
+  }
+  ["Ipv6Network first/last address preserves scopeId"] {
+    net.Ipv6Network("fe80::%1/64").firstAddress.scopeId == "1"
+    net.Ipv6Network("fe80::%1/64").lastAddress.scopeId == "1"
+    net.Ipv6Network("fe80::/64").firstAddress.scopeId == null
+    net.Ipv6Network("fe80::/64").lastAddress.scopeId == null
+  }
+  ["Ipv6Network.subnet()"] {
+    net.Ipv6Network("2001:db8:a:960::/64").subnet(80, 10)
+      == net.Ipv6Network("2001:db8:a:960:a::/80")
+    net.Ipv6Network("2001:db8:a:960::/64").subnet(80, 0) == net.Ipv6Network("2001:db8:a:960::/80")
+    net.Ipv6Network("2001:db8:a:960::/64").subnet(80, 65535)
+      == net.Ipv6Network("2001:db8:a:960:ffff::/80") // last valid subnet
+    net.Ipv6Network("2001:db8:a:960::/64").subnet(64, 0) == net.Ipv6Network("2001:db8:a:960::/64") // target == prefix
+    module.catchOrNull(() -> net.Ipv6Network("2001:db8:a:960::/64").subnet(80, 65536)) != null // one past the last valid subnet
+  }
+  ["Ipv6Network.subnet() at the top of the address space (/128)"] {
+    // subdividing all the way down to individual hosts, right at the last IP in the address space
+    net.Ipv6Network("ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffc/126").subnet(128, 3)
+      == net.Ipv6Network("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128")
+    // self is already a single-host (/128) network
+    net.Ipv6Network("::1/128").subnet(128, 0) == net.Ipv6Network("::1/128")
+    module.catchOrNull(() -> net.Ipv6Network("::1/128").subnet(128, 1)) != null
+    // target - prefix == bitWidth: subdividing the entire address space (/0) down to /128 hosts.
+    // 2^128 isn't representable as a UInt128, so this exercises the fallback path that skips the
+    // (otherwise-overflowing) bounds check.
+    net.Ipv6Network("::/0").subnet(128, 0) == net.Ipv6Network("::/128")
+    net.Ipv6Network("::/0").subnet(128, 4294967295) == net.Ipv6Network("::ffff:ffff/128")
+  }
+  ["Ipv6Network.subnet() preserves scopeId"] {
+    net.Ipv6Network("fe80::%1/64").subnet(80, 10).base.scopeId == "1"
+    net.Ipv6Network("fe80::/64").subnet(80, 10).base.scopeId == null
+  }
+  ["Ipv6Range() preserves scopeId as appropriate"] {
+    net
+      .Ipv6Address("fe80::%1")
+      .rangeTo(net.Ipv6Address("fe80::10%1"))
+      .every((ip) -> ip.scopeId == "1")
+    net
+      .Ipv6Address("fe80::%1")
+      .rangeTo(net.Ipv6Address("fe80::10%2"))
+      .every((ip) -> ip.scopeId == null)
+    net
+      .Ipv6Address("fe80::")
+      .rangeTo(net.Ipv6Address("fe80::10%1"))
+      .every((ip) -> ip.scopeId == null)
+    net
+      .Ipv6Address("fe80::%1")
+      .rangeTo(net.Ipv6Address("fe80::10"))
+      .every((ip) -> ip.scopeId == null)
+    net.Ipv6Address("fe80::").rangeTo(net.Ipv6Address("fe80::10")).every((ip) -> ip.scopeId == null)
+  }
+  ["Ipv6AddressString can't contain unicode digits outside scopeId"] {
+    !("\u{FF11}::" is net.Ipv6AddressString)
+    "fe80::%\u{FF11}" is net.Ipv6AddressString
+    !("::25\u{FF11}.0.0.0" is net.Ipv6AddressString)
+    !("::20\u{FF11}.0.0.0" is net.Ipv6AddressString)
+    !("::2\u{FF11}0.0.0.0" is net.Ipv6AddressString)
+    !("::10\u{FF11}.0.0.0" is net.Ipv6AddressString)
+    !("::1\u{FF11}0.0.0.0" is net.Ipv6AddressString)
+    !("::\u{FF11}00.0.0.0" is net.Ipv6AddressString)
+    !("::00\u{FF11}.0.0.0" is net.Ipv6AddressString)
+    !("::0\u{FF11}0.0.0.0" is net.Ipv6AddressString)
+    !("::0\u{FF11}.0.0.0" is net.Ipv6AddressString)
+    !("::\u{FF11}0.0.0.0" is net.Ipv6AddressString)
+    !("::\u{FF11}.0.0.0" is net.Ipv6AddressString)
+  }
+  ["Ipv6AddressPortString can't contain unicode digits in the port"] {
+    !("[::1]:\u{FF11}" is net.Ipv6AddressPortString)
+  }
+  ["Ipv6CidrString can't contain unicode digits in the suffix"] {
+    !("::1/\u{FF11}" is net.Ipv6CidrString)
+  }
+}
+
+examples {
+  ["Ipv6Address.toExpandedString()"] {
+    net.Ipv6Address("fe80::").toExpandedString()
+    net.Ipv6Address("fe80::1").toExpandedString()
+    net.Ipv6Address("::aa").toExpandedString()
+    net.Ipv6Address("::").toExpandedString()
+    net.Ipv6Address("::1").toExpandedString()
+    net.Ipv6Address("2001:db8::").toExpandedString()
+    net.Ipv6Address("fe80::1%1").toExpandedString()
+    net.Ipv6Address("fe80::1%0").toExpandedString()
+  }
+  ["Ipv6Address.toExpandedString() with scoped addresses"] {
+    net.Ipv6Address("fe80:0000:0000:0000:0000:0000:0000:00%1").toExpandedString() // 39 bytes long
+    net.Ipv6Address("fe80::%0").toExpandedString()
+    net.Ipv6Address("fe80:0:0:0:5:6:7:8%1").toExpandedString()
+    net.Ipv6Address("fe80::%000").toExpandedString() // we don't canonicalize scope ids here
+    net.Ipv6Address("fe80::%001").toExpandedString() // that happens in compressIpv6AddressString
+  }
+  ["Ipv6Address.toExpandedString() with Ipv4 suffix"] {
+    net.Ipv6Address("ffff:ffff:ffff:ffff:0:0:255.255.255.255").toExpandedString() // 39 bytes long
+    net.Ipv6Address("::1.2.3.4").toExpandedString()
+    net.Ipv6Address("2001:db8::1.2.3.4").toExpandedString()
+    net.Ipv6Address("a:b:c:d:e:f:001.000.030.000").toExpandedString()
+    net.Ipv6Address("::ffff:127.0.0.1").toExpandedString()
+    net.Ipv6Address("64:ff9b::127.0.0.1").toExpandedString()
+  }
+  ["Ipv6Address.toString() compression"] {
+    net.Ipv6Address("0001:0002:0003:0004:0005:0006:0007:0008").toString()
+    net.Ipv6Address("fe80:000:000:000:1:000:000:1").toString()
+    net.Ipv6Address("fe80::0001:0000:0000:0001").toString()
+    net.Ipv6Address("1:2:3:4:0:6:7:8").toString() // :: shouldn't compress a single field
+    net.Ipv6Address("1:2:3:4::6:7:8").toString()
+    net.Ipv6Address("::").toString()
+    net.Ipv6Address("::0:0").toString()
+    net.Ipv6Address("FE80::A:B:C:D:E:F").toString()
+    net.Ipv6Address("2001:0:0:1:0:0:0:1").toString()
+    net.Ipv6Address("2001:db8:0:0:1:0:0:1").toString()
+  }
+  ["Ipv6Address.toString() compression with scoped addresses"] {
+    net.Ipv6Address("fe80:0000:0000:0000:0005:0006:0007:0008%0").toString()
+    net.Ipv6Address("fe80::1:0%0").toString()
+    net.Ipv6Address("fe80::%0").toString()
+    net.Ipv6Address("fe80::%1").toString()
+    net.Ipv6Address("fe80::%000").toString() // we canonicalize scope ids here
+    net.Ipv6Address("fe80::%001").toString()
+  }
+  ["Ipv6Address.toString() compression with Ipv4 suffix"] {
+    net.Ipv6Address("::ffff:1.2.3.4").toString()
+    net.Ipv6Address("0000:0000:0000:0000:0000:ffff:001.020.000.004").toString()
+    net.Ipv6Address("fe80:0:0:0::1.2.3.4").toString()
+    net.Ipv6Address("fe80:0:0:0:0:0:0.0.0.0").toString()
+    net.Ipv6Address("::0.0.0.0").toString()
+  }
+  ["Ipv6Address.toString()"] {
+    net.Ipv6Address("fe80::1").toString()
+    net.Ipv6Address("101:1001:1010:110:100:1000:1100:1110").toString()
+    net.Ipv6Address("::").toString()
+    net.Ipv6Address("::0:1").toString()
+    net.Ipv6Address("fe80::0").toString()
+    net.Ipv6Address("fe80:0000:0000:0000:0000:0000:0001:0000").toString()
+    net.Ipv6Address("::ffff:7f00:1").toString()
+    net.Ipv6Address("64:ff9b::c000:0221").toString()
+    net.Ipv6Address("2001:db8:122:344::192.0.2.33").toString()
+    net.Ipv6Address("fe80::1%1").toString()
+    net.Ipv6Address("ff11::1%02").toString()
+    net.Ipv6Address("fe80::%0").toString()
+  }
+}

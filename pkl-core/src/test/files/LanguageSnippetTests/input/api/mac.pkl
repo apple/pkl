@@ -1,0 +1,14 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:net"
+
+facts {
+  ["MacAddress =="] {
+    net.MacAddress("34:73:5A:FA:AF:22") == net.MacAddress("34:73:5A:FA:AF:22")
+    net.MacAddress("34:73:5A:FA:AF:22") != net.MacAddress("34:73:5A:FA:AF:23")
+  }
+  ["MacAddress.toSlaacAddress()"] {
+    net.MacAddress("34:73:5A:FA:AF:22").toSlaacAddress(net.Ipv6Network("::/64")).toExpandedString()
+      == "0000:0000:0000:0000:3673:5aff:fefa:af22"
+  }
+}
