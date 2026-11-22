@@ -105,6 +105,7 @@ public final class NetNodes {
 
   public abstract static class IpAddress extends ExternalMethod1Node {
     @Specialization
+    @TruffleBoundary
     protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String addr) {
       return addr.indexOf(':') < 0
           ? IpMacFactories.parseIpv4Address(addr)
@@ -128,6 +129,7 @@ public final class NetNodes {
 
   public abstract static class IpNetwork extends ExternalMethod1Node {
     @Specialization
+    @TruffleBoundary
     protected VmTyped eval(@SuppressWarnings("unused") VmTyped self, String cidr) {
       return cidr.indexOf(':') < 0
           ? IpMacFactories.parseIpv4Network(cidr)

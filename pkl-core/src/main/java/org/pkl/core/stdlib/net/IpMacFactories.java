@@ -15,6 +15,8 @@
  */
 package org.pkl.core.stdlib.net;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.Node;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
@@ -182,6 +184,7 @@ public class IpMacFactories {
   private static final VmObjectFactory<byte[]> macAddressFactory =
       new VmObjectFactory<byte[]>(NetModule::getMacAddressClass).addProperty("bytes", VmBytes::new);
 
+  @TruffleBoundary
   public static VmTyped parseIpv4Address(String addr) {
     var parts = addr.split("\\.", 4);
     assert parts.length == 4;
@@ -197,6 +200,7 @@ public class IpMacFactories {
     return ipv4AddressFactory.create(repr);
   }
 
+  @TruffleBoundary
   public static VmTyped parseIpv6Address(String addr, @Nullable Node node) {
     var pctIdx = addr.indexOf('%');
     String scopeId = null;
@@ -285,6 +289,7 @@ public class IpMacFactories {
   public static VmTyped makeIpv6Address(
       UInt128 repr, @Nullable String scopeId, @Nullable Node node) {
     if (scopeId != null && !isNonGlobalScope(repr)) {
+      CompilerDirectives.transferToInterpreter();
       throw new VmExceptionBuilder()
           .evalError("ipv6GlobalAddressWithScopeId", Ipv6AddressNodes.toAddressString(repr, false))
           .withOptionalLocation(node)
@@ -294,6 +299,7 @@ public class IpMacFactories {
     return ipv6AddressFactory.create(new Ipv6Address(repr, scopeId));
   }
 
+  @TruffleBoundary
   public static VmTyped parseIpv4Network(String cidr) {
     var parts = cidr.split("/", 2);
     assert parts.length == 2;
@@ -311,6 +317,7 @@ public class IpMacFactories {
     return ipv4NetworkFactory.create(new IpNetwork(base, prefix));
   }
 
+  @TruffleBoundary
   public static VmTyped parseIpv6Network(String cidr, @Nullable Node node) {
     var parts = cidr.split("/", 2);
     assert parts.length == 2;
@@ -328,6 +335,7 @@ public class IpMacFactories {
     return ipv6NetworkFactory.create(new IpNetwork(base, prefix));
   }
 
+  @TruffleBoundary
   public static VmTyped parseMacAddress(String mac) {
     var parts = mac.split("[.:-]");
     assert parts.length == 6;

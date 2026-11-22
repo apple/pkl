@@ -24,6 +24,7 @@ import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv4Address;
 import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv4Network;
 import static org.pkl.core.stdlib.net.IpMacFactories.maskHi;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -133,7 +134,12 @@ public class Ipv4NetworkNodes {
     protected String eval(VirtualFrame frame, VmTyped self) {
       var base = getIpv4Base(self);
       var prefix = getIpv4Prefix(self);
-      return String.format("%s/%d", toStringNode.executeWith(frame, base), prefix);
+      return doEval(toStringNode.executeWith(frame, base), prefix);
+    }
+
+    @TruffleBoundary
+    private String doEval(String ip, long prefix) {
+      return String.format("%s/%d", ip, prefix);
     }
   }
 }

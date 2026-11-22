@@ -24,6 +24,7 @@ import static org.pkl.core.stdlib.net.IpMacFactories.getLastAddress;
 import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv6Address;
 import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv6Network;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -212,7 +213,12 @@ public class Ipv6NetworkNodes {
     protected String eval(VirtualFrame frame, VmTyped self) {
       var base = getIpv6Base(self);
       var prefix = getIpv6Prefix(self);
-      return String.format("%s/%d", toStringNode.executeWith(frame, base), prefix);
+      return doEval(toStringNode.executeWith(frame, base), prefix);
+    }
+
+    @TruffleBoundary
+    private String doEval(String ip, long prefix) {
+      return String.format("%s/%d", ip, prefix);
     }
   }
 }

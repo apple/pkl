@@ -21,6 +21,7 @@ import static org.pkl.core.stdlib.net.IpMacFactories.isIpv4Embedded;
 import static org.pkl.core.stdlib.net.IpMacFactories.isIpv4Mapped;
 import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv6Address;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.util.Objects;
 import org.pkl.core.runtime.VmList;
@@ -57,6 +58,7 @@ public class Ipv6AddressNodes {
 
   public abstract static class toString extends ExternalMethod0Node {
     @Specialization
+    @TruffleBoundary
     protected String eval(VmTyped self) {
       var repr = getIpv6Repr(self);
       var scopeId = getIpv6ScopeId(self);
@@ -75,6 +77,7 @@ public class Ipv6AddressNodes {
 
   public abstract static class toExpandedString extends ExternalMethod0Node {
     @Specialization
+    @TruffleBoundary
     protected String eval(VmTyped self) {
       var repr = getIpv6Repr(self);
       var scopeId = getIpv6ScopeId(self);
@@ -84,6 +87,7 @@ public class Ipv6AddressNodes {
     }
   }
 
+  @TruffleBoundary
   public static String toAddressString(UInt128 repr, boolean expand) {
     var isIpv4 = isIpv4Mapped(repr) || isIpv4Embedded(repr);
     var dcolonIdx = -1;

@@ -19,6 +19,7 @@ import static org.pkl.core.stdlib.net.IpMacFactories.getIpv6Base;
 import static org.pkl.core.stdlib.net.IpMacFactories.getIpv6Repr;
 import static org.pkl.core.stdlib.net.IpMacFactories.getIpv6ScopeId;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -33,6 +34,7 @@ public class MacAddressNodes {
 
   public abstract static class toString extends ExternalMethod0Node {
     @Specialization
+    @TruffleBoundary
     protected String eval(VmTyped self) {
       var repr = getRepr(self);
       return String.format(

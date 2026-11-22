@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.net;
 import static org.pkl.core.stdlib.net.IpMacFactories.getIpv4Repr;
 import static org.pkl.core.stdlib.net.IpMacFactories.makeIpv4Address;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmTyped;
@@ -50,6 +51,7 @@ public class Ipv4AddressNodes {
 
   public abstract static class toString extends ExternalMethod0Node {
     @Specialization
+    @TruffleBoundary
     protected String eval(VmTyped self) {
       var repr = getIpv4Repr(self);
       return String.format(
