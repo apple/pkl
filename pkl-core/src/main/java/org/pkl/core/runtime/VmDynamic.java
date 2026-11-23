@@ -229,13 +229,14 @@ public final class VmDynamic extends VmObject {
   }
 
   public int getRegularMemberCount() {
-    assert isShallowForced();
     if (cachedRegularMemberCount != -1) return cachedRegularMemberCount;
     var result = 0;
     for (var key : cachedValues.getKeys()) {
       if (!isHiddenOrLocalProperty(key)) result += 1;
     }
-    cachedRegularMemberCount = result;
+    // Equality can request the count while this object is still being forced.
+    // A partial count must not be reused after the remaining members are cached.
+    if (isShallowForced()) cachedRegularMemberCount = result;
     return result;
   }
 
