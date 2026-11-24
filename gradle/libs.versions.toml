@@ -11,22 +11,22 @@ errorPronePlugin = "5.1.0"
 geantyref = "2.0.1"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
-graalVm = "25.5.5.0.3"
-graalVmJdkVersion = "25.0.5.0.3"
+graalVm = "25.6.5.1"
+graalVmJdkVersion = "25.0.5.1"
 #noinspection UnusedVersionCatalogEntry
-graalVmInnovation = "5"
+graalVmInnovation = "6"
 # slightly hacky but convenient place so we remember to update the checksum
 # pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-macos-x64 = "unavailable"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-aarch64 = "54369d4a5931a5a2101c7c52444a4e7e6647a3a4e041335053cda6fd22295e0c"
+graalVmSha256-macos-aarch64 = "19ef5175f18fe2a957a5ec4cc3dd263a164e88ae621cf80ee1c715ede72469f0"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-x64 = "c6438dee6c3ade2220d40b7ccdcad24b512d30e233e61bb4fc70519522de34ef"
+graalVmSha256-linux-x64 = "d792848db26f1602f0a5cf2cd9279d9a652d32ab450d891ce616c9ca67e359d0"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-aarch64 = "41741c0650ae7564a78335f9e4fc353a902e6ff1d4140f2e4fabd1c55d5cce66"
+graalVmSha256-linux-aarch64 = "d8e6edf0009bb5d70c6a670eb030d36aa804795427306434c0f7f63c01435307"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-windows-x64 = "b02c3b162129fa8cbfa7ebd0fcc1ae6eba2fc736bf3bef8e40e5ace3e9d9a0d6"
+graalVmSha256-windows-x64 = "1f534c46337f838880553c47f973a3d769b4058036288afcec930e2abddf06a1"
 # pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
