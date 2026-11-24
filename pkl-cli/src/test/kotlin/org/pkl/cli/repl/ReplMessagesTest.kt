@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,5 +72,11 @@ class ReplMessagesTest {
     val responses = server.handleRequest(ReplRequest.Eval("1", "`", true, true))
     assertThat(responses.size).isEqualTo(1)
     assertThat(responses).hasOnlyElementsOfType(ReplResponse.EvalError::class.java)
+  }
+
+  @Test
+  fun `examples link to the current language reference`() {
+    assertThat(ReplMessages.examples.trimEnd().lines().last())
+      .isEqualTo("https://pkl-lang.org/main/current/language-reference/index.html")
   }
 }
