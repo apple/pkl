@@ -388,6 +388,10 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  public VmExceptionBuilder stackOverflowError() {
+    return evalError("stackOverflow");
+  }
+
   public VmException build() {
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");

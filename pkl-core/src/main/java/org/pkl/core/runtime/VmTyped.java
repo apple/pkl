@@ -20,6 +20,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
+import java.util.Objects;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +38,9 @@ import org.pkl.core.util.EconomicMaps;
 
 public final class VmTyped extends VmObject {
   @CompilationFinal private @Nullable VmClass clazz;
+
+  private static final ThreadLocal<IdentityHashMap<VmTyped, Object>> evaluatingKeys =
+      ThreadLocal.withInitial(IdentityHashMap::new);
 
   public VmTyped(
       MaterializedFrame enclosingFrame,
@@ -263,9 +268,8 @@ public final class VmTyped extends VmObject {
     other.force(false);
 
     for (var key : clazz.getAllRegularPropertyNames()) {
-      var value = getCachedValue(key);
-      assert value != null;
-      var otherValue = other.getCachedValue(key);
+      var value = forcedPropertyValue(key);
+      var otherValue = other.forcedPropertyValue(key);
       if (!value.equals(otherValue)) return false;
     }
 
@@ -282,12 +286,39 @@ public final class VmTyped extends VmObject {
     var result = 0;
 
     for (var key : clazz.getAllRegularPropertyNames()) {
-      var value = getCachedValue(key);
-      assert value != null;
-      result = 31 * result + value.hashCode();
+      result = 31 * result + forcedPropertyValue(key).hashCode();
     }
 
     cachedHash = result;
     return result;
+  }
+
+  /**
+   * Returns a regular property value for use in {@link #equals} and {@link #hashCode}.
+   *
+   * <p>{@link #force(boolean)} can return early if it is already running on this object (for
+   * example when {@code hashCode} is called mid-force). A missing cached value is then evaluated
+   * here. If that same property is already being evaluated on this object, the reference is
+   * circular and is reported as a stack overflow.
+   */
+  private Object forcedPropertyValue(Object key) {
+    var value = getCachedValue(key);
+    if (value != null) return value;
+    var inFlight = evaluatingKeys.get();
+    if (inFlight.containsKey(this) && Objects.equals(inFlight.get(this), key)) {
+      throw new VmExceptionBuilder().stackOverflowError().build();
+    }
+    var previous = inFlight.put(this, key);
+    try {
+      value = VmUtils.readMemberOrNull(this, key);
+      if (value != null) return value;
+      throw new VmExceptionBuilder().stackOverflowError().build();
+    } finally {
+      if (previous == null) {
+        inFlight.remove(this);
+      } else {
+        inFlight.put(this, previous);
+      }
+    }
   }
 }

@@ -1,0 +1,8 @@
+import "pkl:reflect"
+
+class A {
+  a: Int
+  b: String
+}
+
+val = reflect.Class(A).properties.containsKey(this)
