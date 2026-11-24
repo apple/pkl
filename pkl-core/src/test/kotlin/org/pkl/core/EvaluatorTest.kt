@@ -278,6 +278,32 @@ class EvaluatorTest {
   }
 
   @Test
+  fun `stack overflow when hashing a typed object during its own evaluation`() {
+    val evaluator = Evaluator.preconfigured()
+    val e =
+      assertThrows<PklException> {
+        evaluator.evaluate(
+          text(
+            """
+            import "pkl:reflect"
+
+            class A {
+              a: Int
+              b: String
+            }
+
+            val = reflect.Class(A).properties.containsKey(this)
+            """
+              .trimIndent()
+          )
+        )
+      }
+    assertThat(e.message).contains("A stack overflow occurred.")
+    assertThat(e.message).doesNotContain("NullPointerException")
+    assertThat(e.message).doesNotContain("unexpected error")
+  }
+
+  @Test
   fun `cannot import module located outside root dir`(@TempDir tempDir: Path) {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {

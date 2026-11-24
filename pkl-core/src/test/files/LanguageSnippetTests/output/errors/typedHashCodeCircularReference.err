@@ -1,0 +1,16 @@
+–– Pkl Error ––
+A stack overflow occurred.
+
+┌─ 3 repetitions of:
+│ 8 | val = reflect.Class(A).properties.containsKey(this)
+│           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+│ at typedHashCodeCircularReference#val (file:///$snippetsDir/input/errors/typedHashCodeCircularReference.pkl)
+└─
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
