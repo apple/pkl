@@ -269,7 +269,7 @@ public final class RendererNodes {
 
     // No-op for XML
     @Override
-    protected void endMap(VmMap value) {}
+    protected void endMap(VmMap value, boolean isEmpty) {}
 
     private void doVisitElement(Object value) {
       if (!(value instanceof VmNull)) {

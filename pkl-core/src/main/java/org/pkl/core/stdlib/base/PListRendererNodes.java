@@ -319,8 +319,8 @@ public final class PListRendererNodes {
     }
 
     @Override
-    protected void endMap(VmMap value) {
-      endDict(value.isEmpty());
+    protected void endMap(VmMap value, boolean isEmpty) {
+      endDict(isEmpty);
     }
 
     private void endDict(boolean isEmpty) {

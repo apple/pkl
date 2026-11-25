@@ -276,8 +276,8 @@ public final class JsonRendererNodes {
     }
 
     @Override
-    protected void endMap(VmMap value) {
-      endObject(value.isEmpty());
+    protected void endMap(VmMap value, boolean isEmpty) {
+      endObject(isEmpty);
     }
 
     private void endArray(boolean isEmpty) {

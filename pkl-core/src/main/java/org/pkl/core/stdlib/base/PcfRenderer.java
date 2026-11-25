@@ -310,7 +310,7 @@ public final class PcfRenderer extends AbstractStringRenderer {
   }
 
   @Override
-  protected void endMap(VmMap value) {
+  protected void endMap(VmMap value, boolean isEmpty) {
     builder.append(')');
   }
 

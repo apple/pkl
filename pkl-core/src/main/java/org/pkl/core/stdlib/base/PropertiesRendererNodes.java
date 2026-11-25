@@ -256,7 +256,7 @@ public final class PropertiesRendererNodes {
     protected void endSet(VmSet value) {}
 
     @Override
-    protected void endMap(VmMap value) {}
+    protected void endMap(VmMap value, boolean isEmpty) {}
 
     private void writeValue(String value) {
       builder.append(PropertiesUtils.renderPropertiesKeyOrValue(value, false, restrictCharset));

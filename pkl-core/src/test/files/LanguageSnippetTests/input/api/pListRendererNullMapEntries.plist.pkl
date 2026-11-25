@@ -1,0 +1,13 @@
+a = Map("k", null)
+b = new Mapping { ["k"] = null }
+c = Map("k1", null, "k2", null)
+d = Map("x", Map("k", null))
+e = List(Map("k", null))
+f = Map("k1", null, "k2", 1)
+g {
+  Map("k", null)
+}
+
+output {
+  renderer = new PListRenderer {}
+}

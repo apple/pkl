@@ -378,8 +378,8 @@ public final class YamlRendererNodes {
     }
 
     @Override
-    protected void endMap(VmMap value) {
-      endYamlMapping(value.isEmpty());
+    protected void endMap(VmMap value, boolean isEmpty) {
+      endYamlMapping(isEmpty);
     }
 
     private void endYamlSequence(boolean isEmpty) {
