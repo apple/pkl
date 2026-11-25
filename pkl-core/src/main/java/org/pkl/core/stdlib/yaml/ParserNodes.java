@@ -272,9 +272,9 @@ public final class ParserNodes {
           }
         }
 
-        var result = Long.parseLong(value, offset, value.length(), radix);
-        if (isNegative) result = -result;
-        return result;
+        // parse together with the sign because the magnitude of `Long.MIN_VALUE` is not a `long`
+        var digits = value.substring(offset);
+        return Long.parseLong(isNegative ? "-" + digits : digits, radix);
       }
 
       private static long parseBase60(String value, boolean isNegative, int offset) {
@@ -282,9 +282,10 @@ public final class ParserNodes {
         var segments = value.substring(offset).split(":");
         for (var segment : segments) {
           var segmentNum = Long.parseLong(segment);
+          // accumulate as negative number because the magnitude of `Long.MIN_VALUE` is not a `long`
+          if (isNegative) segmentNum = -segmentNum;
           result = VmSafeMath.add(VmSafeMath.multiply(result, 60), segmentNum);
         }
-        if (isNegative) result = -result;
         return result;
       }
     }
