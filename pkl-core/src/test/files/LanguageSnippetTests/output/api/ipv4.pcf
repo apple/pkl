@@ -1,0 +1,111 @@
+facts {
+  ["Ipv4Address =="] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4AddressString"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4CidrString"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4NetworkString"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4AddressPortString"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4Address()"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4Network.containsNetwork()"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4Network.overlaps()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4Network.subnet()"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4Network.subnet() at the top of the address space (/32)"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4AddressString can't contain unicode digits"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Ipv4AddressPortString can't contain unicode digits in the port"] {
+    true
+  }
+  ["Ipv4CidrString can't contain unicode digits in the suffix"] {
+    true
+  }
+}

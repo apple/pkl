@@ -1,0 +1,22 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:net"
+
+facts {
+  ["IpNetworkString"] {
+    "10.0.0.0/24" is net.IpNetworkString
+    "2001:db8::/32" is net.IpNetworkString
+    !("10.0.0.1/24" is net.IpNetworkString) // host bits set
+    !("2001:db8::1/32" is net.IpNetworkString) // host bits set
+    !("not a cidr" is net.IpNetworkString)
+    !("" is net.IpNetworkString)
+  }
+  ["IpAddressPortString can't contain unicode digits in the port"] {
+    !("127.0.0.1:\u{FF11}" is net.IpAddressPortString)
+    !("[::1]:\u{FF11}" is net.IpAddressPortString)
+  }
+  ["IpCidrString can't contain unicode digits in the suffix"] {
+    !("10.0.0.0/\u{FF11}" is net.Ipv4CidrString) 
+    !("::1/\u{FF11}" is net.Ipv6CidrString)
+  }
+}

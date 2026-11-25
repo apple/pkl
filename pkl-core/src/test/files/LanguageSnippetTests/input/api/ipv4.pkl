@@ -1,0 +1,119 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:net"
+
+facts {
+  ["Ipv4Address =="] {
+    net.Ipv4Address("127.0.0.1") == net.Ipv4Address("127.0.0.1")
+    net.Ipv4Address("127.0.0.1") != net.Ipv4Address("127.0.0.2")
+    net.Ipv4Address("127.0.0.1") != net.Ipv4Address("127.0.1.1")
+    net.Ipv4Address("127.0.0.1") != net.Ipv4Address("127.1.0.1")
+    net.Ipv4Address("127.0.0.1") != net.Ipv4Address("128.0.0.1")
+  }
+  ["Ipv4AddressString"] {
+    "0.0.0.0" is net.Ipv4AddressString
+    "127.0.0.1" is net.Ipv4AddressString
+    "1.1.1.1" is net.Ipv4AddressString
+    "000.000.000.000" is net.Ipv4AddressString
+    "255.255.255.255" is net.Ipv4AddressString
+    !("0000.0.0.0" is net.Ipv4AddressString)
+    !("256.0.0.0" is net.Ipv4AddressString)
+    !("260.0.0.0" is net.Ipv4AddressString)
+    !("300.0.0.0" is net.Ipv4AddressString)
+    !("1.1.1" is net.Ipv4AddressString)
+    !("1.1.1." is net.Ipv4AddressString)
+    !("1.1.1.1." is net.Ipv4AddressString)
+    !("1.a.1.1" is net.Ipv4AddressString)
+    !("1..1.1" is net.Ipv4AddressString)
+    !("1..1.1.1" is net.Ipv4AddressString)
+    !(".1.1.1" is net.Ipv4AddressString)
+    !(".1.1.1.1" is net.Ipv4AddressString)
+    !("" is net.Ipv4AddressString)
+  }
+  ["Ipv4CidrString"] {
+    "0.0.0.0/1" is net.Ipv4CidrString
+    "255.255.255.255/32" is net.Ipv4CidrString
+    !("0.0.0.0/" is net.Ipv4CidrString)
+    !("0.0.0.0/100" is net.Ipv4CidrString)
+    !("0.0.0.0/a" is net.Ipv4CidrString)
+    !("/10" is net.Ipv4CidrString)
+    !("" is net.Ipv4CidrString)
+  }
+  ["Ipv4NetworkString"] {
+    "10.0.0.0/24" is net.Ipv4NetworkString
+    "0.0.0.0/0" is net.Ipv4NetworkString // whole address space: no host bits to be non-zero
+    "255.255.255.255/32" is net.Ipv4NetworkString // single host: every bit is a network bit
+    !("10.0.0.1/24" is net.Ipv4NetworkString) // host bits set
+    !("not a cidr" is net.Ipv4NetworkString)
+    !("" is net.Ipv4NetworkString)
+  }
+  ["Ipv4AddressPortString"] {
+    "0.0.0.0:0" is net.Ipv4AddressPortString
+    "255.255.255.255:65535" is net.Ipv4AddressPortString
+    !("0.0.0.0:" is net.Ipv4AddressPortString)
+    !("0.0.0.0:123456" is net.Ipv4AddressPortString)
+    !(":1" is net.Ipv4AddressPortString)
+    !("" is net.Ipv4AddressPortString)
+    !("0.0.0.0:a" is net.Ipv4AddressPortString)
+    !("[0.0.0.0]:1" is net.Ipv4AddressPortString)
+  }
+  ["Ipv4Address()"] {
+    net.Ipv4Address("127.0.0.1").bytes == Bytes(0x7F, 0, 0, 1)
+    net.Ipv4Address("0.0.0.0").bytes == Bytes(0, 0, 0, 0)
+    net.Ipv4Address("255.255.255.255").bytes == Bytes(0xFF, 0xFF, 0xFF, 0xFF)
+    net.Ipv4Address("126.127.128.129").bytes == Bytes(0x7E, 0x7F, 0x80, 0x81)
+    net.Ipv4Address("172.16.254.1").bytes == Bytes(0xAC, 0x10, 0xFE, 0x01)
+  }
+  ["Ipv4Network.containsNetwork()"] {
+    net.Ipv4Network("10.0.0.0/16").containsNetwork(net.Ipv4Network("10.0.5.0/24")) // narrower prefix inside wider
+    !net.Ipv4Network("10.0.5.0/24").containsNetwork(net.Ipv4Network("10.0.0.0/16")) // wider isn't a subnet of narrower
+    net.Ipv4Network("10.0.0.0/24").containsNetwork(net.Ipv4Network("10.0.0.0/24")) // identical
+    !net.Ipv4Network("10.0.0.0/24").containsNetwork(net.Ipv4Network("192.168.0.0/24")) // disjoint
+    !net.Ipv4Network("10.0.5.0/24").containsNetwork(net.Ipv4Network("0.0.0.0/0")) // other is wider than self, not narrower
+  }
+  ["Ipv4Network.overlaps()"] {
+    net.Ipv4Network("10.0.0.0/24").overlaps(net.Ipv4Network("10.0.0.0/24")) // identical
+    net.Ipv4Network("10.0.0.0/16").overlaps(net.Ipv4Network("10.0.5.0/24")) // other nested inside self
+    net.Ipv4Network("10.0.5.0/24").overlaps(net.Ipv4Network("10.0.0.0/16")) // self nested inside other
+    net.Ipv4Network("0.0.0.0/0").overlaps(net.Ipv4Network("10.0.5.0/24")) // /0 overlaps everything
+    !net.Ipv4Network("10.0.0.0/24").overlaps(net.Ipv4Network("192.168.0.0/24")) // disjoint
+    !net.Ipv4Network("10.0.0.0/25").overlaps(net.Ipv4Network("10.0.0.128/25")) // adjacent halves of a /24
+  }
+  ["Ipv4Network.subnet()"] {
+    net.Ipv4Network("10.53.120.0/21").subnet(24, 3) == net.Ipv4Network("10.53.123.0/24")
+    net.Ipv4Network("10.53.120.0/21").subnet(24, 0) == net.Ipv4Network("10.53.120.0/24")
+    net.Ipv4Network("10.53.120.0/21").subnet(24, 7) == net.Ipv4Network("10.53.127.0/24") // last valid subnet
+    net.Ipv4Network("10.53.120.0/21").subnet(21, 0) == net.Ipv4Network("10.53.120.0/21") // target == prefix
+    module.catchOrNull(() -> net.Ipv4Network("10.53.120.0/21").subnet(24, 8)) != null // one past the last valid subnet
+  }
+  ["Ipv4Network.subnet() at the top of the address space (/32)"] {
+    // subdividing all the way down to individual hosts, right at the last IP in the address space
+    net.Ipv4Network("255.255.255.252/30").subnet(32, 3) == net.Ipv4Network("255.255.255.255/32")
+    // self is already a single-host (/32) network
+    net.Ipv4Network("10.0.0.1/32").subnet(32, 0) == net.Ipv4Network("10.0.0.1/32")
+    module.catchOrNull(() -> net.Ipv4Network("10.0.0.1/32").subnet(32, 1)) != null
+    // target - prefix == bitWidth: subdividing the entire address space (/0) down to /32 hosts
+    net.Ipv4Network("0.0.0.0/0").subnet(32, 0) == net.Ipv4Network("0.0.0.0/32")
+    net.Ipv4Network("0.0.0.0/0").subnet(32, 4294967295) == net.Ipv4Network("255.255.255.255/32")
+  }
+  ["Ipv4AddressString can't contain unicode digits"] {
+    // U+FF11 is FULLWIDTH DIGIT ONE
+    !("25\u{FF11}.0.0.0" is net.Ipv4AddressString)
+    !("20\u{FF11}.0.0.0" is net.Ipv4AddressString)
+    !("2\u{FF11}0.0.0.0" is net.Ipv4AddressString)
+    !("10\u{FF11}.0.0.0" is net.Ipv4AddressString)
+    !("1\u{FF11}0.0.0.0" is net.Ipv4AddressString)
+    !("\u{FF11}00.0.0.0" is net.Ipv4AddressString)
+    !("00\u{FF11}.0.0.0" is net.Ipv4AddressString)
+    !("0\u{FF11}0.0.0.0" is net.Ipv4AddressString)
+    !("0\u{FF11}.0.0.0" is net.Ipv4AddressString)
+    !("\u{FF11}0.0.0.0" is net.Ipv4AddressString)
+    !("\u{FF11}.0.0.0" is net.Ipv4AddressString)
+  }
+  ["Ipv4AddressPortString can't contain unicode digits in the port"] {
+    !("127.0.0.1:\u{FF11}" is net.IpAddressPortString)
+  }
+  ["Ipv4CidrString can't contain unicode digits in the suffix"] {
+    !("10.0.0.0/\u{FF11}" is net.Ipv4CidrString)
+  }
+}
