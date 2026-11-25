@@ -233,6 +233,7 @@ abstract class NativeImageBuild : DefaultTask() {
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResources=org/jline/utils/.*")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
+        add("-H:IncludeResourceBundles=org.pkl.messaging.errorMessages")
         add("-H:IncludeResourceBundles=org.pkl.parser.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
         if (mainClass.isPresent) {

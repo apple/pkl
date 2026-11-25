@@ -23,6 +23,7 @@ plugins {
 val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
 
 dependencies {
+  api(projects.pklMessaging)
   implementation(projects.pklCore)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)

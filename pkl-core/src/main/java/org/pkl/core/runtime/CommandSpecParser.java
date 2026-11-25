@@ -65,7 +65,6 @@ import org.pkl.core.ast.member.ModuleNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.runtime.VmObjectCursor.CursorOption;
@@ -74,6 +73,7 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 /** Runs commands. */
 public final class CommandSpecParser {

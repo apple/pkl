@@ -36,6 +36,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.Value;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.messaging.externalreader.ExternalReader;
 
 /** Java version of {@code pkl.EvaluatorSettings}. */
 public record PklEvaluatorSettings(
@@ -89,7 +90,7 @@ public record PklEvaluatorSettings(
             : externalModuleReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+                        Entry::getKey, entry -> parseExternalReader(entry.getValue())));
 
     var externalResourceReadersRaw = (Map<String, Value>) pSettings.get("externalResourceReaders");
     var externalResourceReaders =
@@ -98,7 +99,7 @@ public record PklEvaluatorSettings(
             : externalResourceReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+                        Entry::getKey, entry -> parseExternalReader(entry.getValue())));
 
     var color = (String) pSettings.get("color");
     var traceMode = (String) pSettings.get("traceMode");
@@ -118,6 +119,18 @@ public record PklEvaluatorSettings(
         externalModuleReaders,
         externalResourceReaders,
         traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase(Locale.ROOT)));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ExternalReader parseExternalReader(Value input) {
+    if (input instanceof PObject externalReader) {
+      var executable = (String) externalReader.getProperty("executable");
+      var arguments = (List<String>) externalReader.get("arguments");
+      var workingDir = externalReader.getProperty("workingDir");
+      return new ExternalReader(
+          executable, arguments, workingDir instanceof PNull ? null : (String) workingDir);
+    }
+    throw PklBugException.unreachableCode();
   }
 
   public record Http(
@@ -208,21 +221,6 @@ public record PklEvaluatorSettings(
       } else {
         throw PklBugException.unreachableCode();
       }
-    }
-  }
-
-  public record ExternalReader(
-      String executable, @Nullable List<String> arguments, @Nullable String workingDir) {
-    @SuppressWarnings("unchecked")
-    public static ExternalReader parse(Value input) {
-      if (input instanceof PObject externalReader) {
-        var executable = (String) externalReader.getProperty("executable");
-        var arguments = (List<String>) externalReader.get("arguments");
-        var workingDir = externalReader.getProperty("workingDir");
-        return new ExternalReader(
-            executable, arguments, workingDir instanceof PNull ? null : (String) workingDir);
-      }
-      throw PklBugException.unreachableCode();
     }
   }
 

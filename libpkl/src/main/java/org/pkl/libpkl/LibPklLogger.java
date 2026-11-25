@@ -16,7 +16,7 @@
 package org.pkl.libpkl;
 
 import java.util.Objects;
-import org.pkl.core.messaging.MessageTransports.Logger;
+import org.pkl.messaging.MessageTransports.Logger;
 
 public class LibPklLogger implements Logger {
 

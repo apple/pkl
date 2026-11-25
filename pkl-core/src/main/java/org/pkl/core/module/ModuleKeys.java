@@ -32,9 +32,6 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalModuleResolver;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.externalreader.ModuleReaderSpec;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -44,6 +41,9 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalModuleResolver;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
+import org.pkl.messaging.externalreader.ModuleReaderSpec;
 
 /** Utilities for creating and using {@link ModuleKey}s. */
 public final class ModuleKeys {
@@ -840,20 +840,25 @@ public final class ModuleKeys {
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
         throws IOException, SecurityManagerException {
-      return resolver.listElements(securityManager, baseUri);
+      securityManager.checkResolveModule(baseUri);
+      return resolver.listElements(baseUri).stream()
+          .map((it) -> new PathElement(it.getName(), it.isDirectory()))
+          .toList();
     }
 
     @Override
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
-      var contents = resolver.resolveModule(securityManager, uri);
+      securityManager.checkResolveModule(uri);
+      var contents = resolver.resolveModule(uri);
       return ResolvedModuleKeys.virtual(this, uri, contents, true);
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
         throws IOException, SecurityManagerException {
-      return resolver.hasElement(securityManager, elementUri);
+      securityManager.checkResolveModule(elementUri);
+      return resolver.hasElement(elementUri);
     }
   }
 }

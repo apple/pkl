@@ -1,0 +1,124 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.messaging.externalreader;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import org.jspecify.annotations.Nullable;
+import org.pkl.messaging.MessageTransport;
+import org.pkl.messaging.MessageTransports;
+import org.pkl.messaging.Messages.*;
+import org.pkl.messaging.PathElement;
+import org.pkl.messaging.ProtocolException;
+
+final class ExternalResourceResolverImpl implements ExternalResourceResolver {
+  private final MessageTransport transport;
+  private final long evaluatorId;
+  private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
+  private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
+  private final Random requestIdGenerator = new Random();
+
+  ExternalResourceResolverImpl(MessageTransport transport, long evaluatorId) {
+    this.transport = transport;
+    this.evaluatorId = evaluatorId;
+  }
+
+  public Optional<byte[]> read(URI uri) throws IOException {
+    var result = doRead(uri);
+    return result == null ? Optional.empty() : Optional.of(result);
+  }
+
+  public boolean hasElement(URI elementUri) {
+    try {
+      return doRead(elementUri) != null;
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
+  public List<PathElement> listElements(URI baseUri) throws IOException {
+    return doListElements(baseUri);
+  }
+
+  public List<PathElement> doListElements(URI baseUri) throws IOException {
+    return Objects.requireNonNull(
+        MessageTransports.resolveFuture(
+            listResponses.computeIfAbsent(
+                baseUri,
+                (uri) -> {
+                  var future = new CompletableFuture<List<PathElement>>();
+                  var request =
+                      new ListResourcesRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
+                  try {
+                    transport.send(
+                        request,
+                        (response) -> {
+                          if (response instanceof ListResourcesResponse resp) {
+                            if (resp.error() != null) {
+                              future.completeExceptionally(new IOException(resp.error()));
+                            } else {
+                              future.complete(
+                                  Objects.requireNonNullElseGet(resp.pathElements(), List::of));
+                            }
+                          } else {
+                            future.completeExceptionally(
+                                new ProtocolException("unexpected response"));
+                          }
+                        });
+                  } catch (ProtocolException | IOException e) {
+                    future.completeExceptionally(e);
+                  }
+                  return future;
+                })));
+  }
+
+  public byte @Nullable [] doRead(URI baseUri) throws IOException {
+    return MessageTransports.resolveFuture(
+        readResponses.computeIfAbsent(
+            baseUri,
+            (uri) -> {
+              var future = new CompletableFuture<byte @Nullable []>();
+              var request =
+                  new ReadResourceRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
+              try {
+                transport.send(
+                    request,
+                    (response) -> {
+                      if (response instanceof ReadResourceResponse resp) {
+                        if (resp.error() != null) {
+                          future.completeExceptionally(new IOException(resp.error()));
+                        } else {
+                          future.complete(resp.contents());
+                        }
+                      } else {
+                        future.completeExceptionally(new ProtocolException("unexpected response"));
+                      }
+                    });
+              } catch (ProtocolException | IOException e) {
+                future.completeExceptionally(e);
+              }
+              return future;
+            }));
+  }
+}

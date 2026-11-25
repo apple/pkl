@@ -40,13 +40,13 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class IoUtils {
   // Don't match paths like `C:\`, which are drive letters on Windows.

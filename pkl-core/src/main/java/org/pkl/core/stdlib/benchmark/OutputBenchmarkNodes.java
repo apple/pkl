@@ -26,7 +26,6 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -36,6 +35,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.util.MutableReference;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public final class OutputBenchmarkNodes {
   public abstract static class run extends ExternalMethod0Node {

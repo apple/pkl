@@ -18,8 +18,8 @@ package org.pkl.commons.test.server
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import org.assertj.core.api.Assertions.*
-import org.pkl.core.messaging.Message
-import org.pkl.core.messaging.MessageTransport
+import org.pkl.messaging.Message
+import org.pkl.messaging.MessageTransport
 
 class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
   val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)

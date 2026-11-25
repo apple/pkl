@@ -29,9 +29,9 @@ import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.util.IoUtils
+import org.pkl.messaging.externalreader.ExternalReader
 
 @OptIn(ExperimentalPathApi::class)
 class CliCommandTest {
@@ -201,7 +201,7 @@ class CliCommandTest {
     val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
     val cliTest = CliTest(opts)
     assertThat(cliTest.myExternalModuleReaders)
-      .isEqualTo(mapOf("bar" to PklEvaluatorSettings.ExternalReader("bar", listOf(), null)))
+      .isEqualTo(mapOf("bar" to ExternalReader("bar", listOf(), null)))
   }
 
   @Test

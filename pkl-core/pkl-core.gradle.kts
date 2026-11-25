@@ -60,6 +60,9 @@ dependencies {
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
   compileOnly(projects.pklExecutor)
 
+  // external reader classes are part of the public API of the evaluator
+  api(projects.pklMessaging)
+
   implementation(projects.pklParser)
   implementation(projects.pklFormatter)
   implementation(libs.msgpack)

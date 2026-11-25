@@ -33,12 +33,12 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
+import org.pkl.messaging.externalreader.ExternalReaderProcessException;
 
 public class VmImportAnalyzer {
   @TruffleBoundary
