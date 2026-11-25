@@ -381,7 +381,7 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   }
 
   @Override
-  protected void endMap(VmMap value) {
+  protected void endMap(VmMap value, boolean isEmpty) {
     // noop
   }
 

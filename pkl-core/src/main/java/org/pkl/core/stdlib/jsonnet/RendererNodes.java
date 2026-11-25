@@ -347,8 +347,8 @@ public final class RendererNodes {
     }
 
     @Override
-    protected void endMap(VmMap value) {
-      endObject(value.isEmpty());
+    protected void endMap(VmMap value, boolean isEmpty) {
+      endObject(isEmpty);
     }
 
     @Override

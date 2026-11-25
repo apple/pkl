@@ -180,7 +180,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   protected abstract void endSet(VmSet value);
 
-  protected abstract void endMap(VmMap value);
+  protected abstract void endMap(VmMap value, boolean isEmpty);
 
   @Override
   public void visitTyped(VmTyped value) {
@@ -330,7 +330,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     }
 
     enclosingValue = prevEnclosingValue;
-    endMap(value);
+    endMap(value, isFirst.get());
   }
 
   private void doVisitProperty(
