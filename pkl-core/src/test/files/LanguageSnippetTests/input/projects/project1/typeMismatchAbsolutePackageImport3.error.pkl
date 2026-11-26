@@ -1,0 +1,6 @@
+import "@birds/catalog/Swallow.pkl"
+import "package://localhost:0/birds@0.5.0#/Bird.pkl"
+
+// `Swallow` amends `Bird`, but here it is imported via an absolute `package:` URI,
+// so its `Bird` is a different module than the one imported via `@birds`.
+res: Bird = Swallow
