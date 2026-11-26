@@ -1,0 +1,35 @@
+import "pkl:test"
+
+function key<T>() = new Mapping {
+  ["a" as T] = 1
+}
+function forValue<T>() = new Mapping {
+  for (i in List(1)) {
+    [i] = "a" as T
+  }
+}
+function forKey<T>() = new Mapping {
+  for (i in List(1)) {
+    ["a" as T] = i
+  }
+}
+function forWhen<T>() = new Listing {
+  for (i in List(1)) {
+    when ("a" is T) {
+      "is T"
+    } else {
+      "is not T"
+    }
+  }
+}
+
+function forAnnotation<T>() = new Listing {
+  for (i: T in List(1)) { i }
+}
+
+a = test.catch(() -> key<Int>())
+b = test.catch(() -> forValue<Int>())
+c = test.catch(() -> forKey<Int>())
+d = test.catch(() -> forKey<String(length > 5)>())
+e = forWhen<Int>()
+f = test.catch(() -> forAnnotation<String>())

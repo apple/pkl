@@ -1615,9 +1615,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         .addSlot(FrameSlotKind.Illegal, toIdentifier(name), null);
   }
 
+  private record ForGeneratorHeader(
+      @Nullable UnresolvedTypeNode unresolvedKeyTypeNode,
+      @Nullable UnresolvedTypeNode unresolvedValueTypeNode,
+      ExpressionNode iterableNode) {}
+
   @Override
   public GeneratorMemberNode visitForGenerator(ForGenerator ctx) {
-
     var keyParameter = ctx.getP2() == null ? null : ctx.getP1();
     var valueParameter = ctx.getP2() == null ? ctx.getP1() : ctx.getP2();
     var keyBinding = makeBinding(keyParameter);
@@ -1640,23 +1644,31 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .build();
     }
 
-    var unresolvedKeyTypeNode =
-        keyIdentifier == null ? null : visitTypeAnnotation(keyIdentifier.getTypeAnnotation());
-    var unresolvedValueTypeNode =
-        valueIdentifier == null ? null : visitTypeAnnotation(valueIdentifier.getTypeAnnotation());
+    var header =
+        symbolTable.enterEagerGenerator(
+            scope ->
+                new ForGeneratorHeader(
+                    keyIdentifier == null
+                        ? null
+                        : visitTypeAnnotation(keyIdentifier.getTypeAnnotation()),
+                    valueIdentifier == null
+                        ? null
+                        : visitTypeAnnotation(valueIdentifier.getTypeAnnotation()),
+                    visitExpr(ctx.getExpr())));
+
     // if possible, initialize immediately to avoid later insert
     var keyTypeNode =
-        unresolvedKeyTypeNode == null && keyBinding != null
+        header.unresolvedKeyTypeNode == null && keyBinding != null
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
                 .initWriteSlotNode(keyBinding.slot())
             : null;
     // if possible, initialize immediately to avoid later insert
     var valueTypeNode =
-        unresolvedValueTypeNode == null && valueBinding != null
+        header.unresolvedValueTypeNode == null && valueBinding != null
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
                 .initWriteSlotNode(valueBinding.slot())
             : null;
-    var iterableNode = symbolTable.enterEagerGenerator(scope -> visitExpr(ctx.getExpr()));
+
     var outerScope = symbolTable.getCurrentScope();
     return symbolTable.enterForGenerator(
         keyBinding,
@@ -1667,9 +1679,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           return GeneratorForNodeGen.create(
               createSourceSection(ctx),
               scope.frameDescriptorBuilder.build(),
-              iterableNode,
-              unresolvedKeyTypeNode,
-              unresolvedValueTypeNode,
+              header.iterableNode,
+              header.unresolvedKeyTypeNode,
+              header.unresolvedValueTypeNode,
               memberNodes,
               keyTypeNode,
               valueTypeNode,
@@ -2200,9 +2212,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var descriptorBuilder = descriptorBuilderAndBindings.builder;
     var bindings = descriptorBuilderAndBindings.bindings;
-    var typeParameters =
-        visitTypeParameterList(
-            entry.getTypeParameterList(), descriptorBuilderAndBindings.typeBindings);
+    var typeBindings = descriptorBuilderAndBindings.typeBindings;
+    var typeParameters = visitTypeParameterList(entry.getTypeParameterList(), typeBindings);
 
     var annotations = doVisitAnnotations(entry.getAnnotations(), methodName);
 
@@ -2210,6 +2221,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         methodName,
         getConstLevel(modifiers),
         bindings,
+        typeBindings,
         descriptorBuilder,
         typeParameters,
         scope -> {
@@ -2889,13 +2901,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var frameDescriptorBuilder = frameDescriptorBuilderAndBindings.builder;
     var bindings = frameDescriptorBuilderAndBindings.bindings;
-    var typeParameters =
-        visitTypeParameterList(typeParamList, frameDescriptorBuilderAndBindings.typeBindings);
+    var typeBindings = frameDescriptorBuilderAndBindings.typeBindings;
+    var typeParameters = visitTypeParameterList(typeParamList, typeBindings);
 
     return symbolTable.enterMethod(
         methodName,
         getConstLevel(modifiers),
         bindings,
+        typeBindings,
         frameDescriptorBuilder,
         typeParameters,
         scope -> {
@@ -3240,7 +3253,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       var param = typeParams.get(i);
       slotVariables[i] =
           frameDescriptorBuilder.addSlot(
-              FrameSlotKind.Illegal, toIdentifier(param.getIdentifier().getValue()), null);
+              FrameSlotKind.Object, toIdentifier(param.getIdentifier().getValue()), null);
     }
     return slotVariables;
   }

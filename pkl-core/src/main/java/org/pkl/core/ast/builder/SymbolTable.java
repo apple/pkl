@@ -99,6 +99,7 @@ public final class SymbolTable {
       Identifier name,
       ConstLevel constLevel,
       FrameSlotVariable[] bindings,
+      FrameSlotVariable[] typeBindings,
       FrameDescriptorBuilder frameDescriptorBuilder,
       TypeParameter[] typeParameters,
       Function<MethodScope, T> nodeFactory) {
@@ -109,6 +110,7 @@ public final class SymbolTable {
             toQualifiedName(name),
             constLevel,
             bindings,
+            typeBindings,
             frameDescriptorBuilder,
             typeParameters),
         nodeFactory);
@@ -715,7 +717,8 @@ public final class SymbolTable {
         FrameDescriptorBuilder frameDescriptorBuilder,
         TypeParameter[] typeParameters,
         int[] forGeneratorSlots,
-        int[] parameterSlots) {
+        int[] parameterSlots,
+        int[] typeParameterSlots) {
       super(
           parent,
           name,
@@ -723,7 +726,7 @@ public final class SymbolTable {
           constLevel,
           frameDescriptorBuilder,
           forGeneratorSlots,
-          parameterSlots,
+          ArrayUtils.concat(parameterSlots, typeParameterSlots),
           extendTypeParams(parent.knownTypeParameterNames, typeParameters));
       this.typeParameters = typeParameters;
     }
@@ -801,6 +804,7 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         FrameSlotVariable[] bindings,
+        FrameSlotVariable[] typeBindings,
         FrameDescriptorBuilder frameDescriptorBuilder,
         TypeParameter[] typeParameters) {
       super(
@@ -811,7 +815,8 @@ public final class SymbolTable {
           frameDescriptorBuilder,
           typeParameters,
           EMPTY_INT_ARRAY,
-          getSlots(bindings));
+          getSlots(bindings),
+          getSlots(typeBindings));
       this.bindings = bindings;
     }
 
@@ -1091,6 +1096,7 @@ public final class SymbolTable {
           frameDescriptorBuilder,
           typeParameters,
           EMPTY_INT_ARRAY,
+          EMPTY_INT_ARRAY,
           EMPTY_INT_ARRAY);
       isClosed = VmModifier.isClosed(modifiers);
     }
@@ -1131,7 +1137,8 @@ public final class SymbolTable {
           frameDescriptorBuilder,
           typeParameters,
           parent.forGeneratorSlots,
-          parent.parameterSlots);
+          parent.parameterSlots,
+          EMPTY_INT_ARRAY);
     }
 
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
