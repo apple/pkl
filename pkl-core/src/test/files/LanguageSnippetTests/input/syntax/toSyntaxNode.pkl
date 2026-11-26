@@ -1,0 +1,56 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local function nodesOfType(node: syntax.Node, type: syntax.NodeType) =
+  node.fold(List(), (acc: List<syntax.Node>, n) -> if (n.type == type) acc.add(n) else acc)
+
+facts {
+  ["a parsed module converts to a ModuleNode"] {
+    local mod = parser.parseModule("x = 1").toSyntaxNode()
+    mod is syntax.ModuleNode
+    (mod as syntax.ModuleNode).properties["x"] != null
+  }
+
+  ["a parsed expression converts to its ExprNode subclass"] {
+    parser.parseExpression("1 + 2").toSyntaxNode() is syntax.AdditionExprNode
+    parser.parseExpression("foo.bar").toSyntaxNode() is syntax.QualifiedAccessExprNode
+    parser.parseExpression(#""hi""#).toSyntaxNode() is syntax.SingleLineStringLiteralExprNode
+  }
+
+  ["any node in the tree converts, not just the root"] {
+    local mod = parser.parseModule("class Point { x: Int }")
+
+    nodesOfType(mod, "identifier").first.toSyntaxNode() is syntax.IdentifierNode
+    nodesOfType(mod, "class").first.toSyntaxNode() is syntax.ClassNode
+    nodesOfType(mod, "class_body").first.toSyntaxNode() is syntax.ClassBodyNode
+    nodesOfType(mod, "declared_type").first.toSyntaxNode() is syntax.DeclaredTypeNode
+  }
+
+  ["a node built from scratch converts"] {
+    // such a node carries no parse-time state, so it is converted on the fly
+    local intLiteral = new syntax.Node {
+      type = "int_literal_expr"
+      text = "42"
+    }
+    intLiteral.toSyntaxNode() is syntax.IntLiteralExprNode
+    (intLiteral.toSyntaxNode() as syntax.IntLiteralExprNode).value == "42"
+  }
+
+  ["a modified tree converts"] {
+    local mod =
+      parser.parseModule("x = 1").replaceChildren(
+        (n) -> n.type == "int_literal_expr",
+        (n) -> (n) { text = "2" },
+      )
+    local property = (mod.toSyntaxNode() as syntax.ModuleNode).properties["x"]!!
+    (property.value as syntax.IntLiteralExprNode).value == "2"
+  }
+
+  ["conversion round-trips through builtNode"] {
+    local node = parser.parseModule("x = 1")
+    node.toSyntaxNode().builtNode == node
+  }
+}
