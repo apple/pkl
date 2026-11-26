@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import org.msgpack.core.MessagePack
 import org.pkl.commons.createTempFile
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
@@ -809,6 +810,35 @@ class EvaluatorTest {
             .trimIndent()
         )
       )
+    }
+  }
+
+  @Test
+  fun `pkl-binary counts members evaluated during dynamic equality`() {
+    val data =
+      evaluator.evaluateExpressionPklBinary(
+        text(
+          """
+          x = new Dynamic { c = 1; a = x == new Dynamic {} }
+          y = "after"
+          z = new Listing { 1; 2 }
+          """
+            .trimIndent()
+        ),
+        "module",
+      )
+
+    val module = PklBinaryDecoder.decode(data) as PModule
+    assertThat(module.properties).containsOnlyKeys("x", "y", "z")
+    val dynamic = module.getProperty("x") as PObject
+    assertThat(dynamic.properties).containsOnlyKeys("c", "a")
+    assertThat(dynamic.properties).containsEntry("c", 1L).containsEntry("a", false)
+    assertThat(module.getProperty("y")).isEqualTo("after")
+    assertThat(module.getProperty("z")).isEqualTo(listOf(1L, 2L))
+
+    MessagePack.newDefaultUnpacker(data).use { unpacker ->
+      unpacker.skipValue()
+      assertThat(unpacker.hasNext()).isFalse
     }
   }
 
