@@ -21,4 +21,10 @@ examples {
     Infinity
     -Infinity
   }
+  ["force()"] {
+    1
+    "hello"
+    1
+    List(1, 2, 3)
+  }
 }

@@ -35,4 +35,11 @@ examples {
     Infinity
     -Infinity
   }
+
+  ["force()"] {
+    force(1)
+    force("hello")
+    force(new Dynamic { x = 1 }).x
+    force(List(1, 2, 3))
+  }
 }
