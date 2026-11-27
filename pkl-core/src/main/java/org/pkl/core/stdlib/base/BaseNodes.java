@@ -27,6 +27,7 @@ import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.runtime.VmValue;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
@@ -134,6 +135,14 @@ public final class BaseNodes {
     @Specialization
     protected VmPair eval(VirtualFrame frame, VmTyped self, Object first, Object second) {
       return new VmPair(first, second);
+    }
+  }
+
+  public abstract static class force extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmTyped self, Object value) {
+      VmValue.force(value, true);
+      return value;
     }
   }
 

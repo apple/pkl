@@ -2409,6 +2409,10 @@ external const function Null(defaultValue: Object | Function<Object>): Null
 /// Constructs a [Pair].
 external const function Pair<First, Second>(first: First, second: Second): Pair<First, Second>
 
+/// Forces eager evaluation of [value], preventing deep call stacks when composing objects
+/// with [fold()] or [reduce()]. Returns [value] unchanged.
+external function force<T>(value: T): T
+
 /// An ordered pair of elements.
 ///
 /// To construct a [Pair], use method [Pair()].

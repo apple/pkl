@@ -233,6 +233,12 @@ examples {
     module.catch(() -> List().reduce((x, y) -> x + y))
   }
 
+  ["reduce() with force() (issue #977)"] {
+    local numbers = IntSeq(0, 1000).toList().map((i) -> new Dynamic { value = i })
+    local adder = (a: Dynamic, b: Dynamic) -> force(new Dynamic { value = a.value + b.value })
+    numbers.reduce(adder).value
+  }
+
   ["groupBy()"] {
     list2.groupBy((x) -> x)
     list3.groupBy((x) -> x)

@@ -181,6 +181,9 @@ examples {
     1
     "Expected a non-empty collection. Collection: List()"
   }
+  ["reduce() with force() (issue #977)"] {
+    500500
+  }
   ["groupBy()"] {
     Map(1, List(1), 2, List(2), 3, List(3), 4, List(4), 5, List(5))
     Map(1, List(1, 1), 2, List(2, 2), 3, List(3))
